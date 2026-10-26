@@ -1,0 +1,218 @@
+import type { SelectionGesture } from '@/shared/vaultSelection'
+import { ChevronDown, ChevronRight, Folder, FolderOpen } from 'lucide-react'
+import { useEffect, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
+import type { QuickNoteNode } from '@/shared/contracts/quickNote'
+import { useToolActivity } from '@/shared/components/ToolActivity'
+
+type QuickNoteTreeProps = {
+  nodes: QuickNoteNode[]
+  selectedPath: string
+  selectedPaths: string[]
+  onContextSelect: (path: string) => void
+  expanded: ReadonlySet<string>
+  onSelect: (node: QuickNoteNode, gesture: SelectionGesture) => void
+  onToggle: (relativePath: string) => void
+  onMove: (node: Pick<QuickNoteNode, 'relativePath' | 'kind'>, targetDirectory: string) => void
+  onRenameRequest: (node: QuickNoteNode) => void
+  onMoveRequest: (node: QuickNoteNode) => void
+  onDuplicateRequest: (node: QuickNoteNode) => void
+  onExportRequest: (node: QuickNoteNode) => void
+  onInfoRequest: (node: QuickNoteNode) => void
+  onDeleteRequest: (node: QuickNoteNode) => void
+  onRevealRequest: (node: QuickNoteNode) => void
+  onGitRequest: () => void
+  renameLabel: string
+  moveLabel: string
+  duplicateLabel: string
+  exportLabel: string
+  infoLabel: string
+  deleteLabel: string
+  revealLabel: string
+  gitLabel: string
+}
+
+const quickNotePathType = 'application/x-mootool-quick-note-path'
+const quickNoteKindType = 'application/x-mootool-quick-note-kind'
+
+export function QuickNoteTree({ nodes, selectedPath, selectedPaths, onContextSelect, expanded, onSelect, onToggle, onMove, onRenameRequest, onMoveRequest, onDuplicateRequest, onExportRequest, onInfoRequest, onDeleteRequest, onRevealRequest, onGitRequest, renameLabel, moveLabel, duplicateLabel, exportLabel, infoLabel, deleteLabel, revealLabel, gitLabel }: QuickNoteTreeProps) {
+  const toolActive = useToolActivity()
+  const menuRef = useRef<HTMLDivElement>(null)
+  const [contextMenu, setContextMenu] = useState<{ node: QuickNoteNode; left: number; top: number } | null>(null)
+
+  useEffect(() => {
+    if (!contextMenu || !toolActive) return
+    const focusFrame = window.requestAnimationFrame(() => menuRef.current?.querySelector<HTMLButtonElement>('button:not(:disabled)')?.focus())
+    const close = () => setContextMenu(null)
+    const closeOnEscape = (event: KeyboardEvent) => { if (event.key === 'Escape') close() }
+    document.addEventListener('pointerdown', close)
+    document.addEventListener('keydown', closeOnEscape)
+    window.addEventListener('blur', close)
+    return () => {
+      window.cancelAnimationFrame(focusFrame)
+      document.removeEventListener('pointerdown', close)
+      document.removeEventListener('keydown', closeOnEscape)
+      window.removeEventListener('blur', close)
+    }
+  }, [contextMenu, toolActive])
+
+  return (
+    <>
+      <div
+        className="quick-note-tree"
+        role="tree"
+        aria-multiselectable="true"
+        tabIndex={0}
+        onDragOver={(event) => event.preventDefault()}
+        onDrop={(event) => {
+          event.preventDefault()
+          const draggedNode = readDraggedNode(event.dataTransfer)
+          if (draggedNode && canMoveToDirectory(draggedNode.relativePath, '')) onMove(draggedNode, '')
+        }}
+      >
+        {nodes.map((node) => (
+          <QuickNoteTreeNode
+            key={node.relativePath}
+            node={node}
+            depth={0}
+            selectedPath={selectedPath}
+          selectedPaths={selectedPaths}
+            expanded={expanded}
+            onSelect={onSelect}
+            onToggle={onToggle}
+            onMove={onMove}
+            onOpenContextMenu={(menuNode, left, top) => {
+              onContextSelect(menuNode.relativePath)
+              setContextMenu({ node: menuNode, left, top })
+            }}
+          />
+        ))}
+      </div>
+      {contextMenu && toolActive && createPortal(
+        <div
+          ref={menuRef}
+          className="quick-note-tree-menu"
+          role="menu"
+          style={{ left: contextMenu.left, top: contextMenu.top }}
+          onPointerDown={(event) => event.stopPropagation()}
+        >
+          <button type="button" role="menuitem" disabled={selectedPaths.length > 1} onClick={() => { onRenameRequest(contextMenu.node); setContextMenu(null) }}>{renameLabel}</button>
+          <button type="button" role="menuitem" disabled={selectedPaths.length > 1} onClick={() => { onMoveRequest(contextMenu.node); setContextMenu(null) }}>{moveLabel}</button>
+          {contextMenu.node.kind === 'file' && (
+            <>
+              <button type="button" role="menuitem" onClick={() => { onDuplicateRequest(contextMenu.node); setContextMenu(null) }}>{duplicateLabel}</button>
+              <button type="button" role="menuitem" onClick={() => { onExportRequest(contextMenu.node); setContextMenu(null) }}>{exportLabel}</button>
+              <button type="button" role="menuitem" disabled={selectedPaths.length > 1} onClick={() => { onInfoRequest(contextMenu.node); setContextMenu(null) }}>{infoLabel}</button>
+              <div className="quick-note-tree-menu__separator" role="separator" />
+            </>
+          )}
+          <button type="button" role="menuitem" disabled={selectedPaths.length > 1} onClick={() => { onDeleteRequest(contextMenu.node); setContextMenu(null) }}>{deleteLabel}</button>
+          <button type="button" role="menuitem" disabled={selectedPaths.length > 1} onClick={() => { onRevealRequest(contextMenu.node); setContextMenu(null) }}>{revealLabel}</button>
+          <div className="quick-note-tree-menu__separator" role="separator" />
+          <button type="button" role="menuitem" onClick={() => { onGitRequest(); setContextMenu(null) }}>{gitLabel}</button>
+        </div>,
+        document.body
+      )}
+    </>
+  )
+}
+
+type NodeProps = Pick<QuickNoteTreeProps, 'selectedPath' | 'selectedPaths' | 'expanded' | 'onSelect' | 'onToggle' | 'onMove'> & {
+  node: QuickNoteNode
+  depth: number
+  onOpenContextMenu: (node: QuickNoteNode, left: number, top: number) => void
+}
+
+function QuickNoteTreeNode({ node, depth, selectedPath, selectedPaths, expanded, onSelect, onToggle, onMove, onOpenContextMenu }: NodeProps) {
+  const open = node.kind === 'directory' && expanded.has(node.relativePath)
+  const label = node.title || node.name.replace(/\.txt$/i, '')
+  return (
+    <div role="none">
+      <button
+        className={`quick-note-tree__row${node.kind === 'file' ? ' quick-note-tree__row--file' : ''}${selectedPaths.includes(node.relativePath) ? ' quick-note-tree__row--active' : ''}`}
+        type="button"
+        role="treeitem"
+        draggable={selectedPaths.length <= 1}
+        data-path={node.relativePath}
+        aria-expanded={node.kind === 'directory' ? open : undefined}
+        aria-selected={selectedPaths.includes(node.relativePath)}
+        style={{ paddingLeft: 7 + depth * 15 }}
+        onClick={(event) => {
+          if (node.kind === 'directory' && !event.ctrlKey && !event.metaKey && !event.shiftKey) onToggle(node.relativePath)
+          onSelect(node, event)
+        }}
+        onContextMenu={(event) => {
+          event.preventDefault()
+          const menuHeight = node.kind === 'file' ? 276 : 180
+          onOpenContextMenu(
+            node,
+            Math.max(8, Math.min(event.clientX, window.innerWidth - 176)),
+            Math.max(8, Math.min(event.clientY, window.innerHeight - menuHeight))
+          )
+        }}
+        onDragStart={(event) => {
+          event.dataTransfer.effectAllowed = 'move'
+          event.dataTransfer.setData(quickNotePathType, node.relativePath)
+          event.dataTransfer.setData(quickNoteKindType, node.kind)
+        }}
+        onDragOver={node.kind === 'directory' ? (event) => {
+          event.preventDefault()
+          event.stopPropagation()
+          event.dataTransfer.dropEffect = 'move'
+        } : undefined}
+        onDrop={node.kind === 'directory' ? (event) => {
+          event.preventDefault()
+          event.stopPropagation()
+          const draggedNode = readDraggedNode(event.dataTransfer)
+          if (draggedNode && canMoveToDirectory(draggedNode.relativePath, node.relativePath)) onMove(draggedNode, node.relativePath)
+        } : undefined}
+      >
+        <span className="quick-note-tree__chevron">
+          {node.kind === 'directory' ? open ? <ChevronDown size={12} /> : <ChevronRight size={12} /> : null}
+        </span>
+        {node.kind === 'directory' && (open ? <FolderOpen size={14} /> : <Folder size={14} />)}
+        <span style={node.kind === 'file' ? { color: noteColor(node.color) } : undefined}>{label}</span>
+      </button>
+      {node.kind === 'directory' && open && node.children?.map((child) => (
+        <QuickNoteTreeNode
+          key={child.relativePath}
+          node={child}
+          depth={depth + 1}
+          selectedPath={selectedPath}
+          selectedPaths={selectedPaths}
+          expanded={expanded}
+          onSelect={onSelect}
+          onToggle={onToggle}
+          onMove={onMove}
+          onOpenContextMenu={onOpenContextMenu}
+        />
+      ))}
+    </div>
+  )
+}
+
+function readDraggedNode(dataTransfer: DataTransfer): Pick<QuickNoteNode, 'relativePath' | 'kind'> | null {
+  const relativePath = dataTransfer.getData(quickNotePathType)
+  const kind = dataTransfer.getData(quickNoteKindType)
+  if (!relativePath || (kind !== 'file' && kind !== 'directory')) return null
+  return { relativePath, kind }
+}
+
+export function canMoveToDirectory(relativePath: string, targetDirectory: string): boolean {
+  const currentDirectory = relativePath.includes('/') ? relativePath.slice(0, relativePath.lastIndexOf('/')) : ''
+  return currentDirectory !== targetDirectory
+    && relativePath !== targetDirectory
+    && !targetDirectory.startsWith(`${relativePath}/`)
+}
+
+function noteColor(color: string | undefined): string {
+  const colors: Record<string, string> = {
+    coral: '#d97868',
+    yellow: '#c99535',
+    green: '#4e9275',
+    blue: '#4f83cc',
+    purple: '#8a72b5',
+    red: '#c96761'
+  }
+  return colors[color ?? ''] ?? 'currentColor'
+}

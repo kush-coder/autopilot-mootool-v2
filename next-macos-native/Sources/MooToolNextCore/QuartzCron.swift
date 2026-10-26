@@ -1,0 +1,361 @@
+import Foundation
+
+extension CronExpression {
+    public static func describe(_ input: String, language: AppLanguage = .zhCN) -> String? {
+        guard let cron = try? CronExpression(input) else { return nil }
+        if let summary = cron.naturalSummary(language: language) {
+            return summary + " · " + cron.describe(language: language)
+        }
+        return cron.describe(language: language)
+    }
+}
+
+extension CronExpression {
+    private func loc(_ key: String, language: AppLanguage) -> String {
+        AppLocalization.string(key, language: language)
+    }
+
+    /// Short schedule hint for common Quartz patterns (cronstrue-style, not a full parser).
+    func naturalSummary(language: AppLanguage) -> String? {
+        guard flavor == .quartz, seconds == [0], minutesField.count == 1, hoursField.count == 1 else { return nil }
+        let minute = minutesField.sorted().first!
+        let hour = hoursField.sorted().first!
+        let time = String(format: "%02d:%02d", hour, minute)
+        let weekdays = Set(weekdaysField.map { $0 == 7 ? 0 : $0 })
+        let workdays = Set([1, 2, 3, 4, 5])
+        if dayRule == .quartzWeek, weekMatcher == .values, weekdays == workdays {
+            return String(format: loc("cron.describe.summaryWorkdays", language: language), time)
+        }
+        if dayRule == .quartzAny, monthsField.count == 12, daysField.count == 31 {
+            return String(format: loc("cron.describe.summaryDaily", language: language), time)
+        }
+        if dayRule == .quartzDay, dayMatcher == .last {
+            return String(format: loc("cron.describe.summaryLastDay", language: language), time)
+        }
+        if dayRule == .quartzWeek, case .nth(let weekday, let nth) = weekMatcher {
+            return String(format: loc("cron.describe.summaryNthWeekday", language: language), nth, weekdayName(weekday, language: language), time)
+        }
+        if dayRule == .quartzWeek, case .last(let weekday) = weekMatcher {
+            return String(format: loc("cron.describe.summaryLastWeekday", language: language), weekdayName(weekday, language: language), time)
+        }
+        return nil
+    }
+
+    func describe(language: AppLanguage) -> String {
+        switch flavor {
+        case .unix:
+            return loc("cron.describe.unixFiveField", language: language)
+        case .quartz:
+            var parts: [String] = []
+            if seconds != [0] {
+                parts.append(String(format: loc("cron.describe.fieldSeconds", language: language), label(seconds, in: 0...59, language: language)))
+            }
+            parts.append(String(format: loc("cron.describe.fieldMinutes", language: language), label(minutesField, in: 0...59, language: language)))
+            parts.append(String(format: loc("cron.describe.fieldHours", language: language), label(hoursField, in: 0...23, language: language)))
+            switch dayRule {
+            case .unixOr: parts.append(loc("cron.describe.unixDayOrWeek", language: language))
+            case .quartzDay:
+                switch dayMatcher {
+                case .last: parts.append(loc("cron.describe.dayLast", language: language))
+                case .nearestWeekday(let day):
+                    parts.append(String(format: loc("cron.describe.dayNearestWeekday", language: language), day))
+                case .any: parts.append(loc("cron.describe.dayAny", language: language))
+                case .values:
+                    parts.append(String(format: loc("cron.describe.dayValues", language: language), label(daysField, in: 1...31, language: language)))
+                }
+            case .quartzWeek:
+                switch weekMatcher {
+                case .last(let weekday):
+                    parts.append(String(format: loc("cron.describe.weekLast", language: language), weekdayName(weekday, language: language)))
+                case .nth(let weekday, let nth):
+                    parts.append(String(format: loc("cron.describe.weekNth", language: language), nth, weekdayName(weekday, language: language)))
+                case .any: parts.append(loc("cron.describe.weekAny", language: language))
+                case .values:
+                    parts.append(String(format: loc("cron.describe.weekValues", language: language), label(weekdaysField, in: 0...7, language: language)))
+                }
+            case .quartzAny: parts.append(loc("cron.describe.everyDay", language: language))
+            }
+            parts.append(String(format: loc("cron.describe.fieldMonths", language: language), label(monthsField, in: 1...12, language: language)))
+            if let yearsField, yearsField != Set(1970...2199) {
+                parts.append(String(format: loc("cron.describe.fieldYears", language: language), label(yearsField, in: 1970...2199, language: language)))
+            }
+            return parts.joined(separator: " · ")
+        }
+    }
+
+    private func label(_ values: Set<Int>, in range: ClosedRange<Int>, language: AppLanguage) -> String {
+        if values.count == range.count {
+            return loc(range.lowerBound == 0 ? "cron.describe.labelEvery" : "cron.describe.labelEveryMonth", language: language)
+        }
+        if values.count <= 4 { return values.sorted().map(String.init).joined(separator: ",") }
+        return String(format: loc("cron.describe.labelValueCount", language: language), values.count)
+    }
+
+    private func weekdayName(_ weekday: Int, language: AppLanguage) -> String {
+        let index = max(0, min(6, weekday))
+        return loc("cron.weekday.\(index)", language: language)
+    }
+}
+
+enum CronFlavor { case unix, quartz }
+enum CronDayRule { case unixOr, quartzDay, quartzWeek, quartzAny }
+
+enum CronDayMatcher: Equatable {
+    case values
+    case any
+    case last
+    case nearestWeekday(Int)
+}
+
+enum CronWeekMatcher: Equatable {
+    case values
+    case any
+    case last(Int)
+    case nth(Int, Int)
+}
+
+struct QuartzCronParts {
+    var seconds: Set<Int>
+    var minutes: Set<Int>
+    var hours: Set<Int>
+    var days: Set<Int>
+    var months: Set<Int>
+    var weekdays: Set<Int>
+    var years: Set<Int>?
+    var dayRule: CronDayRule
+    var flavor: CronFlavor
+    var dayMatcher: CronDayMatcher = .values
+    var weekMatcher: CronWeekMatcher = .values
+}
+
+enum CronScheduleMatch {
+    static func weekdayIndex(_ date: Date, calendar: Calendar) -> Int { calendar.component(.weekday, from: date) - 1 }
+
+    static func isLastDayOfMonth(_ date: Date, calendar: Calendar) -> Bool {
+        let day = calendar.component(.day, from: date)
+        guard let range = calendar.range(of: .day, in: .month, for: date) else { return false }
+        return day == range.count
+    }
+
+    static func isNearestWeekday(to day: Int, date: Date, calendar: Calendar) -> Bool {
+        let year = calendar.component(.year, from: date)
+        let month = calendar.component(.month, from: date)
+        guard let anchor = calendar.date(from: DateComponents(year: year, month: month, day: day)) else { return false }
+        let weekday = calendar.component(.weekday, from: anchor)
+        var nearest = anchor
+        if weekday == 7 { nearest = calendar.date(byAdding: .day, value: -1, to: anchor)! }
+        else if weekday == 1 { nearest = calendar.date(byAdding: .day, value: 1, to: anchor)! }
+        if calendar.component(.month, from: nearest) != month {
+            if weekday == 7, let forward = calendar.date(byAdding: .day, value: 2, to: anchor), calendar.component(.month, from: forward) == month { nearest = forward }
+            else if weekday == 1, let backward = calendar.date(byAdding: .day, value: -2, to: anchor), calendar.component(.month, from: backward) == month { nearest = backward }
+        }
+        return calendar.isDate(date, inSameDayAs: nearest)
+    }
+
+    static func isLastWeekday(_ weekday: Int, date: Date, calendar: Calendar) -> Bool {
+        guard weekdayIndex(date, calendar: calendar) == weekday else { return false }
+        guard let range = calendar.range(of: .day, in: .month, for: date) else { return false }
+        let day = calendar.component(.day, from: date)
+        for next in (day + 1)...range.count {
+            guard let candidate = calendar.date(byAdding: .day, value: next - day, to: date) else { continue }
+            if weekdayIndex(candidate, calendar: calendar) == weekday { return false }
+        }
+        return true
+    }
+
+    static func isNthWeekday(_ nth: Int, weekday: Int, date: Date, calendar: Calendar) -> Bool {
+        guard weekdayIndex(date, calendar: calendar) == weekday else { return false }
+        let year = calendar.component(.year, from: date)
+        let month = calendar.component(.month, from: date)
+        guard let range = calendar.range(of: .day, in: .month, for: date) else { return false }
+        var seen = 0
+        for day in range {
+            guard let candidate = calendar.date(from: DateComponents(year: year, month: month, day: day)) else { continue }
+            if weekdayIndex(candidate, calendar: calendar) == weekday {
+                seen += 1
+                if seen == nth { return calendar.isDate(candidate, inSameDayAs: date) }
+            }
+        }
+        return false
+    }
+}
+
+enum QuartzCronParser {
+    static func parse(_ input: String, language: AppLanguage = AppLocalization.preferredLanguage()) throws -> QuartzCronParts {
+        let parts = input.split(whereSeparator: \.isWhitespace).map(String.init)
+        switch parts.count {
+        case 5: return try parseUnix(parts, language: language)
+        case 6, 7: return try parseQuartz(parts, language: language)
+        default: throw ToolError(AppLocalization.string("cron.error.segmentCount", language: language))
+        }
+    }
+
+    private static func parseUnix(_ parts: [String], language: AppLanguage) throws -> QuartzCronParts {
+        let anyDay = parts[2].hasPrefix("*")
+        let anyWeekday = parts[4].hasPrefix("*")
+        let dayRule: CronDayRule
+        if anyDay && anyWeekday { dayRule = .quartzAny }
+        else if anyWeekday && !anyDay { dayRule = .quartzDay }
+        else if anyDay && !anyWeekday { dayRule = .quartzWeek }
+        else { dayRule = .unixOr }
+        return QuartzCronParts(
+            seconds: [0],
+            minutes: try parseField(parts[0], range: 0...59, language: language),
+            hours: try parseField(parts[1], range: 0...23, language: language),
+            days: try parseField(parts[2], range: 1...31, language: language),
+            months: try parseField(parts[3], range: 1...12, language: language),
+            weekdays: try parseWeekField(parts[4], language: language),
+            years: nil,
+            dayRule: dayRule,
+            flavor: .unix
+        )
+    }
+
+    private static func parseQuartz(_ parts: [String], language: AppLanguage) throws -> QuartzCronParts {
+        let dayToken = parts[3]
+        let weekToken = parts[5]
+        if dayToken == "?" && weekToken == "?" { throw ToolError(AppLocalization.string("cron.error.dayWeekBothQuestion", language: language)) }
+        let parsedDay = try parseDayToken(dayToken, language: language)
+        let parsedWeek = try parseWeekToken(weekToken, language: language)
+        let dayRule: CronDayRule
+        if dayToken == "?" { dayRule = .quartzWeek }
+        else if weekToken == "?" { dayRule = .quartzDay }
+        else if dayToken == "*" && (weekToken == "*" || weekToken == "?") { dayRule = .quartzAny }
+        else { dayRule = .unixOr }
+        let years = parts.count == 7 && !parts[6].isEmpty ? try parseField(parts[6], range: 1970...2199, language: language) : nil
+        return QuartzCronParts(
+            seconds: try parseField(parts[0], range: 0...59, language: language),
+            minutes: try parseField(parts[1], range: 0...59, language: language),
+            hours: try parseField(parts[2], range: 0...23, language: language),
+            days: parsedDay.values,
+            months: try parseField(parts[4], range: 1...12, language: language),
+            weekdays: parsedWeek.values,
+            years: years,
+            dayRule: dayRule,
+            flavor: .quartz,
+            dayMatcher: parsedDay.matcher,
+            weekMatcher: parsedWeek.matcher
+        )
+    }
+
+    private static func parseDayToken(_ value: String, language: AppLanguage) throws -> (values: Set<Int>, matcher: CronDayMatcher) {
+        if value == "?" { return (Set(1...31), .any) }
+        if value == "L" { return (Set(1...31), .last) }
+        if value.hasSuffix("W"), value.count > 1, let number = Int(value.dropLast()) {
+            guard (1...31).contains(number) else { throw ToolError(AppLocalization.string("cron.error.dayWRange", language: language)) }
+            return (Set(1...31), .nearestWeekday(number))
+        }
+        if value.contains("L") || value.contains("W") {
+            throw ToolError(String(format: AppLocalization.string("cron.error.dayUnsupported", language: language), value))
+        }
+        return (try parseField(value, range: 1...31, language: language), .values)
+    }
+
+    private static func parseWeekToken(_ value: String, language: AppLanguage) throws -> (values: Set<Int>, matcher: CronWeekMatcher) {
+        if value == "?" || value == "*" { return (Set(0...7), .any) }
+        if !value.contains(",") {
+            let hash = value.split(separator: "#", omittingEmptySubsequences: false)
+            if hash.count == 2 {
+                let weekday = try weekdayNumber(String(hash[0]), language: language)
+                guard let nth = Int(hash[1]), (1...5).contains(nth) else { throw ToolError(AppLocalization.string("cron.error.weekNthRange", language: language)) }
+                return (Set(0...7), .nth(weekday, nth))
+            }
+            if value.count > 1, value.last?.uppercased() == "L" {
+                let weekday = try weekdayNumber(String(value.dropLast()), language: language)
+                return (Set(0...7), .last(weekday))
+            }
+        }
+        if value.contains("#") || value.uppercased().contains("L") {
+            throw ToolError(String(format: AppLocalization.string("cron.error.weekUnsupported", language: language), value))
+        }
+        return (try parseWeekField(value, language: language), .values)
+    }
+
+    private static func weekdayNumber(_ token: String, language: AppLanguage) throws -> Int {
+        let normalized = token.uppercased()
+        let map = ["SUN": 0, "MON": 1, "TUE": 2, "WED": 3, "THU": 4, "FRI": 5, "SAT": 6]
+        if let mapped = map[normalized] { return mapped }
+        guard let number = Int(normalized), (0...7).contains(number) else {
+            throw ToolError(String(format: AppLocalization.string("cron.error.weekInvalid", language: language), token))
+        }
+        return number == 7 ? 0 : number
+    }
+
+    static func parseField(_ value: String, range: ClosedRange<Int>, language: AppLanguage = AppLocalization.preferredLanguage()) throws -> Set<Int> {
+        if value == "?" { return Set(range) }
+        var output = Set<Int>()
+        for item in value.split(separator: ",", omittingEmptySubsequences: false) {
+            let pair = item.split(separator: "/", omittingEmptySubsequences: false)
+            guard (1...2).contains(pair.count), let step = pair.count == 2 ? Int(pair[1]) : 1, step > 0 else {
+                throw ToolError(AppLocalization.string("cron.error.stepInvalid", language: language))
+            }
+            let bounds = pair[0].split(separator: "-", omittingEmptySubsequences: false)
+            let lower: Int; let upper: Int
+            if pair[0] == "*" { lower = range.lowerBound; upper = range.upperBound }
+            else if bounds.count == 1, let number = Int(bounds[0]) { lower = number; upper = pair.count == 2 ? range.upperBound : number }
+            else if bounds.count == 2, let a = Int(bounds[0]), let b = Int(bounds[1]) { lower = a; upper = b }
+            else { throw ToolError(String(format: AppLocalization.string("cron.error.fieldInvalid", language: language), String(item))) }
+            guard range.contains(lower), range.contains(upper), lower <= upper else {
+                throw ToolError(String(format: AppLocalization.string("cron.error.fieldOutOfRange", language: language), String(item)))
+            }
+            output.formUnion(stride(from: lower, through: upper, by: step))
+        }
+        return output
+    }
+
+    static func parseWeekField(_ value: String, language: AppLanguage = AppLocalization.preferredLanguage()) throws -> Set<Int> {
+        if value == "?" { return Set(0...7) }
+        let normalized = value
+            .replacingOccurrences(of: "SUN", with: "0", options: .caseInsensitive)
+            .replacingOccurrences(of: "MON", with: "1", options: .caseInsensitive)
+            .replacingOccurrences(of: "TUE", with: "2", options: .caseInsensitive)
+            .replacingOccurrences(of: "WED", with: "3", options: .caseInsensitive)
+            .replacingOccurrences(of: "THU", with: "4", options: .caseInsensitive)
+            .replacingOccurrences(of: "FRI", with: "5", options: .caseInsensitive)
+            .replacingOccurrences(of: "SAT", with: "6", options: .caseInsensitive)
+        return try parseField(normalized, range: 0...7, language: language)
+    }
+}
+
+public struct CronFieldDraft: Equatable {
+    public var second = "0"
+    public var minute = "*"
+    public var hour = "*"
+    public var day = "*"
+    public var month = "*"
+    public var week = "?"
+    public var year = ""
+    public init() {}
+    public init(second: String, minute: String, hour: String, day: String, month: String, week: String, year: String) {
+        self.second = second; self.minute = minute; self.hour = hour; self.day = day; self.month = month; self.week = week; self.year = year
+    }
+    public func build(language: AppLanguage = AppLocalization.preferredLanguage()) throws -> String {
+        let core = [second, minute, hour, day, month, week].map { $0.trimmingCharacters(in: .whitespaces) }
+        guard core.allSatisfy({ !$0.isEmpty }) else { throw ToolError(AppLocalization.string("cron.error.builderEmptyFields", language: language)) }
+        let trimmedYear = year.trimmingCharacters(in: .whitespaces)
+        return ([second, minute, hour, day, month, week] + (trimmedYear.isEmpty ? [] : [trimmedYear])).joined(separator: " ")
+    }
+    public static func split(_ expression: String, language: AppLanguage = AppLocalization.preferredLanguage()) throws -> CronFieldDraft {
+        let parts = expression.split(whereSeparator: \.isWhitespace).map(String.init)
+        guard parts.count == 6 || parts.count == 7 else { throw ToolError(AppLocalization.string("cron.error.quartzSegmentCount", language: language)) }
+        return CronFieldDraft(second: parts[0], minute: parts[1], hour: parts[2], day: parts[3], month: parts[4], week: parts[5], year: parts.count == 7 ? parts[6] : "")
+    }
+    public struct Preset: Identifiable, Equatable {
+        public let id: String
+        public let expression: String
+        public init(id: String, expression: String) {
+            self.id = id
+            self.expression = expression
+        }
+    }
+
+    /// Preset ids align with Electron `cron.everyMinute` … `cron.weekdays`; native adds `lastDayOfMonth` and `firstFriday9`.
+    public static let presets: [Preset] = [
+        Preset(id: "everyMinute", expression: "0 * * * * ?"),
+        Preset(id: "everyHour", expression: "0 0 * * * ?"),
+        Preset(id: "everyDay", expression: "0 0 0 * * ?"),
+        Preset(id: "weekdays", expression: "0 0 9 ? * MON-FRI"),
+        Preset(id: "lastDayOfMonth", expression: "0 0 0 L * ?"),
+        Preset(id: "firstFriday9", expression: "0 0 9 ? * FRI#1"),
+    ]
+}

@@ -1,0 +1,487 @@
+﻿# 🚀 Mootool
+
+**Official Open-Source Release & Maintained Codebase** by [**@kush-coder**](https://github.com/kush-coder)
+
+[![Verified Build](https://img.shields.io/badge/Status-Verified--Passing-emerald?style=for-the-badge&logo=github)](https://github.com/kush-coder)
+[![License](https://img.shields.io/badge/License-MIT License-indigo?style=for-the-badge)](https://github.com/kush-coder)
+[![Language](https://img.shields.io/badge/Language-Kotlin-purple?style=for-the-badge)](https://github.com/kush-coder)
+
+## 💡 About This Project
+
+Handy tool set for developers
+
+This repository is actively maintained and distributed by **@kush-coder** as an official open-source release.
+
+## ✨ Key Highlights
+- 🛡️ **Verified Health Checks**: Passed automated sandbox builds, dependency resolution, and health test runs.
+- 🚀 **Production Ready**: Lightweight footprint optimized for high efficiency.
+- 📦 **Permissive Open Source**: Available for developer integration, custom modifications, and community enhancements.
+
+## 🚀 Quick Start & Installation
+
+```bash
+# Clone your official repository
+git clone https://github.com/kush-coder/autopilot-MooTool.git
+cd autopilot-MooTool
+```
+
+---
+
+## 📖 Comprehensive Documentation
+
+![logo](assets/logo/logo-128.png)
+
+<p align="center">
+  <strong>English</strong> ·
+  <a href="README_zh_CN.md">简体中文</a> ·
+  <a href="README_ja.md">日本語</a>
+</p>
+
+# MooTool
+
+Handy desktop toolset for developers.
+
+## About
+
+Hi! Thanks for using MooTool. "Moo" is named after my daughter.
+
+I keep building and improving MooTool to support my own day-to-day development work.
+
+Fewer Java developers build with Swing nowadays, but I still enjoy it. So in every bit of free time, I kept working on this project. I finally shipped something, though many similar tools exist on the web.
+
+Hope you enjoy using it as much as I enjoyed building it.
+
+[![码云Gitee](https://gitee.com/zhoubochina/MooTool/badge/star.svg?theme=blue)](https://gitee.com/zhoubochina/MooTool)
+[![GitHub stars](https://img.shields.io/github/stars/rememberber/MooTool.svg)](https://github.com/rememberber/MooTool)
+[![GitHub release](https://img.shields.io/github/v/release/rememberber/MooTool)](https://github.com/rememberber/MooTool/releases)
+[![GitHub license](https://img.shields.io/github/license/rememberber/MooTool)](https://github.com/rememberber/MooTool/blob/master/LICENSE.txt)
+
+<a href="https://hellogithub.com/repository/4e5f287079734f98890a69d56000b361" target="_blank"><img src="https://api.hellogithub.com/v1/widgets/recommend.svg?rid=4e5f287079734f98890a69d56000b361&claim_uid=0UhXFJvP9ndHtiB" alt="Featured｜HelloGitHub" style="width: 250px; height: 54px;" width="250" height="54" /></a>
+
+## Supported platforms
+
+Windows • Linux • macOS. Target platforms and current status are listed below; editions under development have not completed release acceptance on every target platform.
+
+## Product lines
+
+MooTool now has 7 independent product lines, each with its own code, build, version, installation identity, data, and update channel. They can be installed side by side and evolve independently. Version numbers are specific to each product; see its documentation for feature coverage.
+
+| Product / source | Technology and overview | Target platforms | Status / download |
+| --- | --- | --- | --- |
+| [**MooTool Next Electron**](next/README.md) | Electron, Vite, React, TypeScript; the currently recommended desktop edition. | Windows / Linux / macOS | Stable: [Download 1.3.5](https://github.com/rememberber/MooTool/releases/tag/next-electron-v1.3.5) |
+| [**MooTool Java**](src/) | Java, Swing; the original desktop edition, still maintained. | Windows / Linux / macOS | Stable: [Download 1.8.7](https://github.com/rememberber/MooTool/releases/tag/v1.8.7) · [Gitee mirror](https://gitee.com/zhoubochina/MooTool/releases) |
+| [**MooTool Next Tauri**](next-tauri/README.md) | Tauri 2, Rust, React, TypeScript; 25 tools with independent storage and updates. | Windows / Linux / macOS | Release candidate: [Download 0.1.0-rc.2](https://github.com/rememberber/MooTool/releases/tag/next-tauri-v0.1.0-rc.2) |
+| [**MooTool Next macOS Native**](next-macos-native/README.md) | SwiftUI, AppKit, system frameworks; native workspaces, JSON vault, quick notes, and image attachments. | macOS 14+ | Pre-release: [Download 0.8.0](https://github.com/rememberber/MooTool/releases/tag/next-macos-native-v0.8.0) |
+| [**MooTool Next Flutter**](next-flutter/README.md) | Flutter, Dart; tools and desktop channels are implemented, with platform acceptance and some capabilities still in progress. | Windows / Linux / macOS | 0.1.0 development build; local run and unsigned packaging scripts available. |
+| [**MooTool Next Compose**](next-compose/README.md) | Kotlin, Compose Multiplatform Desktop; multiple tools, quick notes, and backup/restore implemented. | Windows / Linux / macOS | 0.1.0 development build; local macOS app-image build verified, with its own JVM runtime. |
+| [**MooTool Next FX**](next-fx/README.md) | OpenJDK, OpenJFX (JavaFX); application shell, JSON vault, encoding/decoding, and regex tools implemented. | Windows / Linux / macOS | 0.1.0-SNAPSHOT early development build; local macOS app-image packaging implemented. |
+
+Follow the product links for source code or the product README, including development setup, running, packaging, and acceptance notes. The current macOS native product lives in `next-macos-native/`; `macos/` contains the early SwiftUI prototype.
+
+## Use MooTool with AI (Next Electron)
+
+**MooTool Next Electron 1.3.5** lets local AI clients use MooTool through MCP or a standalone Skill. Tools use the bundled runtime, so no separate Node.js installation is needed and calls work with the MooTool window closed.
+
+| Client | One-click integration |
+| --- | --- |
+| Codex | MCP, Skill, or both |
+| Claude Code | MCP, Skill, or both |
+| Cursor | MCP |
+
+- **11 tools:** JSON formatting and JSONPath queries, encoding/decoding, timestamps, text diffs, hashes, UUIDs, plus search and read tools for Quick Notes and JSON documents.
+- **Installation management:** preview generated configuration, test the connection, inspect installation status, repair/update, and uninstall. Existing configuration is backed up; conflicting user edits are reported and preserved.
+- **Read-only document access:** off by default, with a separate grant for each vault. Disabling access takes effect on the next call; moving a vault revokes access. Reads are paginated and exclude hidden files, symbolic links and files ignored by the vault root's `.gitignore`.
+
+To get started:
+
+1. Install MooTool at a permanent location: macOS Applications, the Windows installer, or Linux deb. AppImage and Windows portable runtimes cannot be registered for one-click AI integration.
+2. Open **Settings → AI integration**, choose the client and integration mode, review the preview, then click **Install in one click**.
+3. Restart the AI client or reload its MCP / Skills, enabling the tools if prompted. Try “Use MooTool to sort the keys in this JSON.”
+4. For saved documents, enable **Allow reading Quick Notes** or **Allow reading JSON documents** in the same settings page, then ask the AI to search the corresponding vault.
+
+Other local stdio MCP clients can use **Copy MCP configuration**. See the [AI integration guide](next/doc/mootool-ai-integration.md) for installation paths, limits, standalone Skill usage and verification records.
+
+## Screenshots
+
+> The screenshots below show MooTool Java. See each product's README for its UI and acceptance records.
+
+> Main feature screenshots below. Translation, UA analysis, Image assistant, PDF, environment variables, system info, config conversion, Protobuf, and other modules do not have dedicated screenshots yet — open the corresponding tabs after install.
+
+![Quick Note](screen_shoot/quick_note_2_mac.png)
+
+![Quick Note - quick replace](screen_shoot/quick_replace_mac.png)
+
+![Overview](screen_shoot/time_mac_2.png)
+
+![Overview](screen_shoot/json_mac_2.png)
+
+![Overview](screen_shoot/host_mac_2.png)
+
+![Overview](screen_shoot/http_mac_2.png)
+
+![Overview](screen_shoot/encode_mac_2.png)
+
+![Overview](screen_shoot/qr_code_mac_2.png)
+
+![Overview](screen_shoot/crypto_mac_2.png)
+
+![Overview](screen_shoot/calculator_mac_2.png)
+
+![Overview](screen_shoot/net_mac_2.png)
+
+![Overview](screen_shoot/color_board_mac_2.png)
+
+![Overview](screen_shoot/regex_mac_2.png)
+
+![Overview](screen_shoot/cron_mac_2.png)
+
+![Overview](screen_shoot/java_mac_2.png)
+
+![Overview](screen_shoot/diff_mac.png)
+
+![Overview](screen_shoot/mt-favoriteColor.png)
+
+![Overview](screen_shoot/quick_note_light_mac.png)
+
+![Theme & appearance](screen_shoot/theme.png)
+
+## Download
+
+- [MooTool Next Electron 1.3.5 (recommended)](https://github.com/rememberber/MooTool/releases/tag/next-electron-v1.3.5)
+- [MooTool Java 1.8.7](https://github.com/rememberber/MooTool/releases/tag/v1.8.7)
+- [MooTool Next Tauri 0.1.0-rc.2 (release candidate)](https://github.com/rememberber/MooTool/releases/tag/next-tauri-v0.1.0-rc.2)
+- [MooTool Next macOS Native 0.8.0 (pre-release)](https://github.com/rememberber/MooTool/releases/tag/next-macos-native-v0.8.0)
+- [All GitHub Releases](https://github.com/rememberber/MooTool/releases)
+- [MooTool Java releases on Gitee](https://gitee.com/zhoubochina/MooTool/releases)
+
+For Flutter, Compose, and FX, see the product READMEs above for source builds. A development version number does not imply that a public stable installer is available.
+
+## Support the author
+
+**If MooTool helps you, consider supporting the evenings and weekends spent building it — your appreciation keeps me motivated.**
+
+![zanshang](assets/material/wx-zanshang.jpg)
+
+# MooTool feature map
+
+> This feature map describes MooTool Java. See each product's documentation for implemented features, differences, and planned work.
+
+> Many modules include a **History** sub-tab: search, apply, copy input/output, delete, and clear all.
+
+```text
+MooTool
+├── Quick Note
+│   ├── Multi-language syntax highlighting
+│   ├── Common code formatting
+│   │   ├── SQL
+│   │   ├── JSON
+│   │   └── Java
+│   ├── Ordered / unordered lists
+│   ├── Markdown live preview
+│   ├── Insert images in Markdown
+│   ├── Export / batch export, search, global find
+│   ├── Document info (created/updated time, word count, etc.)
+│   ├── Link detection and click-to-open
+│   ├── Font, font size, list colors
+│   └── Quick replace panel
+│       ├── Batch text operations in the side panel (selected lines only):
+│       ├── Auto save
+│       ├── Trim spaces
+│       ├── Remove empty lines
+│       ├── Remove tabs (\t)
+│       ├── Scientific notation → plain number
+│       ├── Plain number → scientific notation
+│       ├── Plain number → thousands separator
+│       ├── Thousands separator → plain number
+│       ├── snake_case → camelCase
+│       ├── camelCase → snake_case
+│       ├── UPPER → lower
+│       ├── lower → UPPER
+│       ├── Remove line breaks
+│       ├── Line break → comma
+│       ├── Line break → ','
+│       ├── Line break → ","
+│       ├── Comma → line break
+│       ├── ',' → line break
+│       ├── "," → line break
+│       ├── Tab (\t) → line break
+│       ├── Deduplicate lines
+│       ├── Deduplicate lines and count occurrences
+│       ├── Escape
+│       ├── Unescape
+│       ├── Reverse lines
+│       ├── Sort lines A→Z
+│       ├── Sort lines Z→A
+│       └── Sort by pinyin
+├── Time convert
+│   ├── Timestamp conversion
+│   │   ├── Date/time → timestamp (ms)
+│   │   ├── Timestamp (ms) → date/time
+│   │   ├── Timestamp (s) → date/time
+│   │   └── Date/time → timestamp (s)
+│   ├── History
+│   ├── Fullscreen clock
+│   └── Timezone picker and quick shortcuts
+├── JSON
+│   ├── JSON format
+│   │   ├── Sort keys alphabetically
+│   │   ├── Ignore key case
+│   │   └── Check duplicate keys
+│   ├── JSON minify
+│   ├── Export / batch export, find
+│   ├── Font and size
+│   ├── Swap JSON keys and values
+│   ├── JSON → XML
+│   ├── XML → JSON
+│   ├── JavaBean → JSON
+│   ├── JSON → JavaBean
+│   ├── Escape
+│   ├── Unescape
+│   ├── Get JSON via JSON Path
+│   └── Visual JSON Path picker
+├── Translation
+│   ├── 20+ languages with auto-detect (Chinese, English, Japanese, Korean, French, Spanish, German, Russian, …)
+│   ├── Google / Bing translators with automatic fallback
+│   ├── Save to word book
+│   ├── Word book
+│   │   ├── Search, create, edit, delete
+│   │   └── Retranslate
+│   └── Translation history
+├── Host
+│   ├── Host formatting / syntax highlight
+│   ├── Manage / view system hosts
+│   ├── Import / export hosts
+│   └── Search, find & replace
+├── HTTP
+│   ├── HTTP requests: GET/POST/PUT/DELETE/HEAD/PATCH/OPTIONS
+│   ├── Import cURL
+│   ├── Format HTTP header/body
+│   ├── Request management
+│   ├── Request history
+│   └── Search
+├── UA analysis
+│   ├── Parse User-Agent (browser, engine, OS, device type/brand/model, …)
+│   ├── Detect mobile / bot crawlers
+│   ├── Preset UAs (Chrome, Firefox, Safari, Edge, WeChat in-app browser, curl, …)
+│   ├── Paste / clear
+│   └── History
+├── Encode / decode
+│   ├── Native → Unicode
+│   ├── Unicode → Native
+│   ├── URL encode / decode
+│   ├── Native → hex
+│   ├── Hex → Native
+│   ├── Native → ASCII (decimal/hex code points)
+│   ├── ASCII → Native
+│   └── History
+├── QR code
+│   ├── Generate QR code
+│   │   ├── Custom size
+│   │   ├── Custom error correction level
+│   │   └── Custom logo
+│   ├── Decode QR code
+│   ├── Read from clipboard
+│   └── History
+├── Crypto / random
+│   ├── Supports Chinese national crypto SM2 / SM3 / SM4
+│   ├── Symmetric encrypt/decrypt
+│   │   ├── AES
+│   │   ├── DES
+│   │   └── SM4
+│   ├── Asymmetric encrypt/decrypt
+│   │   ├── RSA
+│   │   └── SM2 (encrypt/decrypt, sign, verify)
+│   ├── Digest (file/text)
+│   │   ├── MD5
+│   │   ├── SHA1
+│   │   ├── SHA256
+│   │   ├── SHA384
+│   │   ├── SHA512
+│   │   └── SM3
+│   ├── Base64 encode/decode
+│   ├── Base32 encode/decode
+│   ├── Random UUID
+│   ├── Random numeric/alpha/alphanumeric strings (custom length)
+│   ├── Random strong passwords (custom length)
+│   └── History
+├── Calculator
+│   ├── Arithmetic
+│   ├── Base conversion
+│   ├── Greatest common divisor
+│   ├── Least common multiple
+│   ├── Permutations & combinations
+│   └── History
+├── Network / IP
+│   ├── IP lookup
+│   ├── Domain lookup
+│   ├── netstat
+│   ├── ping
+│   ├── IPv4 ↔ long conversion
+│   ├── WHOIS lookup
+│   └── Flush DNS
+├── Color board
+│   ├── Theme / standard palettes
+│   ├── Screen color picker
+│   ├── Free-form color pick
+│   ├── Color format conversion
+│   ├── Favorite colors
+│   ├── Color ops (invert, intersect, add, difference, average)
+│   └── History
+├── Image assistant
+│   ├── Local image host
+│   ├── Screenshot
+│   ├── Clipboard import / export
+│   ├── Zoom toolbar (in/out/original/fit)
+│   ├── Image Base64 encode/decode
+│   ├── Image compression
+│   ├── Image watermark
+│   └── Image OCR (Tesseract)
+├── Cron
+│   ├── Cron expression builder
+│   ├── Parse cron (Linux 5-field / Quartz 6–7 field)
+│   ├── Validate cron
+│   ├── Cron to natural language
+│   ├── Next 10 run times
+│   ├── Favorite cron expressions
+│   ├── History
+│   └── Common cron examples
+├── Regex
+│   ├── Regex match test
+│   ├── Favorite regex
+│   ├── Common regex patterns
+│   └── History
+├── Java
+│   ├── Java/Groovy format & highlight
+│   ├── Java/Groovy interpret & run
+│   └── History
+├── Reformat
+│   ├── Format uploaded files
+│   │   ├── Nginx config
+│   │   ├── XML
+│   │   ├── HTML
+│   │   └── Java
+│   ├── Paste & format (Nginx / Java / XML / HTML)
+│   └── History
+├── PDF
+│   ├── Split PDF
+│   └── Merge PDF
+├── Environment
+│   ├── System environment variables (table)
+│   ├── Java properties
+│   └── Refresh / export
+├── System info
+│   ├── Collects local system/hardware info via OSHI; loads on first visit or refresh:
+│   ├── System (OS, computer, firmware, motherboard, …)
+│   ├── CPU
+│   ├── Memory
+│   ├── Storage
+│   └── Network
+├── Config conversion
+│   ├── Properties → YAML
+│   ├── YAML → Properties
+│   ├── YAML validate (syntax & line numbers)
+│   ├── YAML format
+│   ├── History
+│   ├── JSON → YAML (TODO)
+│   └── YAML → JSON (TODO)
+├── Text diff
+│   ├── Side-by-side diff (sync scroll)
+│   ├── Unified diff
+│   └── Copy diff
+├── Protobuf
+│   ├── JSON ↔ Protobuf binary
+│   │   ├── Hex / Base64 output
+│   │   └── Format `.proto` definitions
+│   ├── Decode wire format (no `.proto` required)
+│   ├── Hex / Base64 conversion
+│   └── History
+└── App & settings
+    ├── Sync & backup (Git sync, data export)
+    ├── Keyboard shortcuts
+    ├── Custom data directory
+    ├── Check for updates on startup
+    ├── SQL dialect
+    ├── System tray
+    ├── Window behavior
+    │   ├── macOS / Windows: close button hides to Dock/taskbar; app keeps running
+    │   └── Linux: close button quits the app
+    ├── Appearance
+    │   ├── Many themes (Flat Light/Dark, macOS, One Dark, Monokai, …)
+    │   ├── Accent color
+    │   ├── Follow system accent
+    │   ├── Immersive window background
+    │   ├── Maximize on startup
+    │   └── Tab icons only mode
+    └── Layout
+        ├── Panel position (top/bottom/left/right)
+        └── Global font & size
+```
+
+## Acknowledgements
+
+[Hutool](http://hutool.cn/)  
+[FlatLaf](https://github.com/JFormDesigner/FlatLaf)  
+[vscode-icons](https://github.com/microsoft/vscode-icons)  
+[iconfont](https://www.iconfont.cn/)
+
+## Developer notes
+
+See the [multi-product release conventions](RELEASE_CONVENTIONS.md) for version, Git tag, GitHub Release, `Latest`, and CI isolation rules.
+
+Each product has an independent project. Read its README linked in the product table and work in the corresponding directory. The JDK, IntelliJ IDEA, Maven, and packaging instructions below apply only to MooTool Java at the repository root.
+
+Minimum JDK: **25**<br>
+Before you start, **configure IntelliJ IDEA as shown below**, then run **maven clean**:
+![considerations](assets/material/gui_build.png)
+
+### Packaging & CI
+
+Packaging JDKs can be downloaded and cached locally:
+
+- JDK archives: `downloads/jdks/`
+- Extracted JDKs: `jdks/<os>/<arch>/home`
+
+The download script uses Eclipse Temurin 25 and reuses only a matching JDK. Add `--force` to replace an older cache.
+
+#### Prepare local packaging JDKs
+
+```bash
+python3 scripts/prepare_jdks.py --targets mac-x64
+python3 scripts/prepare_jdks.py --targets mac-arm64
+python3 scripts/prepare_jdks.py --targets windows-x64
+python3 scripts/prepare_jdks.py --targets linux-x64
+```
+
+Resolve all download targets:
+
+```bash
+python3 scripts/prepare_jdks.py --targets all --resolve-only
+```
+
+#### Local package commands
+
+Default `mvn clean package` uses your current JDK and builds a macOS universal package.
+
+Profiles `mac-intel`, `mac-apple-silicon`, `windows-x64`, and `linux-x64` validate cached JDKs under `jdks/` during `validate`; run `scripts/prepare_jdks.py` first or the build fails fast.
+
+Package for a specific platform using cached JDKs:
+
+```bash
+mvn clean package -Pmac-intel -Dmaven.test.skip=true
+mvn clean package -Pmac-apple-silicon -Dmaven.test.skip=true
+mvn clean package -Pwindows-x64 -Dmaven.test.skip=true
+mvn clean package -Plinux-x64 -Dmaven.test.skip=true
+```
+
+Output directories:
+
+- Default: `target/`
+- Intel Mac: `target/mac-intel/`
+- Apple Silicon Mac: `target/mac-apple-silicon/`
+- Windows x64: `target/windows-x64/`
+- Linux x64: `target/linux-x64/`
+
+
+---
+
+*Maintained with ❤️ by @kush-coder. Official distribution powered by GitHub Autopilot Automation Platform.*

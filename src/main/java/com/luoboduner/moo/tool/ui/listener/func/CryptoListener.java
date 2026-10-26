@@ -1,0 +1,524 @@
+package com.luoboduner.moo.tool.ui.listener.func;
+
+import cn.hutool.core.codec.Base32;
+import cn.hutool.core.codec.Base64;
+import cn.hutool.core.io.FileUtil;
+import cn.hutool.core.swing.clipboard.ClipboardUtil;
+import cn.hutool.core.util.CharsetUtil;
+import cn.hutool.core.util.IdUtil;
+import cn.hutool.core.util.RandomUtil;
+import cn.hutool.core.util.StrUtil;
+import cn.hutool.crypto.SecureUtil;
+import cn.hutool.crypto.SmUtil;
+import cn.hutool.crypto.asymmetric.KeyType;
+import cn.hutool.crypto.asymmetric.RSA;
+import cn.hutool.crypto.asymmetric.SM2;
+import cn.hutool.crypto.digest.DigestAlgorithm;
+import cn.hutool.crypto.digest.DigestUtil;
+import cn.hutool.crypto.digest.Digester;
+import cn.hutool.crypto.symmetric.AES;
+import cn.hutool.crypto.symmetric.DES;
+import cn.hutool.crypto.symmetric.SM4;
+import cn.hutool.crypto.symmetric.SymmetricAlgorithm;
+import cn.hutool.log.Log;
+import cn.hutool.log.LogFactory;
+import com.formdev.flatlaf.util.SystemFileChooser;
+import com.luoboduner.moo.tool.App;
+import com.luoboduner.moo.tool.ui.FuncConsts;
+import com.luoboduner.moo.tool.ui.form.func.CryptoForm;
+import com.luoboduner.moo.tool.util.AlertUtil;
+import com.luoboduner.moo.tool.util.FuncHistoryUtil;
+import com.luoboduner.moo.tool.util.MsgUtil;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.exception.ExceptionUtils;
+
+import javax.swing.*;
+import java.io.File;
+import java.security.KeyPair;
+
+/**
+ * <pre>
+ * CryptoListener
+ * </pre>
+ *
+ * @author <a href="https://github.com/rememberber">RememBerBer</a>
+ * @since 2019/10/24.
+ */
+public class CryptoListener {
+    private static final Log logger = LogFactory.get();
+
+    private final static String RANDOM_BASE_STRING = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890`~!@#$%^&*()_+-=[]{};':,./<>?";
+
+    public static void addListeners() {
+        CryptoForm cryptoForm = CryptoForm.getInstance();
+        // 对称-加密按钮
+        cryptoForm.getSymEncryptButton().addActionListener(e -> {
+            try {
+                String symType = (String) cryptoForm.getSymTypeComboBox().getSelectedItem();
+                String content = cryptoForm.getSymTextAreaLeft().getText();
+                String key = cryptoForm.getSymKeyTextField().getText();
+                String encryptHex = null;
+
+                if ("AES".equals(symType)) {
+                    byte[] generatedKey = SecureUtil.generateKey(SymmetricAlgorithm.AES.getValue(), key.getBytes()).getEncoded();
+
+                    AES aes = SecureUtil.aes(generatedKey);
+                    encryptHex = aes.encryptHex(content);
+                } else if ("DES".equals(symType)) {
+                    byte[] generatedKey = SecureUtil.generateKey(SymmetricAlgorithm.DES.getValue(), key.getBytes()).getEncoded();
+
+                    DES des = SecureUtil.des(generatedKey);
+                    encryptHex = des.encryptHex(content);
+                } else if ("SM4".equals(symType)) {
+                    byte[] generatedKey = SecureUtil.generateKey("SM4", key.getBytes()).getEncoded();
+
+                    SM4 sm4 = SmUtil.sm4(generatedKey);
+                    encryptHex = sm4.encryptHex(content);
+                }
+                if (encryptHex != null) {
+                    cryptoForm.getSymTextAreaRight().setText(encryptHex);
+                    saveCryptoHistory("对称加密", "SymEncrypt", content, encryptHex, symType + " 加密");
+                }
+            } catch (Exception ex) {
+                MsgUtil.errorWithDetail(App.mainFrame, "msg.encryptFailed", ex.getMessage());
+                logger.error(ExceptionUtils.getStackTrace(ex));
+            }
+        });
+
+        // 对称-解密按钮
+        cryptoForm.getSymDecryptButton().addActionListener(e -> {
+            try {
+                String symType = (String) cryptoForm.getSymTypeComboBox().getSelectedItem();
+                String content = cryptoForm.getSymTextAreaRight().getText();
+                String key = cryptoForm.getSymKeyTextField().getText();
+                String decryptStr = null;
+                if ("AES".equals(symType)) {
+                    byte[] generatedKey = SecureUtil.generateKey(SymmetricAlgorithm.AES.getValue(), key.getBytes()).getEncoded();
+
+                    AES aes = SecureUtil.aes(generatedKey);
+                    decryptStr = aes.decryptStr(content);
+                } else if ("DES".equals(symType)) {
+                    byte[] generatedKey = SecureUtil.generateKey(SymmetricAlgorithm.DES.getValue(), key.getBytes()).getEncoded();
+
+                    DES des = SecureUtil.des(generatedKey);
+                    decryptStr = des.decryptStr(content);
+                } else if ("SM4".equals(symType)) {
+                    byte[] generatedKey = SecureUtil.generateKey("SM4", key.getBytes()).getEncoded();
+
+                    SM4 sm4 = SmUtil.sm4(generatedKey);
+                    decryptStr = sm4.decryptStr(content);
+                }
+                if (decryptStr != null) {
+                    cryptoForm.getSymTextAreaLeft().setText(decryptStr);
+                    saveCryptoHistory("对称加密", "SymDecrypt", content, decryptStr, symType + " 解密");
+                }
+            } catch (Exception ex) {
+                MsgUtil.errorWithDetail(App.mainFrame, "msg.decryptFailed", ex.getMessage());
+                logger.error(ExceptionUtils.getStackTrace(ex));
+            }
+        });
+
+        // 文本摘要加密
+        cryptoForm.getDigestTextButton().addActionListener(e -> {
+            try {
+                String digestContent = cryptoForm.getDigestContentTextArea().getText();
+                String digestType = (String) cryptoForm.getDigestTypeComboBox().getSelectedItem();
+                String digestResult = "";
+                assert digestType != null;
+                switch (digestType) {
+                    case "MD5":
+                        digestResult = DigestUtil.md5Hex(digestContent);
+                        break;
+                    case "SHA-1":
+                        digestResult = DigestUtil.sha1Hex(digestContent);
+                        break;
+                    case "SHA-256":
+                        digestResult = DigestUtil.sha256Hex(digestContent);
+                        break;
+                    case "SHA-384":
+                        digestResult = new Digester(DigestAlgorithm.SHA384).digestHex(digestContent, CharsetUtil.UTF_8);
+                        break;
+                    case "SHA-512":
+                        digestResult = new Digester(DigestAlgorithm.SHA512).digestHex(digestContent, CharsetUtil.UTF_8);
+                        break;
+                    case "SM3":
+                        digestResult = SmUtil.sm3(digestContent);
+                        break;
+                    default:
+                        digestResult = "";
+                }
+                cryptoForm.getDigestResultTextArea().setText(digestResult);
+                saveCryptoHistory("摘要", "DigestText", digestContent, digestResult, digestType + " 摘要");
+            } catch (Exception ex) {
+                MsgUtil.errorWithDetail(App.mainFrame, "msg.encryptFailed", ex.getMessage());
+                logger.error(ExceptionUtils.getStackTrace(ex));
+            }
+        });
+
+        // 文件摘要加密
+        cryptoForm.getDigestFileButton().addActionListener(e -> {
+            try {
+                String filePath = cryptoForm.getDigestFilePathTextField().getText();
+                String digestType = (String) cryptoForm.getDigestTypeComboBox().getSelectedItem();
+                String digestResult = "";
+                assert digestType != null;
+                switch (digestType) {
+                    case "MD5":
+                        digestResult = DigestUtil.md5Hex(FileUtil.file(filePath));
+                        break;
+                    case "SHA-1":
+                        digestResult = DigestUtil.sha1Hex(FileUtil.file(filePath));
+                        break;
+                    case "SHA-256":
+                        digestResult = DigestUtil.sha256Hex(FileUtil.file(filePath));
+                        break;
+                    case "SHA-384":
+                        digestResult = new Digester(DigestAlgorithm.SHA384).digestHex(FileUtil.file(filePath));
+                        break;
+                    case "SHA-512":
+                        digestResult = new Digester(DigestAlgorithm.SHA512).digestHex(FileUtil.file(filePath));
+                        break;
+                    case "SM3":
+                        digestResult = SmUtil.sm3(FileUtil.file(filePath));
+                        break;
+                    default:
+                        digestResult = "";
+                }
+                cryptoForm.getDigestResultTextArea().setText(digestResult);
+                App.config.setDigestFilePath(filePath);
+                App.config.save();
+            } catch (Exception ex) {
+                MsgUtil.errorWithDetail(App.mainFrame, "msg.encryptFailed", ex.getMessage());
+                logger.error(ExceptionUtils.getStackTrace(ex));
+            }
+        });
+
+        // 文件摘要加密-文件浏览按钮
+        cryptoForm.getExploreButton().addActionListener(e -> {
+            File beforeFile = new File(App.config.getDigestFilePath());
+            SystemFileChooser fileChooser;
+
+            if (beforeFile.exists()) {
+                fileChooser = new SystemFileChooser(beforeFile);
+            } else {
+                fileChooser = new SystemFileChooser();
+            }
+
+            int approve = fileChooser.showOpenDialog(cryptoForm.getCryptoPanel());
+            if (approve == SystemFileChooser.APPROVE_OPTION) {
+                cryptoForm.getDigestFilePathTextField().setText(fileChooser.getSelectedFile().getAbsolutePath());
+            }
+        });
+
+        cryptoForm.getGenerateUuidButton().addActionListener(e -> {
+            String randomUUID = IdUtil.randomUUID();
+            cryptoForm.getUuidTextField().setText(randomUUID);
+            saveCryptoHistory("随机", "RandomUuid", "", randomUUID, "UUID");
+        });
+
+        cryptoForm.getGenerateRandomNumButton().addActionListener(e -> {
+            try {
+                int digit = Integer.parseInt(cryptoForm.getRandomNumDigitTextField().getText().trim());
+                String randomNumbers = RandomUtil.randomNumbers(digit);
+                cryptoForm.getRandomNumTextField().setText(randomNumbers);
+                App.config.setRandomNumDigit(digit);
+                App.config.save();
+                saveCryptoHistory("随机", "RandomNum", String.valueOf(digit), randomNumbers, digit + "位随机数");
+            } catch (Exception ex) {
+                MsgUtil.errorWithDetail(App.mainFrame, "msg.generateFailed", ex.getMessage());
+                logger.error(ExceptionUtils.getStackTrace(ex));
+            }
+        });
+
+        cryptoForm.getGenerateRadomStringButton().addActionListener(e -> {
+            try {
+                int digit = Integer.parseInt(cryptoForm.getRandomStringDigitTextField().getText().trim());
+                String randomString = RandomUtil.randomString(RandomUtil.BASE_NUMBER + RandomUtil.BASE_CHAR + RandomUtil.BASE_CHAR.toUpperCase(), digit);
+                cryptoForm.getRandomStringTextField().setText(randomString);
+                App.config.setRandomStringDigit(digit);
+                App.config.save();
+                saveCryptoHistory("随机", "RandomString", String.valueOf(digit), randomString, digit + "位随机串");
+            } catch (Exception ex) {
+                MsgUtil.errorWithDetail(App.mainFrame, "msg.generateFailed", ex.getMessage());
+                logger.error(ExceptionUtils.getStackTrace(ex));
+            }
+        });
+
+        cryptoForm.getToUpperCaseButton().addActionListener(e -> {
+            cryptoForm.getRandomStringTextField().setText(cryptoForm.getRandomStringTextField().getText().toUpperCase());
+        });
+
+        cryptoForm.getToLowerCaseButton().addActionListener(e -> {
+            cryptoForm.getRandomStringTextField().setText(cryptoForm.getRandomStringTextField().getText().toLowerCase());
+        });
+
+        cryptoForm.getGenerateRandomPasswordButton().addActionListener(e -> {
+            try {
+                int digit = Integer.parseInt(cryptoForm.getRandomPasswordDigitTextField().getText().trim());
+                String randomPassword = RandomUtil.randomString(RANDOM_BASE_STRING, digit);
+                cryptoForm.getRandomPasswordTextField().setText(randomPassword);
+                App.config.setRandomPasswordDigit(digit);
+                App.config.save();
+                saveCryptoHistory("随机", "RandomPassword", String.valueOf(digit), randomPassword, digit + "位随机密码");
+            } catch (Exception ex) {
+                MsgUtil.errorWithDetail(App.mainFrame, "msg.generateFailed", ex.getMessage());
+                logger.error(ExceptionUtils.getStackTrace(ex));
+            }
+        });
+
+        cryptoForm.getCopyUuidButton().addActionListener(e -> {
+            try {
+                ClipboardUtil.setStr(cryptoForm.getUuidTextField().getText());
+                AlertUtil.buttonInfo(cryptoForm.getCopyUuidButton(), "复制", "已复制", 2000);
+            } catch (Exception e1) {
+                logger.error(e1);
+            }
+        });
+
+        cryptoForm.getCopyRandomNumButton().addActionListener(e -> {
+            try {
+                ClipboardUtil.setStr(cryptoForm.getRandomNumTextField().getText());
+                AlertUtil.buttonInfo(cryptoForm.getCopyRandomNumButton(), "复制", "已复制", 2000);
+            } catch (Exception e1) {
+                logger.error(e1);
+            }
+        });
+
+        cryptoForm.getCopyRadomStringButton().addActionListener(e -> {
+            try {
+                ClipboardUtil.setStr(cryptoForm.getRandomStringTextField().getText());
+                AlertUtil.buttonInfo(cryptoForm.getCopyRadomStringButton(), "复制", "已复制", 2000);
+            } catch (Exception e1) {
+                logger.error(e1);
+            }
+        });
+
+        cryptoForm.getCopyRandomPasswordButton().addActionListener(e -> {
+            try {
+                ClipboardUtil.setStr(cryptoForm.getRandomPasswordTextField().getText());
+                AlertUtil.buttonInfo(cryptoForm.getCopyRandomPasswordButton(), "复制", "已复制", 2000);
+            } catch (Exception e1) {
+                logger.error(e1);
+            }
+        });
+
+        // 生成一对密钥
+        cryptoForm.getAsymKeyGenerateButton().addActionListener(e -> {
+            try {
+                String asymType = (String) cryptoForm.getAsymComboBox().getSelectedItem();
+                String privateKeyStr = "";
+                String publicKeyStr = "";
+                if ("RSA".equals(asymType)) {
+                    KeyPair pair = SecureUtil.generateKeyPair("RSA");
+                    privateKeyStr = Base64.encode(pair.getPrivate().getEncoded());
+                    publicKeyStr = Base64.encode(pair.getPublic().getEncoded());
+                } else if ("DSA".equals(asymType)) {
+                    KeyPair pair = SecureUtil.generateKeyPair("DSA");
+                    privateKeyStr = Base64.encode(pair.getPrivate().getEncoded());
+                    publicKeyStr = Base64.encode(pair.getPublic().getEncoded());
+                } else if ("SM2".equals(asymType)) {
+                    SM2 sm2 = SmUtil.sm2();
+                    privateKeyStr = sm2.getPrivateKeyBase64();
+                    publicKeyStr = sm2.getPublicKeyBase64();
+                }
+                cryptoForm.getAsymPubKeyTextArea().setText(publicKeyStr);
+                cryptoForm.getAsymPubKeyTextArea().setCaretPosition(0);
+                cryptoForm.getAsymPrivateKeyTextArea().setText(privateKeyStr);
+                cryptoForm.getAsymPrivateKeyTextArea().setCaretPosition(0);
+            } catch (Exception ex) {
+                MsgUtil.errorWithDetail(App.mainFrame, "msg.generateFailed", ex.getMessage());
+                logger.error(ExceptionUtils.getStackTrace(ex));
+            }
+        });
+
+        // 使用公钥加密
+        cryptoForm.getAsymEncryptWithPubKeyButton().addActionListener(e -> {
+            try {
+                String asymType = (String) cryptoForm.getAsymComboBox().getSelectedItem();
+                String publicKeyStr = cryptoForm.getAsymPubKeyTextArea().getText();
+                String toEncryptStr = cryptoForm.getAsymLeftTextArea().getText();
+                String encryptStr = "";
+                if ("RSA".equals(asymType)) {
+                    RSA rsa = new RSA(null, publicKeyStr);
+                    encryptStr = Base64.encode(rsa.encrypt(StrUtil.bytes(toEncryptStr, CharsetUtil.CHARSET_UTF_8), KeyType.PublicKey));
+                } else if ("SM2".equals(asymType)) {
+                    SM2 sm2 = SmUtil.sm2(null, publicKeyStr);
+                    encryptStr = Base64.encode(sm2.encrypt(StrUtil.bytes(toEncryptStr, CharsetUtil.CHARSET_UTF_8), KeyType.PublicKey));
+                }
+
+                cryptoForm.getAsymRightTextArea().setText(encryptStr);
+                cryptoForm.getAsymRightTextArea().setCaretPosition(0);
+                saveCryptoHistory("非对称加密", "AsymEncryptPub", toEncryptStr, encryptStr, asymType + " 公钥加密");
+            } catch (Exception ex) {
+                MsgUtil.errorWithDetail(App.mainFrame, "msg.encryptFailed", ex.getMessage());
+                logger.error(ExceptionUtils.getStackTrace(ex));
+            }
+        });
+
+        // 使用私钥解密
+        cryptoForm.getAsymDecryptWithPrivateKeyButton().addActionListener(e -> {
+            try {
+                String asymType = (String) cryptoForm.getAsymComboBox().getSelectedItem();
+                String privateKeyStr = cryptoForm.getAsymPrivateKeyTextArea().getText();
+                String toDecryptStr = cryptoForm.getAsymRightTextArea().getText();
+                String decryptStr = "";
+                if ("RSA".equals(asymType)) {
+                    RSA rsa = new RSA(privateKeyStr, null);
+                    decryptStr = StrUtil.str(rsa.decrypt(Base64.decode(toDecryptStr), KeyType.PrivateKey), CharsetUtil.CHARSET_UTF_8);
+                } else if ("SM2".equals(asymType)) {
+                    SM2 sm2 = SmUtil.sm2(privateKeyStr, null);
+                    decryptStr = StrUtil.str(sm2.decrypt(Base64.decode(toDecryptStr), KeyType.PrivateKey), CharsetUtil.CHARSET_UTF_8);
+                }
+
+                cryptoForm.getAsymLeftTextArea().setText(decryptStr);
+                cryptoForm.getAsymLeftTextArea().setCaretPosition(0);
+                saveCryptoHistory("非对称加密", "AsymDecryptPri", toDecryptStr, decryptStr, asymType + " 私钥解密");
+            } catch (Exception ex) {
+                MsgUtil.errorWithDetail(App.mainFrame, "msg.decryptFailed", ex.getMessage());
+                logger.error(ExceptionUtils.getStackTrace(ex));
+            }
+        });
+
+        // 使用私钥加密
+        cryptoForm.getAsymEncryptWithPrivateKeyButton().addActionListener(e -> {
+            try {
+                String asymType = (String) cryptoForm.getAsymComboBox().getSelectedItem();
+                String privateKeyStr = cryptoForm.getAsymPrivateKeyTextArea().getText();
+                String toEncryptStr = cryptoForm.getAsymLeftTextArea().getText();
+                String encryptStr = "";
+                if ("RSA".equals(asymType)) {
+                    RSA rsa = new RSA(privateKeyStr, null);
+                    encryptStr = Base64.encode(rsa.encrypt(StrUtil.bytes(toEncryptStr, CharsetUtil.CHARSET_UTF_8), KeyType.PrivateKey));
+                } else if ("SM2".equals(asymType)) {
+                    SM2 sm2 = SmUtil.sm2(privateKeyStr, null);
+                    encryptStr = Base64.encode(sm2.encrypt(StrUtil.bytes(toEncryptStr, CharsetUtil.CHARSET_UTF_8), KeyType.PrivateKey));
+                }
+
+                cryptoForm.getAsymRightTextArea().setText(encryptStr);
+                cryptoForm.getAsymRightTextArea().setCaretPosition(0);
+            } catch (Exception ex) {
+                MsgUtil.errorWithDetail(App.mainFrame, "msg.encryptFailed", ex.getMessage());
+                logger.error(ExceptionUtils.getStackTrace(ex));
+            }
+        });
+
+        // 使用公钥解密
+        cryptoForm.getAsymDecryptWithPubKeyButton().addActionListener(e -> {
+            try {
+                String asymType = (String) cryptoForm.getAsymComboBox().getSelectedItem();
+                String publicKeyStr = cryptoForm.getAsymPubKeyTextArea().getText();
+                String toDecryptStr = cryptoForm.getAsymRightTextArea().getText();
+                String decryptStr = "";
+                if ("RSA".equals(asymType)) {
+                    RSA rsa = new RSA(null, publicKeyStr);
+                    decryptStr = StrUtil.str(rsa.decrypt(Base64.decode(toDecryptStr), KeyType.PublicKey), CharsetUtil.CHARSET_UTF_8);
+                } else if ("SM2".equals(asymType)) {
+                    SM2 sm2 = SmUtil.sm2(null, publicKeyStr);
+                    decryptStr = StrUtil.str(sm2.decrypt(Base64.decode(toDecryptStr), KeyType.PublicKey), CharsetUtil.CHARSET_UTF_8);
+                }
+
+                cryptoForm.getAsymLeftTextArea().setText(decryptStr);
+                cryptoForm.getAsymLeftTextArea().setCaretPosition(0);
+            } catch (Exception ex) {
+                MsgUtil.errorWithDetail(App.mainFrame, "msg.decryptFailed", ex.getMessage());
+                logger.error(ExceptionUtils.getStackTrace(ex));
+            }
+        });
+
+        // 使用私钥签名（SM2 国密）
+        cryptoForm.getAsymSignButton().addActionListener(e -> {
+            try {
+                String asymType = (String) cryptoForm.getAsymComboBox().getSelectedItem();
+                if (!"SM2".equals(asymType)) {
+                    MsgUtil.info(App.mainFrame, "msg.signSm2Only");
+                    return;
+                }
+                String privateKeyStr = cryptoForm.getAsymPrivateKeyTextArea().getText();
+                String content = cryptoForm.getAsymLeftTextArea().getText();
+                SM2 sm2 = SmUtil.sm2(privateKeyStr, null);
+                String signStr = Base64.encode(sm2.sign(StrUtil.bytes(content, CharsetUtil.CHARSET_UTF_8)));
+                cryptoForm.getAsymRightTextArea().setText(signStr);
+                cryptoForm.getAsymRightTextArea().setCaretPosition(0);
+            } catch (Exception ex) {
+                MsgUtil.errorWithDetail(App.mainFrame, "msg.signFailed", ex.getMessage());
+                logger.error(ExceptionUtils.getStackTrace(ex));
+            }
+        });
+
+        // 使用公钥验签（SM2 国密）
+        cryptoForm.getAsymVerifyButton().addActionListener(e -> {
+            try {
+                String asymType = (String) cryptoForm.getAsymComboBox().getSelectedItem();
+                if (!"SM2".equals(asymType)) {
+                    MsgUtil.info(App.mainFrame, "msg.verifySm2Only");
+                    return;
+                }
+                String publicKeyStr = cryptoForm.getAsymPubKeyTextArea().getText();
+                String content = cryptoForm.getAsymLeftTextArea().getText();
+                String signStr = cryptoForm.getAsymRightTextArea().getText();
+                SM2 sm2 = SmUtil.sm2(null, publicKeyStr);
+                boolean verified = sm2.verify(StrUtil.bytes(content, CharsetUtil.CHARSET_UTF_8), Base64.decode(signStr));
+                if (verified) {
+                    MsgUtil.success(App.mainFrame, "msg.verifySuccess");
+                } else {
+                    MsgUtil.error(App.mainFrame, "msg.verifyFailedResult");
+                }
+            } catch (Exception ex) {
+                MsgUtil.errorWithDetail(App.mainFrame, "msg.verifyFailed", ex.getMessage());
+                logger.error(ExceptionUtils.getStackTrace(ex));
+            }
+        });
+
+        // Base64加密
+        cryptoForm.getBase64EncodeButton().addActionListener(e -> {
+            try {
+                String type = (String) cryptoForm.getBase64ComboBox().getSelectedItem();
+                String text = cryptoForm.getBase64LeftTextArea().getText();
+                String encode = "";
+                if ("Base64".equals(type)) {
+                    encode = Base64.encode(text);
+                } else if ("Base32".equals(type)) {
+                    encode = Base32.encode(text);
+                }
+
+                cryptoForm.getBase64RightTextArea().setText(encode);
+                cryptoForm.getBase64RightTextArea().setCaretPosition(0);
+                saveCryptoHistory("Base64", "Base64Encode", text, encode, type + " 编码");
+            } catch (Exception ex) {
+                MsgUtil.errorWithDetail(App.mainFrame, "msg.encryptFailed", ex.getMessage());
+                logger.error(ExceptionUtils.getStackTrace(ex));
+            }
+        });
+
+        // Base64解密
+        cryptoForm.getBase64DecodeButton().addActionListener(e -> {
+            try {
+                String type = (String) cryptoForm.getBase64ComboBox().getSelectedItem();
+                String text = cryptoForm.getBase64RightTextArea().getText();
+                String decode = "";
+                if ("Base64".equals(type)) {
+                    decode = Base64.decodeStr(text);
+                } else if ("Base32".equals(type)) {
+                    decode = Base32.decodeStr(text);
+                }
+
+                cryptoForm.getBase64LeftTextArea().setText(decode);
+                cryptoForm.getBase64LeftTextArea().setCaretPosition(0);
+                saveCryptoHistory("Base64", "Base64Decode", text, decode, type + " 解码");
+            } catch (Exception ex) {
+                MsgUtil.errorWithDetail(App.mainFrame, "msg.decryptFailed", ex.getMessage());
+                logger.error(ExceptionUtils.getStackTrace(ex));
+            }
+        });
+    }
+
+    private static void saveCryptoHistory(String tab, String operation, String input, String output, String summary) {
+        if (StringUtils.isAllBlank(input, output)) {
+            return;
+        }
+        FuncHistoryUtil.save(FuncConsts.CRYPTO, summary, input, output, tab + "|" + operation);
+        if (CryptoForm.getHistoryPanel() != null) {
+            CryptoForm.getHistoryPanel().refreshListIfVisible();
+        }
+    }
+}

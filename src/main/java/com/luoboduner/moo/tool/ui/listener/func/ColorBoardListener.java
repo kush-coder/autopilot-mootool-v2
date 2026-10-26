@@ -1,0 +1,212 @@
+package com.luoboduner.moo.tool.ui.listener.func;
+
+import cn.hutool.core.swing.clipboard.ClipboardUtil;
+import cn.hutool.log.Log;
+import cn.hutool.log.LogFactory;
+import com.luoboduner.moo.tool.App;
+import com.luoboduner.moo.tool.ui.UiConsts;
+import com.luoboduner.moo.tool.ui.component.FlatColorPipette;
+import com.luoboduner.moo.tool.ui.dialog.CommonTipsDialog;
+import com.luoboduner.moo.tool.ui.dialog.FavoriteColorDialog;
+import com.luoboduner.moo.tool.ui.form.func.ColorBoardForm;
+import com.luoboduner.moo.tool.ui.frame.FavoriteColorFrame;
+import com.luoboduner.moo.tool.util.AlertUtil;
+import com.luoboduner.moo.tool.util.I18n;
+import com.luoboduner.moo.tool.util.ColorUtil;
+import com.luoboduner.moo.tool.util.MsgUtil;
+
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.*;
+
+/**
+ * <pre>
+ * ColorBoardListener
+ * </pre>
+ *
+ * @author <a href="https://github.com/rememberber">RememBerBer</a>
+ * @since 2019/11/25.
+ */
+public class ColorBoardListener {
+
+    private static final Log logger = LogFactory.get();
+
+    public static void addListeners() {
+        ColorBoardForm colorBoardForm = ColorBoardForm.getInstance();
+        colorBoardForm.getPickerButton().addActionListener(e -> {
+//            GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
+//            GraphicsDevice gd = ge.getDefaultScreenDevice();
+//            if (!gd.isWindowTranslucencySupported(TRANSLUCENT)) {
+//                MsgUtil.info(colorBoardForm.getColorBoardPanel(), "msg.systemEnvUnsupported");
+//                return;
+//            }
+//            App.mainFrame.setVisible(false);
+//            ColorPickerFrame.showPicker();
+
+            // show pipette color picker
+            Window window = SwingUtilities.windowForComponent((JComponent) e.getSource());
+            try {
+                App.mainFrame.setExtendedState(Frame.ICONIFIED);
+                FlatColorPipette.pick(window, true,
+                        color -> {
+//                            if (color != null) {
+//                                ColorBoardForm.setSelectedColor(color);
+//                            }
+                        },
+                        color -> {
+                            if (color != null) {
+                                String before = ColorUtil.toHex(ColorBoardForm.getSelectedColor());
+                                ColorBoardForm.setSelectedColor(color);
+                                ColorBoardForm.saveColorHistory(I18n.get("colorBoard.op.picker"), before, ColorUtil.toHex(color));
+                            }
+                            App.mainFrame.setExtendedState(Frame.NORMAL);
+                        });
+            } catch (AWTException | UnsupportedOperationException ex) {
+                logger.error(ex);
+                MsgUtil.info(colorBoardForm.getColorBoardPanel(), "msg.systemEnvUnsupported");
+            }
+        });
+        colorBoardForm.getCopyButton().addActionListener(e -> {
+            try {
+                ClipboardUtil.setStr(colorBoardForm.getColorCodeTextField().getText());
+                AlertUtil.buttonInfo(colorBoardForm.getCopyButton(), I18n.get("common.copy"),
+                        I18n.get("common.copied"), 2000);
+            } catch (Exception e1) {
+                logger.error(e1);
+            }
+        });
+        colorBoardForm.getCodeTypeComboBox().addItemListener(e -> {
+            if (e.getStateChange() == ItemEvent.SELECTED) {
+                String code = colorBoardForm.getColorCodeTextField().getText();
+                ColorBoardForm.setColorCode(code);
+                App.config.setColorCodeType(e.getItem().toString());
+                App.config.save();
+            }
+        });
+        colorBoardForm.getThemeComboBox().addItemListener(e -> {
+            if (e.getStateChange() == ItemEvent.SELECTED) {
+                ColorBoardForm.fillColorBlocks();
+                App.config.setColorTheme(e.getItem().toString());
+                App.config.save();
+            }
+        });
+        colorBoardForm.getFavoriteBookButton().addActionListener(e -> FavoriteColorFrame.showWindow());
+        colorBoardForm.getFavoriteButton().addActionListener(e -> {
+            FavoriteColorDialog favoriteColorDialog = new FavoriteColorDialog();
+            favoriteColorDialog.pack();
+            favoriteColorDialog.init(ColorBoardForm.getSelectedColor());
+            favoriteColorDialog.setVisible(true);
+        });
+        colorBoardForm.getColorCodeTextField().addKeyListener(new KeyListener() {
+            @Override
+            public void keyTyped(KeyEvent e) {
+
+            }
+
+            @Override
+            public void keyPressed(KeyEvent e) {
+                if (e.getKeyCode() == KeyEvent.VK_ENTER) {
+                    String before = ColorUtil.toHex(ColorBoardForm.getSelectedColor());
+                    Color color = ColorUtil.fromHex(colorBoardForm.getColorCodeTextField().getText());
+                    ColorBoardForm.setSelectedColor(color);
+                    ColorBoardForm.saveColorHistory(I18n.get("colorBoard.op.inputColor"), before, ColorUtil.toHex(color));
+                }
+            }
+
+            @Override
+            public void keyReleased(KeyEvent e) {
+
+            }
+        });
+        colorBoardForm.getAboutLabel().addMouseListener(new MouseAdapter() {
+            @Override
+            public void mousePressed(MouseEvent e) {
+                CommonTipsDialog dialog = new CommonTipsDialog();
+
+                dialog.setTitle(I18n.get("colorBoard.about.title"));
+                dialog.setHtmlText(I18n.get("colorBoard.about.html"));
+                dialog.pack();
+                dialog.setVisible(true);
+
+                super.mousePressed(e);
+            }
+
+            @Override
+            public void mouseEntered(MouseEvent e) {
+                JLabel label = (JLabel) e.getComponent();
+                label.setCursor(new Cursor(Cursor.HAND_CURSOR));
+                label.setIcon(UiConsts.HELP_FOCUSED_ICON);
+                super.mouseEntered(e);
+            }
+
+            @Override
+            public void mouseExited(MouseEvent e) {
+                JLabel label = (JLabel) e.getComponent();
+                label.setIcon(UiConsts.HELP_ICON);
+                super.mouseExited(e);
+            }
+        });
+
+        colorBoardForm.getChooseColorButton().addActionListener(e -> {
+            Color before = ColorBoardForm.getSelectedColor();
+            Color color = JColorChooser.showDialog(colorBoardForm.getColorBoardPanel(),
+                    I18n.get("colorBoard.op.chooseColor"), before);
+            if (color != null) {
+                ColorBoardForm.setSelectedColor(color);
+                ColorBoardForm.saveColorHistory(I18n.get("colorBoard.op.chooseColor"), ColorUtil.toHex(before), ColorUtil.toHex(color));
+            }
+        });
+
+        colorBoardForm.getSecondaryColorPanel().addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                Color color = JColorChooser.showDialog(colorBoardForm.getColorBoardPanel(),
+                        I18n.get("colorBoard.chooseCompareColor"), ColorBoardForm.getSecondaryColor());
+                if (color != null) {
+                    ColorBoardForm.setSecondaryColor(color);
+                }
+            }
+
+            @Override
+            public void mouseEntered(MouseEvent e) {
+                colorBoardForm.getSecondaryColorPanel().setBorder(BorderFactory.createEtchedBorder());
+            }
+
+            @Override
+            public void mouseExited(MouseEvent e) {
+                colorBoardForm.getSecondaryColorPanel().setBorder(BorderFactory.createEmptyBorder());
+            }
+        });
+
+        colorBoardForm.getSwapColorButton().addActionListener(e -> {
+            String primary = ColorUtil.toHex(ColorBoardForm.getSelectedColor());
+            String secondary = ColorUtil.toHex(ColorBoardForm.getSecondaryColor());
+            ColorBoardForm.swapColors();
+            ColorBoardForm.saveColorHistory(I18n.get("colorBoard.op.swapColor"), primary + " / " + secondary,
+                    ColorUtil.toHex(ColorBoardForm.getSelectedColor()) + " / " + ColorUtil.toHex(ColorBoardForm.getSecondaryColor()));
+        });
+
+        colorBoardForm.getInvertColorButton().addActionListener(e ->
+                applyColorOperation(I18n.get("colorBoard.op.invert"), ColorUtil.invert(ColorBoardForm.getSelectedColor())));
+
+        colorBoardForm.getIntersectColorButton().addActionListener(e ->
+                applyColorOperation(I18n.get("colorBoard.op.intersect"), ColorUtil.intersect(ColorBoardForm.getSelectedColor(), ColorBoardForm.getSecondaryColor())));
+
+        colorBoardForm.getAddColorButton().addActionListener(e ->
+                applyColorOperation(I18n.get("colorBoard.op.add"), ColorUtil.add(ColorBoardForm.getSelectedColor(), ColorBoardForm.getSecondaryColor())));
+
+        colorBoardForm.getDiffColorButton().addActionListener(e ->
+                applyColorOperation(I18n.get("colorBoard.op.difference"), ColorUtil.difference(ColorBoardForm.getSelectedColor(), ColorBoardForm.getSecondaryColor())));
+
+        colorBoardForm.getAverageColorButton().addActionListener(e ->
+                applyColorOperation(I18n.get("colorBoard.op.average"), ColorUtil.average(ColorBoardForm.getSelectedColor(), ColorBoardForm.getSecondaryColor())));
+    }
+
+    private static void applyColorOperation(String operation, Color resultColor) {
+        String before = ColorUtil.toHex(ColorBoardForm.getSelectedColor());
+        String secondary = ColorUtil.toHex(ColorBoardForm.getSecondaryColor());
+        ColorBoardForm.setSelectedColor(resultColor);
+        ColorBoardForm.saveColorHistory(operation, before,
+                ColorUtil.toHex(resultColor) + " " + I18n.format("colorBoard.op.compareColorSuffix", secondary));
+    }
+}

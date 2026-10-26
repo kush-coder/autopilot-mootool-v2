@@ -1,0 +1,260 @@
+package com.rememberber.mootool.next.compose.domain
+
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertTrue
+import kotlin.test.assertFailsWith
+
+private val t = JsonTranslator { key, params ->
+    var message = when (key) {
+        "json.valid.idle" -> "idle"
+        "json.valid.ok" -> "valid ${params["type"]}"
+        "json.valid.summary" -> "valid ${params["type"]} · ${params["nodes"]} nodes · depth ${params["depth"]}"
+        "json.valid.error" -> "invalid"
+        "json.error.empty" -> "empty"
+        "json.error.notString" -> "not string"
+        "json.error.duplicateKeys" -> "duplicates ${params["paths"]}"
+        "json.error.objectRequired" -> "object required"
+        "json.error.emptyJavaBean" -> "empty bean"
+        "json.error.noJavaFields" -> "no fields"
+        "json.error.emptyXml" -> "empty xml"
+        "json.error.emptyPath" -> "empty path"
+        "json.error.invalidPath" -> "invalid path ${params["reason"]}"
+        else -> key
+    }
+    params.forEach { (name, value) -> message = message.replace("{$name}", value) }
+    message
+}
+
+class JsonEngineTest {
+    @Test
+    fun escapesAndRestoresJsonStrings() {
+        val input = "line one\nline two"
+        assertEquals(input, JsonEngine.unescapeJsonString(JsonEngine.escapeJsonString(input), t))
+    }
+
+    @Test
+    fun escapesJavaStringAndUnescapesJsonText() {
+        assertEquals("tab\\there\\\"quote", JsonEngine.escapeJavaString("tab\there\"quote"))
+        assertEquals("\n", JsonEngine.unescapeJsonText("\\n"))
+    }
+
+    @Test
+    fun formatsAndCompressesWithoutChangingValue() {
+        val input = """{"name":"MooTool","items":[1,2]}"""
+        assertEquals("{\n  \"name\": \"MooTool\",\n  \"items\": [\n    1,\n    2\n  ]\n}", JsonEngine.format(input, t, 2))
+        assertEquals(input, JsonEngine.compress(JsonEngine.format(input, t), t))
+    }
+
+    @Test
+    fun preservesLargeIntegerLiteral() {
+        val input = """{"id":9007199254740993}"""
+        assertTrue(JsonEngine.format(input, t).contains("9007199254740993"))
+        assertEquals(input, JsonEngine.compress(input, t).replace(" ", ""))
+    }
+
+    @Test
+    fun reportsIdleValidAndInvalid() {
+        assertEquals(JsonStatus.Kind.Idle, JsonEngine.validate("", t).kind)
+        assertEquals("valid Array · 1 nodes · depth 0", JsonEngine.validate("[]", t).message)
+        assertEquals(JsonStatus.Kind.Error, JsonEngine.validate("{", t).kind)
+    }
+
+    /** 对照 next-tauri `jsonTools.test.ts` `validates input and reports structural metrics`。 */
+    @Test
+    fun analyzeStructure_matchesTauriFixture() {
+        val analysis = JsonEngine.analyzeStructure("""{"items":[1,2]}""", t)
+        assertEquals(JsonAnalysis("Object", 4, 1, 2, 15), analysis)
+        assertEquals(
+            "valid Object · 4 nodes · depth 2",
+            JsonEngine.validate("""{"items":[1,2]}""", t).message,
+        )
+    }
+
+    @Test
+    fun inferJsonSchema_emitsDraft7ObjectWithRequiredKeys() {
+        val schema = JsonEngine.inferJsonSchema("""{"name":"Moo","count":2}""", t)
+        assertTrue(schema.contains("draft-07"), schema)
+        assertTrue(schema.contains("object"), schema)
+        assertTrue(schema.contains("\"name\""))
+        assertTrue(schema.contains("\"count\""))
+        assertTrue(schema.contains("required"))
+        assertTrue(schema.contains("string"))
+        assertTrue(schema.contains("integer") || schema.contains("number"))
+    }
+
+    @Test
+    fun inferJsonSchema_rejectsInvalidJson() {
+        assertFailsWith<JsonException> {
+            JsonEngine.inferJsonSchema("{", t)
+        }
+    }
+
+    @Test
+    fun formatAdvancedRejectsDuplicateKeysInRawText() {
+        val input = """{"alpha":1,"alpha":2}"""
+        assertFailsWith<JsonException> {
+            JsonEngine.formatAdvanced(input, t, JsonFormatOptions(checkDuplicateKeys = true))
+        }
+    }
+
+    @Test
+    fun formatsThreeMiBStringPayloadWithoutLoss() {
+        val targetBytes = 3 * 1024 * 1024
+        val payload = buildString {
+            val overhead = """{"payload":""}""".toByteArray().size
+            repeat(targetBytes - overhead) { append('z') }
+        }
+        val input = """{"payload":"$payload"}"""
+        assertTrue(input.toByteArray(Charsets.UTF_8).size >= targetBytes)
+        val formatted = JsonEngine.format(input, t, 2)
+        assertTrue(formatted.contains(payload))
+    }
+
+    @Test
+    fun sortsKeysAndDetectsDuplicates() {
+        val input = """{"z":{"B":1,"a":2},"A":0}"""
+        assertEquals(
+            "{\n  \"A\": 0,\n  \"z\": {\n    \"a\": 2,\n    \"B\": 1\n  }\n}",
+            JsonEngine.formatAdvanced(input, t, JsonFormatOptions(2, sortKeys = true, ignoreCase = true, checkDuplicateKeys = true))
+        )
+        assertEquals(listOf("$.A", "$.child.x"), JsonEngine.findDuplicateKeys("""{"a":1,"A":2,"child":{"x":1,"x":2}}""", true))
+    }
+
+    @Test
+    fun convertsJsonAndXml() {
+        val xml = JsonEngine.jsonToXml("""{"name":"MooTool","enabled":true}""", t)
+        assertTrue(xml.contains("<name>MooTool</name>"))
+        val json = JsonEngine.xmlToJson("<tool><name>MooTool</name><enabled>true</enabled></tool>", t)
+        assertTrue(json.contains("\"name\""))
+        assertTrue(json.contains("MooTool"))
+    }
+
+    @Test
+    fun queriesAndEnumeratesPaths() {
+        val input = """{"store":{"books":[{"title":"One"},{"title":"Two"}]}}"""
+        assertEquals("\"Two\"", JsonEngine.queryPath(input, "$.store.books[1].title", t))
+        val titles = JsonEngine.queryPath(input, "$.store.books[*].title", t)
+        assertTrue(titles.contains("One"))
+        assertTrue(JsonEngine.listPaths(input, t).map { it.path }.contains("$.store.books[0].title"))
+    }
+
+    @Test
+    fun queryPathSupportsFilterSliceUnionEscapeAndRejectsScripts() {
+        val catalog = """{"books":[{"title":"Cheap","price":8},{"title":"Dear","price":12}],"foo.bar":1}"""
+        val cheap = JsonEngine.queryPath(catalog, "$.books[?(@.price < 10)]", t)
+        assertTrue(cheap.contains("Cheap"))
+        assertTrue(!cheap.contains("Dear"))
+        assertEquals("[]", JsonEngine.queryPath(catalog, "$.books[?(@.price < 1)]", t).replace(" ", "").replace("\n", ""))
+        val sliced = JsonEngine.queryPath(catalog, "$.books[0:1]", t)
+        assertTrue(sliced.contains("Cheap"))
+        assertTrue(!sliced.contains("Dear"))
+        val union = JsonEngine.queryPath(catalog, "$.books[0,1].title", t)
+        assertTrue(union.contains("Cheap"))
+        assertTrue(union.contains("Dear"))
+        val recursive = JsonEngine.queryPath(catalog, "$..title", t)
+        assertTrue(recursive.contains("Cheap"))
+        assertTrue(recursive.contains("Dear"))
+        assertEquals("1", JsonEngine.queryPath(catalog, "$['foo.bar']", t).trim())
+        assertEquals("[]", JsonEngine.queryPath("[]", "$", t).replace(" ", "").replace("\n", ""))
+        val invalid = runCatching { JsonEngine.queryPath(catalog, "$[?(function(){return true})]", t) }
+        assertTrue(invalid.isFailure)
+        assertTrue(invalid.exceptionOrNull() is JsonException)
+    }
+
+    @Test
+    fun swapsKeysAndConvertsJavaBean() {
+        val swapped = JsonEngine.swapKeysAndValues("""{"first":"one","second":2}""", t)
+        assertTrue(swapped.contains("\"one\""))
+        val bean = JsonEngine.javaBeanToJson("public class User { private String name; private int age; private List<String> tags; }", t)
+        assertTrue(bean.contains("\"name\""))
+        val source = JsonEngine.jsonToJavaBean("""{"name":"MooTool","profile":{"active":true}}""", t, "ToolConfig")
+        assertTrue(source.contains("public class ToolConfig"))
+        assertTrue(source.contains("private Profile profile;"))
+        assertTrue(source.contains("public static class Profile"))
+    }
+
+    /** 对照 Electron `next/electron/mcp/server.test.ts` `spaces: 0` 紧凑输出。 */
+    @Test
+    fun formatAdvancedSpacesZeroMinifiesLikeElectronMcp() {
+        assertEquals(
+            """{"a":1,"b":2}""",
+            JsonEngine.formatAdvanced(
+                """{"b":2,"a":1}""",
+                t,
+                JsonFormatOptions(spaces = 0, sortKeys = true, checkDuplicateKeys = true),
+            ),
+        )
+        assertEquals(
+            """{"moo":true}""",
+            JsonEngine.formatAdvanced(
+                """{"moo":true}""",
+                t,
+                JsonFormatOptions(spaces = 0, checkDuplicateKeys = true),
+            ),
+        )
+    }
+
+    /** 对照 Electron `next/src/features/json/jsonTools.test.ts`（sourceCommit 以仓库为准）。 */
+    @Test
+    fun mirrorsElectronJsonToolsVitestBasics() {
+        val input = """{"name":"MooTool","items":[1,2]}"""
+        assertEquals(
+            "{\n  \"name\": \"MooTool\",\n  \"items\": [\n    1,\n    2\n  ]\n}",
+            JsonEngine.format(input, t, 2),
+        )
+        assertEquals(input, JsonEngine.compress(JsonEngine.format(input, t), t))
+
+        val beanJson = JsonEngine.javaBeanToJson(
+            "public class User { private String name; private int age; private List<String> tags; }",
+            t,
+        )
+        assertTrue(beanJson.contains("\"name\""))
+        assertTrue(beanJson.contains("\"age\""))
+        assertTrue(beanJson.contains("\"tags\""))
+        assertTrue(beanJson.contains("0"))
+        assertTrue(beanJson.contains("\"tags\" : [") || beanJson.contains("\"tags\": []"))
+
+        val swapped = JsonEngine.swapKeysAndValues("""{"first":"one","second":2}""", t)
+        assertTrue(swapped.contains("\"one\""))
+        assertTrue(swapped.contains("first"))
+        assertTrue(swapped.contains("second"))
+
+        val xml = JsonEngine.jsonToXml("""{"name":"MooTool","enabled":true}""", t)
+        assertTrue(xml.contains("<name>MooTool</name>"))
+        val roundTrip = JsonEngine.xmlToJson(
+            "<tool><name>MooTool</name><enabled>true</enabled></tool>",
+            t,
+        )
+        assertTrue(roundTrip.contains("MooTool"))
+        assertTrue(roundTrip.contains("true"))
+
+        assertEquals("\"Two\"", JsonEngine.queryPath(
+            """{"store":{"books":[{"title":"One"},{"title":"Two"}]}}""",
+            "$.store.books[1].title",
+            t,
+        ))
+    }
+
+    @Test
+    fun queryPathEmptyPathMatchesElectronError() {
+        assertFailsWith<JsonException> {
+            JsonEngine.queryPath("{}", "", t)
+        }
+    }
+
+    /** 对照 Electron `jsonTools.test.ts` `queries and enumerates JSON paths`。 */
+    @Test
+    fun listPathsMatchesElectronJsonToolsEnumerate() {
+        val input = """{"store":{"books":[{"title":"One"},{"title":"Two"}]}}"""
+        val paths = JsonEngine.listPaths(input, t).map { it.path }
+        assertTrue(paths.contains("$.store.books[0].title"))
+        assertTrue(paths.contains("$.store.books[1].title"))
+        val firstTitle = JsonEngine.listPaths(input, t).first { it.path == "$.store.books[0].title" }
+        assertEquals("title", firstTitle.label)
+        assertEquals("\"One\"", firstTitle.preview)
+        val secondTitle = JsonEngine.listPaths(input, t).first { it.path == "$.store.books[1].title" }
+        assertEquals("title", secondTitle.label)
+        assertEquals("\"Two\"", secondTitle.preview)
+    }
+}

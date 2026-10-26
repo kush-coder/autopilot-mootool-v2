@@ -1,0 +1,391 @@
+{
+  "currentVersion": "v1.8.7",
+  "versionIndex": {
+    "v0.0.0": "0",
+    "v1.0.0": "1",
+    "v1.1.0": "2",
+    "v1.2.0": "3",
+    "v1.3.0": "4",
+    "v1.3.1": "5",
+    "v1.3.2": "6",
+    "v1.3.3": "7",
+    "v1.3.4": "8",
+    "v1.3.5": "9",
+    "v1.3.6": "10",
+    "v1.4.0": "11",
+    "v1.4.1": "12",
+    "v1.4.2": "13",
+    "v1.4.3": "14",
+    "v1.4.4": "15",
+    "v1.4.5": "16",
+    "v1.4.6": "17",
+    "v1.4.7": "18",
+    "v1.4.8": "19",
+    "v1.5.0": "20",
+    "v1.5.1": "21",
+    "v1.5.2": "22",
+    "v1.5.3": "23",
+    "v1.5.4": "24",
+    "v1.5.5": "25",
+    "v1.5.6": "26",
+    "v1.5.7": "27",
+    "v1.5.8": "28",
+    "v1.5.9": "29",
+    "v1.6.0": "30",
+    "v1.6.1": "31",
+    "v1.6.2": "32",
+    "v1.6.3": "33",
+    "v1.6.4": "34",
+    "v1.6.5": "35",
+    "v1.6.6": "36",
+    "v1.6.7": "37",
+    "v1.6.8": "38",
+    "v1.6.9": "39",
+    "v1.7.0": "40",
+    "v1.7.1": "41",
+    "v1.7.2": "42",
+    "v1.7.3": "43",
+    "v1.7.4": "44",
+    "v1.7.5": "45",
+    "v1.7.6": "46",
+    "v1.7.7": "47",
+    "v1.7.8": "48",
+    "v1.7.9": "49",
+    "v1.8.0": "50",
+    "v1.8.1": "51",
+    "v1.8.2": "52",
+    "v1.8.3": "53",
+    "v1.8.4": "54",
+    "v1.8.5": "55",
+    "v1.8.6": "56",
+    "v1.8.7": "57"
+  },
+  "versionDetailList": [
+    {
+      "version": "v0.0.0",
+      "title": "基础版本",
+      "log": "基础版本\n"
+    },
+    {
+      "version": "v1.0.0",
+      "title": "第一个版本",
+      "log": "第一个版本\n"
+    },
+    {
+      "version": "v1.1.0",
+      "title": "一波体验和细节优化",
+      "log": "● Mac OS的一些特殊处理\n● 设置界面样式微调\n● 支持操作习惯（菜单栏位置）设置\n● 优化发送http请求按钮图标\n● 时间戳转换增加按回车键快捷操作\n● 增加随手记、json、host新建快捷键(Ctrl+N)\n● 增加快捷键提示\n● 随手记和Json格式化tab增加列表显示/隐藏按钮\n● 随机串生成增加位数记忆\n● 文件MD5增加路径记忆\n● 按ESC退出窗口时自动保存随手记的内容\n"
+    },
+    {
+      "version": "v1.2.0",
+      "title": "新增计算和网络IP相关工具",
+      "log": "● 随手记、Json格式化以及host管理增加导出功能\n● 增加计算工具模块（四则运算/进制转换/最大公约数/最小公倍数/排列组合数）\n● 增加网络/IP工具模块（ip地址转换/本机ip信息/根据域名获取ip）\n● 随手记、Json格式化和host管理支持Ctrl+D删除所选择的行\n● 编码转换支持字符串和16进制之间互转\n● 随手记和Json格式化工具的查找功能优化：新增支持区分大小写、全词匹配、正则以及替换功能\n● 界面细节微调\n"
+    },
+    {
+      "version": "v1.3.0",
+      "title": "新增调色板和取色器工具",
+      "log": "● 随机字串符生成规则优化：默认大小写混合，增加转大写和转小写按钮\n● 增加Base64/Base32加解密功能\n● 增加数据文件位置设置功能\n● 增加调色板和取色器以及颜色管理工具\n● 提高启动时界面渲染速度\n● 随手记、json格式化、host切换增加导出路径记忆\n"
+    },
+    {
+      "version": "v1.3.1",
+      "title": "新增图片助手工具",
+      "log": "● 调整随手记和json格式化操作菜单中按钮顺序\n● 优化随手记和json格式化选择和删除项目逻辑\n● 网络工具增加ping功能\n● host切换页签初始化打开卡死问题规避\n● 优化随手记和json格式化替换操作完成后默认从头部开始展示\n● 新增图片助手工具\n"
+    },
+    {
+      "version": "v1.3.2",
+      "title": "常规优化",
+      "log": "● host逻辑优化，修复某些情况下host被覆盖丢失问题\n● 修复图片助手某些情况下文件错乱的问题\n● 全局：列表支持DELETE键盘事件\n● 当前host查看效果优化\n● 图片助手：双击可以打开图片\n"
+    },
+    {
+      "version": "v1.3.3",
+      "title": "新增几套主题样式",
+      "log": "● 修复Apple M1芯片笔记本上无法运行的问题\n● 新增了几套主题样式\n"
+    },
+    {
+      "version": "v1.3.4",
+      "title": "默认自带运行环境",
+      "log": "● 修复三处启动报错\n● 调整默认log路径\n● 优化jbr下的窗口表现\n● 调整默认log路径\n● 优化窗口最大化逻辑\n● 默认自带运行环境\n"
+    },
+    {
+      "version": "v1.3.5",
+      "title": "修复会导致数据丢失的bug，调整外观",
+      "log": "● 修复会导致数据丢失的bug\n● 增加刷新dns缓存功能\n● 计算器支持输入全角字符优化\n● 调整外观\n"
+    },
+    {
+      "version": "v1.3.6",
+      "title": "优化Windows11下的表现",
+      "log": "● MacOS下窗口颜色跟随系统\n● 随手记布局调整，增加快捷文本替换功能\n● 布局、矢量图标等诸多UI细节调整，优化Windows11下的表现\n"
+    },
+    {
+      "version": "v1.4.0",
+      "title": "随手记支持代码高亮",
+      "log": "● 随手记支持代码高亮\n● 支持从Base64导入图片以及导出图片为Base64\n● 计算器支持千分位数据及表达式中包含tab制表符\n● 时间转换和计算器增加操作历史记录\n● host切换tab增加搜索和替换功能\n● 部分功能列表增加上下方向键按钮事件\n● MacOS原生菜单优化\n"
+    },
+    {
+      "version": "v1.4.1",
+      "title": "随手记增加保存对应文本的语法类型",
+      "log": "● 随手记支持超链接内容识别和点击跳转\n● json格式化和host设置支持语法高亮\n● 调整应用启动时的线程逻辑\n● 调整随手记文本域视图逻辑\n● 随手记增加保存对应文本的语法类型\n● 新增配置和数据文件导出备份功能\n● 优化浅色主题下文本域和图标的表现\n● 修复一些bug\n"
+    },
+    {
+      "version": "v1.4.2",
+      "title": "随手记增加SQL、json、java的格式化功能",
+      "log": "● 随手记增加SQL、json、java的格式化功能\n● 优化macOS和linux下host设置\n● 随手记支持设置SQL方言\n● 增加图片备份及使用网盘同步的建议\n● 字体设置列表过长，可以转移到设置对话框进行设置\n● 随手记增加已保存提示\n● 检查更新后支持下载安装文件\n"
+    },
+    {
+      "version": "v1.4.3",
+      "title": "修复删除笔记等可能引起的内存泄漏问题",
+      "log": "● 随手记：修复了重命名后无法编辑和保存的bug\n● 随手记：修复删除笔记等可能引起的内存泄漏问题\n● 随手记：支持设置颜色\n● 随手记：优化自动保存策略\n● 主题：新增OneDark、Monokai等多款主题，推荐尝试Monokai\n● 设置：增加强调色设置\n● 全局：查找和替换功能重构\n● 文本编辑器：修复快捷键删除单行变双行的bug\n"
+    },
+    {
+      "version": "v1.4.4",
+      "title": "优化批量替换性能",
+      "log": "● 随手记：修复删除所有笔记后关闭报错的问题\n● 文本编辑器：优化批量替换性能\n\n"
+    },
+    {
+      "version": "v1.4.5",
+      "title": "新增正则相关工具",
+      "log": "● 正则：新增正则匹配验证、表达式收藏、常用表达式相关功能\n● 调色板：收藏夹列表和收藏项目列表支持重命名和键盘快捷操作等\n● 随手记：优化实时保存逻辑\n\n"
+    },
+    {
+      "version": "v1.4.6",
+      "title": "新增主题，随手记新增更多快捷替换功能，修复二维码生成器的bug",
+      "log": "● 随手记：新增下划线和驼峰互转，科学计数法和普通数字互转，千分位和普通数字互转，去掉空行等快捷替换功能；ctrl+s时记录log，避免文件内容丢失\n● 二维码：修复某些情况下无法生成二维码的问题\n● 主题：新增Flat macOS主题\n\n"
+    },
+    {
+      "version": "v1.4.7",
+      "title": "优化MacOS下的表现，快捷键，图片助手",
+      "log": "● 外观：多处优化MacOS下的表现，沉浸式窗口\n● 快捷键：优化MacOS下的快捷键\n● 图片助手：列表调整为按修改时间倒序排序\n\n"
+    },
+    {
+      "version": "v1.4.8",
+      "title": "优化窗口esc键行为",
+      "log": "● 优化窗口esc键行为\n● 调整表格行高\n● 升级部分依赖\n\n"
+    },
+    {
+      "version": "v1.5.0",
+      "title": "主题颜色跟随系统",
+      "log": "● 外观：主题颜色跟随系统，暗黑或者白跟随系统变化\n● 调色板：增加自由选色功能\n● 调色板：屏幕取色器优化\n● 字体：新增JetBrains Mono字体\n● 其他细节优化\n\n"
+    },
+    {
+      "version": "v1.5.1",
+      "title": "二维码：支持从剪贴板识别",
+      "log": "● 二维码：支持从剪贴板识别\n● 二维码：增加历史记录\n● 应用：修复下载更新文件时进度条错误的问题\n\n"
+    },
+    {
+      "version": "v1.5.2",
+      "title": "JetBrains Mono font字体问题优化",
+      "log": "● 修复：由于使用的FlatLaf的JetBrains Mono font字体在MacOS上存在兼容性问题，将其从默认调整为可选\n\n"
+    },
+    {
+      "version": "v1.5.3",
+      "title": "优化复制成功等操作的提示行为",
+      "log": "● 全局：优化复制成功等操作的提示行为，减少鼠标点击次数\n● Host：Host功能查找按钮的提示文本错误修正 by wangshun\n● Cron：增加cron表达式转自然语言功能\n● Cron：增加常用cron表达式\n\n"
+    },
+    {
+      "version": "v1.5.4",
+      "title": "Cron部分功能实现",
+      "log": "● 全局：窗口支持鼠标双击最大化/还原\n● 正则：优化正则表达式超过一定长度，组件会发生偏移的问题 issue by smallclover\n● Cron：增加收藏功能\n● Cron：最近10次运行时间计算\n\n"
+    },
+    {
+      "version": "v1.5.5",
+      "title": "新增Cron工具",
+      "log": "● Cron表达式：支持生成和反解析\n● 全局：统一收藏图标样式 by wangshun\n\n"
+    },
+    {
+      "version": "v1.5.6",
+      "title": "升级至Java21",
+      "log": "● 升级至Java21\n● 增加JVM参数外部配置,默认开启分代ZGC\n● 增加时钟大屏\n● 优化系统托盘菜单 issue by smallclover\n\n"
+    },
+    {
+      "version": "v1.5.7",
+      "title": "新增Java、Groovy编译执行器",
+      "log": "● 新增Java、Groovy编译执行器，在MooTool中可执行简单Java或Groovy代码 by:felixnan168\n● 尝试优化随手记撤销大量批量替换时卡顿的问题\n● 升级依赖\n\n"
+    },
+    {
+      "version": "v1.5.8",
+      "title": "功能Tab位置支持设置",
+      "log": "● 新增文件格式化工具、PDF拆分/合并工具 by:felixnan168\n● 设置：新增使用习惯-功能面板位置设置\n● 主题：修复主题切换后，系统托盘样式不跟随更新的问题\n● 全局：更多强调色设置\n● 随手记：outline强调色跟随笔记设置\n● 随手记：增加搜索框\n● Java Console编辑器语法高亮\n\n"
+    },
+    {
+      "version": "v1.5.9",
+      "title": "新增环境变量查看功能",
+      "log": "● 新增环境变量查看功能\n● 全局：统一边距\n● Json、Host、HTTP：增加搜索框\n● 细节优化\n\n"
+    },
+    {
+      "version": "v1.6.0",
+      "title": "JSON工具功能增强",
+      "log": "● JSON工具支持压缩，格式化支持按key字母排序、忽略key字母大小写、检查重复key，支持JSON和XML互转，支持通过JSON Path取值\n\n"
+    },
+    {
+      "version": "v1.6.1",
+      "title": "增加yml和properties互转功能",
+      "log": "● 更新字体版本，随手记增加Inter字体\n● 增加yml和properties互转功能 by:放学后的茶会\n● 修复macOS下开启台前调度以后按esc之后会卡死的问题\n● 快捷键：格式化支持intellij mac的command+option+L\n\n"
+    },
+    {
+      "version": "v1.6.2",
+      "title": "修复macOS15下无法启动的问题",
+      "log": "● 修复macOS15下无法启动的问题\n● 优化随手记中语法高亮语言类型的展示\n● 优化JVM参数\n● 升级部分核心依赖\n\n"
+    },
+    {
+      "version": "v1.6.3",
+      "title": "优化HTTP工具",
+      "log": "● 优化HTTP工具，支持同页面展示响应信息，保存历史记录\n● 优化macOS图标● 优化首次安装的体验\n\n"
+    },
+    {
+      "version": "v1.6.4",
+      "title": "随手记和JSON工具增加更多快捷功能",
+      "log": "● 随手记快捷替换支持按行去重及按行去重统计\n● 随手记快捷替换支持转义和反转义\n● 随手记快捷替换增加comma和换行之间的互相替换\n● 随手记增加对自动换行的记忆\n● 随手记优化java格式化功能\n● JSON工具支持转义和反转义\n\n"
+    },
+    {
+      "version": "v1.6.5",
+      "title": "首次初始化时的细节优化和一些功能更新",
+      "log": "● 首次初始化时的细节优化\n● 新增快捷键：Command + W 最小化窗口\n● JSON工具增加JavaBean和JSON互转功能\n● 格式化Tab支持文本格式化\n\n"
+    },
+    {
+      "version": "v1.6.6",
+      "title": "初步支持翻译功能",
+      "log": "● 初步支持翻译功能 感谢：guozhipeng\n● HTTP请求无HTTP前缀时默认添加http://前缀 感谢：guozhipeng\n● 二维码保存按钮文案改为：保存\n● About页面增加贡献者列表\n\n"
+    },
+    {
+      "version": "v1.6.7",
+      "title": "多个功能迭代",
+      "log": "● Java页面支持格式化\n● json工具增加支持key-value互换\n● 图片助手：页面增加缩放工具栏\n● 图片助手:优化自动保存逻辑，使操作更简单\n● macOS系统中，关闭窗口的行为调整为最小化\n● 随手记：搜索时支持包含内容\n● 随手记：快捷操作支持按行倒序、按A->Z/Z->A、按拼音排序\n● 随手记：快捷操作如果有选中的行，则只替换选中的行\n● 随手记、JSON、Host、HTTP、图片助手列表增加右键快捷菜单\n\n"
+    },
+    {
+      "version": "v1.6.8",
+      "title": "随手记支持添加无序列表或者有序列表序号",
+      "log": "● 随手记支持添加无序列表或者有序列表序号\n● 细节优化\n\n"
+    },
+    {
+      "version": "v1.6.9",
+      "title": "新增文本对比工具",
+      "log": "● 新功能：增加文本比对工具 by Cassian Florin\n● 随手记: 优化XML格式化逻辑以提高安全性与可维护性 (#139) by Cassian Florin\n● 随手记：增加文档信息查看功能，可查看创建时间、更新时间、字数等\n\n"
+    },
+    {
+      "version": "v1.7.0",
+      "title": "HTTP工具支持cURL导入",
+      "log": "● 新功能：HTTP工具支持cURL导入 by Cassian Florin\n\n"
+    },
+    {
+      "version": "v1.7.1",
+      "title": "近期累积的一些更新和优化",
+      "log": "● feat(cron): 支持Linux Cron表达式 by Cassian Florin\n● feat(cron): fix(undo): 修复 Ctrl+Z 撤销异常 by Cassian Florin\n● fix(tray): 修复多屏托盘菜单定位 by Cassian Florin\n● fix: support Apple Silicon macOS package selection by Cassian Florin\n● feat: 时间转换支持时区\n\n"
+    },
+    {
+      "version": "v1.7.2",
+      "title": "完善翻译与单词本功能",
+      "log": "● 翻译：支持更多语言、Bing/Google 自动降级、收藏到单词本\n● 单词本：支持搜索、新建、编辑、删除、重新翻译\n\n"
+    },
+    {
+      "version": "v1.7.3",
+      "title": "大量功能更新、优化和bug修复",
+      "log": "● 随手记：markdown格式支持预览和插入图片\n● 图片助手：截图、压缩、水印、OCR功能实现\n● 加解密：支持国密\n● feat:新增protobuf工具\n● opt：完善翻译功能\n● feat:“网络/IP”增加who is 查询功能\n● feat:调色板支持颜色相交和取反等功能\n● feat:增加系统和硬件信息查看功能\n● opt:图标和细节优化\n\n"
+    },
+    {
+      "version": "v1.7.4",
+      "title": "多模块增加历史记录",
+      "log": "● feat：【全局】图片显示质量提升，不再模糊 \n● feat：【全局】调整点击窗口关闭按钮逻辑（窗口应隐藏到 Dock）\n● feat：【JSON】实现“JSON”工具中的可视化获取JSON Path按钮功能\n● feat：【UA分析】新增UA分析功能\n● feat：【编码转换】增加转ASCII功能 \n● feat：【配置文件转换】增加YAML配置格式校验功能\n● opt：【Host】优化macos host 权限提示\n● UA分析、编码转换、加解密、调色板、Cron、正则、Java、格式化、配置文件转换、Protobuf 增加历史记录\n● 历史记录支持搜索、应用、复制、删除与清空\n\n"
+    },
+    {
+      "version": "v1.7.5",
+      "title": "国际化支持与体验优化",
+      "log": "● feat：【i18n】接入国际化基础设施，支持英文、简体中文与日语，默认英文，首次启动提示切换语言\n● feat：【i18n】全部功能 Tab 与对话框完成多语言覆盖\n● feat：【调色板】新增中国传统色主题\n● opt：【全局】About 页与 Tab 图标显示质量提升\n● opt：【全局】滚动速度优化\n● fix：【i18n】修复切换语言后 Tab 名称变化导致的界面布局异常\n\n"
+    },
+    {
+      "version": "v1.7.6",
+      "title": "功能分组导航与体验优化",
+      "log": "● feat：【全局】新增功能分组导航，支持自定义常用功能组、最近使用功能组（最多 5 个）及功能搜索\n● opt：【JSON】JSON Path 可视化视图支持根节点 key 数量统计\n● opt：【i18n】完善 JSON 工具与随手记快捷替换面板的多语言覆盖\n● opt：【随手记】快捷替换面板开始按钮固定底部显示\n● fix：【全局】分组导航样式下隐藏 Tab 小三角、功能导航按钮仅在分组样式下显示\n● fix：【全局】修复功能管理组列表滚动速度不一致、最近使用未及时更新等问题\n\n"
+    },
+    {
+      "version": "v1.7.7",
+      "title": "体验优化与功能完善",
+      "log": "● feat：【全局】功能列表「最近使用」默认隐藏，可在设置中开启\n● feat：【Host】Host 切换按钮点击后短暂显示成功/失败状态\n● feat：【全局】macOS 应用主菜单增加检查更新项\n● opt：【JSON】优化 JSON Path value 相关功能\n● fix：【随手记】优化多行圆点与序号（无序列表、有序列表）逻辑\n\n"
+    },
+    {
+      "version": "v1.7.8",
+      "title": "随手记/JSON Git 化管理",
+      "log": "● feat：【随手记】数据由数据库改为 txt 文件管理，支持文件夹与 Git 版本控制\n● feat：【JSON】参考随手记实现文档化与 Git 化管理，新增文件夹工具栏操作\n● feat：【随手记/JSON】列表支持按名称/更新时间（默认）/创建时间排序\n● feat：【随手记/JSON】支持设置列表默认全部展开或全部折叠\n● feat：【Git】快捷提交、Diff 优化、同步闭环及冲突可见性体验优化\n● feat：【全局】重启应用后记忆上次操作的 Tab\n● opt：【Git】设置对话框、修改详情支持拖拽分割、搜索框圆角等体验优化\n● opt：【随手记】列表显示/隐藏行与搜索框对齐并固定顶部\n● opt：【文本对比】体验优化\n● fix：【随手记/JSON】切换文件时内容未保存、新建文件类型未保存、JetBrains Mono 中文乱码、字体类型显示异常等问题\n● fix：【Git】面板暗色模式、撤销失败、变更历史、Tab 切换联动及弹窗层级等问题\n● fix：【Vault】修改库路径后文件夹与文件未完整迁移\n● fix：【Host】切换列表时右侧布局异常\n● fix：【首页】贡献者区块不受其他元素加载失败影响\n\n"
+    },
+    {
+      "version": "v1.7.9",
+      "title": "界面与交互问题修复",
+      "log": "● fix：【图片助手】修复右侧预览区下方工具按钮面板高度异常撑开的问题\n● fix：【随手记】修复 Markdown 预览面板在系统明暗模式自动切换时滚动条样式未及时刷新的问题\n● fix：【随手记】修复列表切换文件时偶发需要点击两次才能正常切换的问题\n\n",
+      "titleEn": "UI and interaction fixes",
+      "logEn": "● fix: [Image Assistant] Fixed the tool button panel below the right preview area expanding to an incorrect height\n● fix: [Quick Notes] Fixed the scrollbar style in the Markdown preview not refreshing promptly when the system automatically switches between light and dark modes\n● fix: [Quick Notes] Fixed an intermittent issue where switching files in the list required two clicks\n\n",
+      "titleJa": "UI と操作性の問題を修正",
+      "logJa": "● fix: 【画像アシスタント】右側プレビュー領域下部のツールボタンパネルが異常な高さまで広がる問題を修正\n● fix: 【クイックノート】システムのライト／ダークモード自動切り替え時に Markdown プレビューのスクロールバースタイルがすぐ更新されない問題を修正\n● fix: 【クイックノート】リストでファイルを切り替える際、まれに 2 回クリックしないと切り替わらない問題を修正\n\n"
+    },
+    {
+      "version": "v1.8.0",
+      "title": "推荐使用全新 MooTool Next",
+      "log": "● feat：【首页/关于】新增 MooTool Next Electron 介绍和推荐下载入口\n● MooTool Next 使用 Electron、React 和 TypeScript 全新重写，拥有更现代的界面与多窗口体验，推荐新用户优先使用\n● 支持 macOS、Windows 和 Linux，可与 MooTool Java 独立安装、同时使用\n● chore：【编辑器】升级 RSyntaxTextArea 至 4.0.0\n\n",
+      "titleEn": "Introducing the recommended MooTool Next",
+      "logEn": "● feat: [Home/About] Added an introduction and recommended download link for MooTool Next Electron\n● MooTool Next is rebuilt with Electron, React, and TypeScript for a modern UI and multi-window experience, and is recommended for new users\n● Supports macOS, Windows, and Linux, and can be installed and used alongside MooTool Java\n● chore: [Editor] Upgraded RSyntaxTextArea to 4.0.0\n\n",
+      "titleJa": "おすすめの MooTool Next を紹介",
+      "logJa": "● feat: 【ホーム／MooTool について】MooTool Next Electron の紹介とおすすめダウンロードリンクを追加\n● MooTool Next は Electron、React、TypeScript で全面的に再構築され、モダンな UI とマルチウインドウ体験を提供します。新規ユーザーにはこちらをおすすめします\n● macOS、Windows、Linux に対応し、MooTool Java と同時にインストールして利用できます\n● chore: 【エディター】RSyntaxTextArea を 4.0.0 に更新\n\n"
+    },
+    {
+      "version": "v1.8.1",
+      "title": "发布流程可靠性优化",
+      "log": "● fix：【发布】macOS Intel 安装包改用 GitHub 托管 runner 构建，不再依赖本地 runner\n● opt：【发布】创建版本标签时自动构建并发布 macOS Intel、Apple Silicon、Windows x64 和 Linux x64 全平台安装包\n\n",
+      "titleEn": "Release pipeline reliability improvements",
+      "logEn": "● fix: [Release] Build the macOS Intel installer on a GitHub-hosted runner instead of depending on a local runner\n● opt: [Release] Automatically build and publish installers for macOS Intel, Apple Silicon, Windows x64, and Linux x64 when a release tag is created\n\n",
+      "titleJa": "リリースパイプラインの信頼性を改善",
+      "logJa": "● fix: 【リリース】macOS Intel インストーラーを GitHub ホスト runner でビルドし、ローカル runner への依存を解消\n● opt: 【リリース】リリースタグ作成時に macOS Intel、Apple Silicon、Windows x64、Linux x64 のインストーラーを自動でビルド・公開\n\n"
+    },
+    {
+      "version": "v1.8.2",
+      "title": "启动性能优化与体验修复",
+      "log": "● opt：【全局】优化启动策略，功能页按需懒加载，加快应用启动并减少启动卡顿\n● fix：【时间转换/时钟】修复在工作线程中直接更新 UI 数据的问题\n● fix：【设置】修复字号初始化时的空指针异常\n● opt：【更新】定时检查更新频率调整为每小时一次\n● opt：【更新】安装提示悬停时可查看更新内容详情\n\n",
+      "titleEn": "Startup performance improvements and experience fixes",
+      "logEn": "● opt: [Global] Optimized the startup strategy with on-demand lazy loading of feature tabs to speed up launch and reduce startup freezes\n● fix: [Time Convert/Clock] Fixed updating UI data directly from worker threads\n● fix: [Settings] Fixed a null pointer exception during font size initialization\n● opt: [Update] Changed the scheduled update check frequency to once per hour\n● opt: [Update] Hovering the install prompt now shows update details\n\n",
+      "titleJa": "起動パフォーマンス改善と体験修正",
+      "logJa": "● opt: 【全体】起動戦略を最適化し、機能タブを必要時に遅延読み込みすることで起動を高速化し、起動時のカクつきを軽減\n● fix: 【時間変換／時計】ワーカースレッドから UI データを直接更新していた問題を修正\n● fix: 【設定】フォントサイズ初期化時の NullPointerException を修正\n● opt: 【更新】定期的な更新チェック頻度を 1 時間に 1 回に変更\n● opt: 【更新】インストール案内にマウスを乗せると更新内容の詳細を表示\n\n"
+    },
+    {
+      "version": "v1.8.3",
+      "title": "更新检查与安装流程修复",
+      "log": "● fix：【更新】修复菜单栏「检查更新」点击无响应的问题\n● fix：【更新】修复下载完成后点击「了解并安装」仅退出应用、未真正启动安装的问题\n\n",
+      "titleEn": "Update check and install flow fixes",
+      "logEn": "● fix: [Update] Fixed the menu bar \"Check for Updates\" option not responding when clicked\n● fix: [Update] Fixed the issue where clicking \"Understand and Install\" after download only closed the app without starting installation\n\n",
+      "titleJa": "更新チェックとインストール手順の修正",
+      "logJa": "● fix: 【更新】メニューバーの「更新を確認」をクリックしても反応しない問題を修正\n● fix: 【更新】ダウンロード完了後に「了解してインストール」をクリックするとアプリが終了するだけで、インストールが開始されない問題を修正\n\n"
+    },
+    {
+      "version": "v1.8.4",
+      "title": "托盘图标与更新调度优化",
+      "log": "● opt：【全局】托盘图标改为透明模板图标，更好适配系统明暗模式\n● opt：【更新】优化自动检查更新调度：窗口就绪后再短暂延迟首次检查，之后每小时一次\n\n",
+      "titleEn": "Tray icon and update scheduling improvements",
+      "logEn": "● opt: [Global] Switched the tray icon to a transparent template image for better light/dark mode adaptation\n● opt: [Update] Optimized automatic update check scheduling: briefly delay the first check after the window is ready, then once per hour\n\n",
+      "titleJa": "トレイアイコンと更新スケジュールの改善",
+      "logJa": "● opt: 【全体】トレイアイコンを透明なテンプレート画像に変更し、システムのライト／ダークモードにより適合\n● opt: 【更新】自動更新チェックのスケジュールを最適化：ウィンドウ準備完了後に少し遅らせて初回確認し、以降は 1 時間ごと\n\n"
+    },
+    {
+      "version": "v1.8.5",
+      "title": "HTTP 工具增强",
+      "log": "● feat：【HTTP】支持自定义请求超时时间\n● feat：【HTTP】响应结果 Body 区域支持搜索\n\n",
+      "titleEn": "HTTP tool enhancements",
+      "logEn": "● feat: [HTTP] Added support for customizing the request timeout\n● feat: [HTTP] Added search support in the response Body section\n\n",
+      "titleJa": "HTTP ツールの強化",
+      "logJa": "● feat: 【HTTP】リクエストのタイムアウト時間をカスタマイズ可能に\n● feat: 【HTTP】レスポンス結果の Body 領域で検索をサポート\n\n"
+    },
+    {
+      "version": "v1.8.6",
+      "title": "环境变量、网络扫描与随手记增强",
+      "log": "● feat：【环境变量】支持直接修改系统环境变量\n● feat：【网络/IP】支持 IP 网段批量 Ping 检测，便于网络调试\n● feat：【随手记】支持调整行间距\n● chore：升级依赖至最新版本\n● fix：【发布】修复依赖升级后安装包构建因 jdom/JPMS 冲突失败的问题\n\n",
+      "titleEn": "Environment variables, network scan, and Quick Notes enhancements",
+      "logEn": "● feat: [Environment Variables] Added support for directly modifying system environment variables\n● feat: [Network/IP] Added IP range batch Ping scanning for network debugging\n● feat: [Quick Notes] Added line spacing adjustment\n● chore: Upgraded dependencies to the latest versions\n● fix: [Release] Fixed installer builds failing after the dependency upgrade due to jdom/JPMS conflicts\n\n",
+      "titleJa": "環境変数、ネットワークスキャン、クイックノートの強化",
+      "logJa": "● feat: 【環境変数】システム環境変数の直接編集に対応\n● feat: 【ネットワーク／IP】IP 範囲の一括 Ping スキャンに対応し、ネットワークデバッグを容易に\n● feat: 【クイックノート】行間の調整に対応\n● chore: 依存関係を最新バージョンに更新\n● fix: 【リリース】依存関係更新後に jdom／JPMS 衝突でインストーラー構築が失敗する問題を修正\n\n"
+    },
+    {
+      "version": "v1.8.7",
+      "title": "图片转 SVG 与 JDK 25",
+      "log": "● feat：【图片】图片助手支持将位图离线转换为 SVG\n● opt：【关于】推荐下载明确指向 MooTool Next Electron\n● chore：运行与打包 JDK 升级至 25\n\n",
+      "titleEn": "Image-to-SVG and JDK 25",
+      "logEn": "● feat: [Image] The image assistant can convert bitmaps to SVG offline\n● opt: [About] The recommended download now points to MooTool Next Electron\n● chore: Upgraded the runtime and packaging JDK to 25\n\n",
+      "titleJa": "画像の SVG 変換と JDK 25",
+      "logJa": "● feat: 【画像】画像アシスタントでビットマップをオフラインの SVG に変換できるようになりました\n● opt: 【バージョン情報】推奨ダウンロードを MooTool Next Electron に明確化\n● chore: 実行およびパッケージ用 JDK を 25 に更新\n\n"
+    }
+  ]
+}

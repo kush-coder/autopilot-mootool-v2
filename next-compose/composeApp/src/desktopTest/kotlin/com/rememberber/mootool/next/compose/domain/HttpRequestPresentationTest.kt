@@ -1,0 +1,76 @@
+package com.rememberber.mootool.next.compose.domain
+
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertTrue
+
+class HttpRequestPresentationTest {
+    @Test
+    fun applyResponseMatchesActiveRequestId() {
+        assertTrue(HttpRequestPresentation.shouldApplyResponse("http-1", "http-1"))
+        assertFalse(HttpRequestPresentation.shouldApplyResponse("http-1", "http-2"))
+        assertFalse(HttpRequestPresentation.shouldApplyResponse("", "http-1"))
+    }
+
+    @Test
+    fun previousResponseBeforeSendDelegatesToHttpResponsePresentation() {
+        val ok = HttpResponseResult(
+            requestId = "a",
+            ok = true,
+            status = 200,
+            statusText = "OK",
+            url = "",
+            durationMs = 1,
+            body = "x",
+            headers = "",
+            cookies = "",
+        )
+        val aborted = ok.copy(ok = false, errorCode = HttpErrorCode.ABORTED)
+        assertEquals(ok, HttpRequestPresentation.previousResponseBeforeSend(ok, null))
+        assertEquals(ok, HttpRequestPresentation.previousResponseBeforeSend(aborted, ok))
+    }
+
+    @Test
+    fun canSendRequiresUrlAndNotSending() {
+        assertTrue(HttpRequestPresentation.canSend("https://example.com", sending = false))
+        assertFalse(HttpRequestPresentation.canSend("  ", sending = false))
+        assertFalse(HttpRequestPresentation.canSend("https://example.com", sending = true))
+        assertTrue(HttpRequestPresentation.sendActionEnabled("https://example.com", sending = false))
+        assertFalse(HttpRequestPresentation.sendActionEnabled("", sending = false))
+    }
+
+    @Test
+    fun stopSendActionEnabledRequiresSendingAndRequestId() {
+        assertFalse(HttpRequestPresentation.stopSendActionEnabled(sending = false, requestId = "id"))
+        assertFalse(HttpRequestPresentation.stopSendActionEnabled(sending = true, requestId = ""))
+        assertTrue(HttpRequestPresentation.stopSendActionEnabled(sending = true, requestId = "http-1"))
+    }
+
+    @Test
+    fun shouldToastResponseErrorWhenCodePresent() {
+        assertTrue(HttpRequestPresentation.shouldToastResponseError(HttpErrorCode.NETWORK))
+        assertFalse(HttpRequestPresentation.shouldToastResponseError(null))
+    }
+
+    @Test
+    fun shouldToastClientValidation() {
+        assertTrue(HttpRequestPresentation.shouldToastClientValidation())
+    }
+
+    @Test
+    fun shouldToastCopyFailure() {
+        assertTrue(HttpRequestPresentation.shouldToastCopyFailure())
+    }
+
+    @Test
+    fun runSendRejectsBlankUrlDraft() {
+        val result = HttpRequestPresentation.runSend(
+            HttpEngine.emptyDraft().copy(url = "  "),
+            requestId = "http-test",
+            timeoutMs = 5_000,
+        )
+        assertFalse(result.ok)
+        assertEquals(HttpErrorCode.INVALID_REQUEST, result.errorCode)
+    }
+}

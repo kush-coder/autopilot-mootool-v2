@@ -1,0 +1,68 @@
+package com.rememberber.mootool.next.compose.domain
+
+import java.nio.file.Files
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertTrue
+
+class QrWiringPresentationTest {
+    @Test
+    fun fromSettingsClampsSizeAndNormalizesCorrection() {
+        val defaults = QrWiringPresentation.fromSettings(qrCodeSize = 20, qrErrorCorrection = "h")
+        assertEquals(120, defaults.size)
+        assertEquals(QrErrorCorrection.H, defaults.correction)
+    }
+
+    @Test
+    fun parseSizeFieldNormalizesEditorInput() {
+        assertEquals(360, QrWiringPresentation.parseSizeField("360.4", fallback = 240))
+        assertEquals(240, QrWiringPresentation.parseSizeField("not-a-number", fallback = 240))
+    }
+
+    @Test
+    fun generateSizeUsesEngineNormalize() {
+        assertEquals(2000, QrWiringPresentation.generateSize(9999))
+    }
+
+    @Test
+    fun runGeneratePngUsesEngine() {
+        val outcome = QrWiringPresentation.runGeneratePng("564", 240, QrErrorCorrection.M, logo = null)
+        assertTrue(outcome is QrWiringPresentation.GenerateOutcome.Success)
+        assertTrue((outcome as QrWiringPresentation.GenerateOutcome.Success).png.isNotEmpty())
+    }
+
+    @Test
+    fun toolbarGuardsMatchScreenSemantics() {
+        assertFalse(QrWiringPresentation.canGenerate(busy = true, content = "x"))
+        assertTrue(QrWiringPresentation.canGenerate(busy = false, content = "x"))
+        assertFalse(QrWiringPresentation.hasPngOutput(null))
+        assertTrue(QrWiringPresentation.hasPngOutput(byteArrayOf(1)))
+        assertFalse(QrWiringPresentation.canRecognize(null, busy = false))
+        assertTrue(QrWiringPresentation.canRecognize(byteArrayOf(1), busy = false))
+        assertTrue(QrWiringPresentation.canCopyRecognition("ok"))
+    }
+
+    @Test
+    fun runWritePngFileRoundTrip() {
+        val file = Files.createTempFile("qr-out-", ".png")
+        try {
+            val bytes = byteArrayOf(0x89.toByte(), 0x50, 0x4E, 0x47)
+            val outcome = QrWiringPresentation.runWritePngFile(file.toFile(), bytes)
+            assertTrue(outcome is QrWiringPresentation.WritePngOutcome.Success)
+            assertEquals(bytes.size.toLong(), Files.size(file))
+        } finally {
+            Files.deleteIfExists(file)
+        }
+    }
+
+    @Test
+    fun shouldToastOperationFailure() {
+        assertTrue(QrWiringPresentation.shouldToastOperationFailure(IllegalStateException()))
+    }
+
+    @Test
+    fun shouldToastErrorMessage() {
+        assertTrue(QrWiringPresentation.shouldToastErrorMessage())
+    }
+}

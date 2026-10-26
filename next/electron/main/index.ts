@@ -1,0 +1,2697 @@
+import { windowChromeOptions, trackWindowChrome } from './windowChrome'
+import { GlobalCommandShortcut } from './globalCommandShortcut'
+import { createInitialSettings } from './initialSettings'
+import { BatchRenameService } from './batchRenameService'
+import { OcrService } from './ocrService'
+import { VisionOcrBackend } from './ocrBackend'
+import { PpOcrBackend } from './ppOcrBackend'
+import { OptionalOcrComponent, parseComponentManifest } from './optionalOcrComponent'
+import { commandImportTarget, commandOutputFormat, commandActionTitles, defaultCommandPaletteState, isCommandActionId, normalizeCommandPaletteState, trayCommandActions, updateCommandPaletteState, type CommandPaletteState } from '../../src/shared/contracts/commandPalette'
+import { messages } from '../../src/shared/i18n/messages'
+import { WindowMaterialController, loadNativeGlass } from './windowMaterial'
+import { runImageBatch } from '../../src/shared/imageBatch'
+import { vectorizeInWorker } from './imageVectorizationTask'
+import { registerHttpResponseWindows, closeHttpResponseWindow } from './httpResponseWindows'
+import { exportVaultFiles } from './vaultExport'
+import { JavaRegexService } from './javaRegexService'
+import { deepLApiOrigin } from './translation/deepl'
+import {
+  app,
+  BaseWindow,
+  BrowserWindow,
+  clipboard,
+  desktopCapturer,
+  dialog,
+  globalShortcut,
+  ipcMain,
+  Menu,
+  nativeImage,
+  nativeTheme,
+  net,
+  Notification,
+  powerSaveBlocker,
+  safeStorage,
+  screen,
+  session,
+  shell,
+  Tray,
+  utilityProcess,
+  type WebContents,
+  type WebContentsView,
+  type NativeImage,
+  type Display,
+  type MenuItemConstructorOptions,
+  type OpenDialogOptions
+} from 'electron'
+import Store from 'electron-store'
+import { autoUpdater } from 'electron-updater'
+import { randomUUID, createHash, getHashes } from 'node:crypto'
+import { createReadStream, readFileSync, watch, type FSWatcher } from 'node:fs'
+import { chmod, lstat, mkdir, readFile, rm, stat, writeFile } from 'node:fs/promises'
+import { basename, extname, join, parse } from 'node:path'
+import {
+  defaultWorkspaceState,
+  isDetachableToolId,
+  isExternalPageId,
+  isToolId,
+  type AppNavigationEvent,
+  type AppPaths,
+  type ExternalPageId,
+  type RuntimeStatus,
+  type ToolId,
+  type ToolWorkspaceBounds,
+  type WindowState,
+  type WorkspaceState
+} from '../../src/shared/contracts/app'
+import {
+  defaultAppSettings,
+  mergeSettings,
+  type AppLanguage,
+  type AppSettings,
+  type SecretKey,
+  type SecretStatus,
+  type SettingsPatch
+} from '../../src/shared/contracts/settings'
+import type { HistoryQuery, SaveFuncHistoryInput } from '../../src/shared/contracts/history'
+import type { SaveTextFileInput, TextFileKind, TextFileResult } from '../../src/shared/contracts/files'
+import type { ImageVectorizeOptions, ImageVectorizeResult, RenameImageAssetInput, SaveImageAssetInput, ScreenCapture, ScreenCaptureOverlayData, ScreenCaptureRect, ScreenCaptureResult } from '../../src/shared/contracts/images'
+import { digestAlgorithmIds, type DigestAlgorithmId, type DigestFileResult, type ImageFilePayload, type SaveBinaryFileInput } from '../../src/shared/contracts/nativeFiles'
+import type { PdfMergeSource, PdfSplitTask } from '../../src/shared/contracts/pdf'
+import type {
+  JsonVaultListInput,
+  MoveJsonVaultEntryInput,
+  RenameJsonVaultEntryInput,
+  SaveJsonVaultFileInput
+} from '../../src/shared/contracts/jsonVault'
+import type {
+  CreateQuickNoteInput,
+  MoveQuickNoteEntryInput,
+  QuickNoteListInput,
+  RenameQuickNoteEntryInput,
+  SaveQuickNoteInput
+} from '../../src/shared/contracts/quickNote'
+import type { HostProfileListInput } from '../../src/shared/contracts/system'
+import type { VaultGitActionInput, VaultGitDiffInput } from '../../src/shared/contracts/vaultGit'
+import { codeRuntimeIds, type RuntimeExecutionInput } from '../../src/shared/contracts/runtime'
+import {
+  favoriteKinds,
+  type FavoriteKind,
+  type RenameFavoriteFolderInput,
+  type SaveFavoriteFolderInput,
+  type SaveFavoriteInput
+} from '../../src/shared/contracts/favorites'
+import { backupKinds, type BackupKind, type BackupLocation } from '../../src/shared/contracts/backup'
+import type { LegacyMigrationInput } from '../../src/shared/contracts/migration'
+import type { UpdateCheckEvent, UpdateCheckResult, UpdateDownloadState } from '../../src/shared/contracts/update'
+import { BackupService } from './backupService'
+import { FavoriteRepository } from './favoriteRepository'
+import { HistoryRepository } from './historyRepository'
+import { ImageRepository } from './imageRepository'
+import { normalizeImageVectorizeOptions } from './imageVectorizationService'
+import { JsonVaultRepository } from './jsonVaultRepository'
+import { VaultWorkspaceService } from './vaultWorkspaceService'
+import type { RememberVaultFileInput } from '../../src/shared/contracts/vaultWorkspace'
+import { LegacyMigrationService } from './legacyMigrationService'
+import { NetworkService, parseChromiumProxyDirective, type ProxyConfiguration } from './networkService'
+import { P5Repository } from './p5Repository'
+import { QuickNoteVaultRepository } from './quickNoteVaultRepository'
+import { RuntimeExecutionService } from './runtimeExecutionService'
+import { detectRuntime, getRuntimeEnvironment } from './runtimeDiscovery'
+import {
+  normalizeHostInput,
+  normalizeDeleteEnvironmentVariableInput,
+  normalizeEnvironmentVariableInput,
+  normalizeHttpRequest,
+  normalizeHttpResponse,
+  normalizeHttpSendInput,
+  normalizeKeyword,
+  normalizeNetworkInput,
+  normalizePositiveId,
+  normalizeRequestId,
+  normalizeTranslationHistoryInput,
+  normalizeTranslationInput,
+  normalizeTranslationWordInput
+} from './p5Validation'
+import { PdfTaskService, type PdfJob } from './pdfTaskService'
+import { PdfOutputAccess } from './pdfOutputAccess'
+import { SystemService } from './systemService'
+import { currentUpdateProductId, defaultReleaseUrl, UpdateService } from './updateService'
+import { UpdateManager, type UpdateAdapter } from './updateManager'
+import { downloadUpdateFile } from './updateDownloader'
+import { cleanupUpdateFiles, UPDATE_CLEANUP_INTERVAL } from './updateCleanup'
+import { VaultGitService } from './vaultGitService'
+import { VaultGitCheckpointScheduler } from './vaultGitCheckpointScheduler'
+import { ToolWindowManager } from './toolWindowManager'
+import { buildTrayMenuTemplate } from './trayMenu'
+import { DisplaySleepService } from './displaySleepService'
+import type { AiIntegrationService } from './aiIntegrationService'
+
+type PersistedStore = {
+  settings: AppSettings
+  workspace: WorkspaceState
+  commandPalette: CommandPaletteState
+  window: WindowState
+  toolWindows: Partial<Record<string, WindowState>>
+  secrets: Partial<Record<SecretKey, string>>
+  activeHostId: number | null
+  vaultActiveFiles: Record<string, string>
+}
+
+type ScreenCaptureOverlayRecord = {
+  window: BrowserWindow
+  display: Display
+  displayName: string
+  image: NativeImage
+}
+
+type ScreenOverlayMode = 'capture' | 'color-picker'
+type ScreenOverlayResult = ScreenCaptureResult | string | null
+
+type ScreenCaptureSession = {
+  mode: ScreenOverlayMode
+  overlays: Map<number, ScreenCaptureOverlayRecord>
+  hiddenWindows: BaseWindow[]
+  focusedWindow: BaseWindow | null
+  promise: Promise<ScreenOverlayResult>
+  resolve: (result: ScreenOverlayResult) => void
+  completing: boolean
+}
+
+const isDev = Boolean(process.env.ELECTRON_RENDERER_URL)
+const MAX_VECTOR_PIXELS = 16_000_000
+const defaultWindowState: WindowState = {
+  bounds: { width: 1440, height: 920 },
+  maximized: false
+}
+
+const externalPages: Record<ExternalPageId, string> = {
+  home: 'https://mootool.luoboduner.com',
+  github: 'https://github.com/rememberber/MooTool',
+  gitee: 'https://gitee.com/zhoubochina/MooTool',
+  issues: 'https://github.com/rememberber/MooTool/issues',
+  darcula: 'https://github.com/bulenkov/Darcula',
+  hutool: 'https://hutool.cn',
+  vscodeIcons: 'https://github.com/microsoft/vscode-icons',
+  wePush: 'https://github.com/rememberber/WePush',
+  mooInfo: 'https://github.com/rememberber/MooInfo',
+  contributorCassianFlorin: 'https://github.com/CassianFlorin',
+  contributorFelixcn: 'https://github.com/felixcn',
+  contributorFelixnan168: 'https://gitee.com/felixnan168',
+  contributorLyp: 'https://gitee.com/L1yp',
+  contributorSunsence: 'https://github.com/sunsence',
+  contributorRememberber: 'https://github.com/rememberber'
+}
+
+let store: Store<PersistedStore>
+const vaultWorkspaceService = new VaultWorkspaceService({
+  get: () => store.get('vaultActiveFiles'),
+  set: (paths) => store.set('vaultActiveFiles', paths)
+})
+let mainWindow: BrowserWindow | null = null
+let mainWindowMaterial: WindowMaterialController | null = null
+let batchRenameService: BatchRenameService
+let ocrService: OcrService
+let optionalOcrComponent: OptionalOcrComponent | undefined
+const commandShortcut = new GlobalCommandShortcut(globalShortcut, () => navigateMainWindow('focus-search'), process.platform)
+let toolWindowManager: ToolWindowManager
+let tray: Tray | null = null
+let isQuitting = false
+let closePromptOpen = false
+let screenCaptureSession: ScreenCaptureSession | null = null
+let pendingScreenColor: string | null = null
+let historyRepository: HistoryRepository
+let favoriteRepository: FavoriteRepository
+let p5Repository: P5Repository
+const networkService = new NetworkService()
+const displaySleepService = new DisplaySleepService(powerSaveBlocker)
+const displaySleepCleanupSenders = new Set<number>()
+let systemService: SystemService
+let runtimeExecutionService: RuntimeExecutionService
+let gitAskPassPath = ''
+let quickNoteWatcher: FSWatcher | null = null
+let quickNoteWatchTimer: NodeJS.Timeout | undefined
+let quickNotePullTimer: NodeJS.Timeout | undefined
+let quickNoteWatcherGeneration = 0
+let quickNoteEditorDirty = false
+let jsonVaultWatcher: FSWatcher | null = null
+let jsonVaultWatchTimer: NodeJS.Timeout | undefined
+let jsonVaultPullTimer: NodeJS.Timeout | undefined
+let jsonVaultWatcherGeneration = 0
+let jsonVaultEditorDirty = false
+let updateCleanupTimer: NodeJS.Timeout | undefined
+let updateCleanupRunning = false
+let updateStartupTimer: NodeJS.Timeout | undefined
+let updateIntervalTimer: NodeJS.Timeout | undefined
+let updateCheckPromise: Promise<UpdateCheckResult> | null = null
+let lastUpdateResult: UpdateCheckResult | null = null
+const pdfTasks = new PdfTaskService()
+const pdfOutputs = new PdfOutputAccess()
+const pdfOutputOwners = new Set<number>()
+const allowedPdfPaths = new Set<string>()
+const updateService = new UpdateService(process.env.MOOTOOL_UPDATE_FEED_URL || undefined, {
+  productId: currentUpdateProductId,
+  platform: process.platform,
+  architecture: process.arch,
+  packageType: detectUpdatePackageType()
+})
+const updateManager = new UpdateManager(
+  autoUpdater as unknown as UpdateAdapter,
+  app.isPackaged && process.env.NODE_ENV !== 'test',
+  (state) => broadcast('update:state-changed', state),
+  {
+    installMode: process.platform === 'darwin' ? 'manual' : 'automatic',
+    downloadFile: process.platform === 'darwin'
+      ? (download, onProgress) => downloadUpdateFile(
+          download,
+          join(app.getPath('userData'), 'pending-updates'),
+          onProgress,
+          (url, init) => net.fetch(url, init)
+        )
+      : undefined,
+    openDownloadedFile: async (filePath) => {
+      const error = await shell.openPath(filePath)
+      if (error) throw new Error(error)
+    },
+    quitApp: () => app.quit()
+  }
+)
+const quickNoteCheckpointScheduler = new VaultGitCheckpointScheduler({
+  enabled: () => store.get('settings').vault.autoCommit,
+  hasUnsavedEditorChanges: () => quickNoteEditorDirty,
+  idleMilliseconds: () => store.get('settings').vault.autoCommitIdleSeconds * 1_000,
+  inactiveMilliseconds: () => store.get('settings').vault.autoCommitInactiveSeconds * 1_000,
+  checkpoint: async (message) => {
+    const service = createQuickNoteGitService()
+    return service.automaticCheckpoint(message)
+  }
+})
+const jsonVaultCheckpointScheduler = new VaultGitCheckpointScheduler({
+  enabled: () => store.get('settings').vault.autoCommit,
+  hasUnsavedEditorChanges: () => jsonVaultEditorDirty,
+  idleMilliseconds: () => store.get('settings').vault.autoCommitIdleSeconds * 1_000,
+  inactiveMilliseconds: () => store.get('settings').vault.autoCommitInactiveSeconds * 1_000,
+  checkpoint: async (message) => {
+    const service = createVaultGitService()
+    return service.automaticCheckpoint(message)
+  }
+})
+
+function getDevelopmentIconPath(): string {
+  const filename = process.platform === 'darwin' ? 'icon-mac.png' : process.platform === 'win32' ? 'icon.ico' : 'icon.png'
+  return join(__dirname, '../../resources', filename)
+}
+
+function detectUpdatePackageType(): string | undefined {
+  if (process.platform !== 'linux') return undefined
+  if (process.env.APPIMAGE) return 'appimage'
+  try {
+    const packageType = readFileSync(join(process.resourcesPath, 'package-type'), 'utf8').trim().toLowerCase()
+    return ['deb', 'rpm', 'pacman'].includes(packageType) ? packageType : undefined
+  } catch {
+    return undefined
+  }
+}
+
+function getTrayIconPath(): string {
+  if (!app.isPackaged) {
+    return join(__dirname, '../../resources', 'tray-icon.png')
+  }
+  return join(process.resourcesPath, 'tray-icon.png')
+}
+
+function loadRenderer(window: BrowserWindow): void {
+  if (isDev && process.env.ELECTRON_RENDERER_URL) {
+    void window.loadURL(process.env.ELECTRON_RENDERER_URL)
+    return
+  }
+
+  void window.loadFile(join(__dirname, '../renderer/index.html'))
+}
+
+function loadToolRenderer(view: WebContentsView, toolId: string): Promise<void> {
+  if (isDev && process.env.ELECTRON_RENDERER_URL) {
+    const url = new URL(process.env.ELECTRON_RENDERER_URL)
+    url.searchParams.set('window', 'tool')
+    url.searchParams.set('toolId', toolId)
+    return view.webContents.loadURL(url.toString())
+  }
+
+  return view.webContents.loadFile(join(__dirname, '../renderer/index.html'), {
+    query: { window: 'tool', toolId }
+  })
+}
+
+function loadScreenCaptureRenderer(window: BrowserWindow, mode: ScreenOverlayMode): Promise<void> {
+  if (isDev && process.env.ELECTRON_RENDERER_URL) {
+    const url = new URL(process.env.ELECTRON_RENDERER_URL)
+    url.searchParams.set('window', mode)
+    return window.loadURL(url.toString()).then(() => undefined)
+  }
+
+  return window.loadFile(join(__dirname, '../renderer/index.html'), { query: { window: mode } }).then(() => undefined)
+}
+
+function createMainWindow(): BrowserWindow {
+  const savedWindow = store.get('window', defaultWindowState)
+  const settings = store.get('settings')
+  const dark = nativeTheme.shouldUseDarkColors
+  const window = new BrowserWindow({
+    ...savedWindow.bounds,
+    minWidth: 1080,
+    minHeight: 720,
+    show: false,
+    ...windowChromeOptions(),
+    backgroundColor: dark ? '#171719' : '#f7f7f8',
+    icon: app.isPackaged ? undefined : getDevelopmentIconPath(),
+    webPreferences: {
+      preload: join(__dirname, '../preload/index.js'),
+      sandbox: true,
+      contextIsolation: true,
+      nodeIntegration: false
+    }
+  })
+
+  mainWindow = window
+  const material = new WindowMaterialController(window, settings.appearance.windowMaterial, {
+    platform: process.platform,
+    systemVersion: process.getSystemVersion(),
+    dark: () => nativeTheme.shouldUseDarkColors,
+    highContrast: () => nativeTheme.shouldUseHighContrastColors,
+    loadGlass: loadNativeGlass
+  })
+  mainWindowMaterial = material
+  trackWindowChrome(window, window.webContents)
+  installWindowStatePersistence(window)
+
+  window.on('focus', () => {
+    updateApplicationWindowActivity()
+    // Defer so this wins over Chromium restoring focus into the sidebar shell.
+    setTimeout(() => toolWindowManager?.focusActiveView())
+  })
+  window.on('blur', updateApplicationWindowActivity)
+
+  window.once('ready-to-show', async () => {
+    let solidRequested = true
+    try {
+      solidRequested = await window.webContents.executeJavaScript(
+        `matchMedia('(prefers-reduced-transparency: reduce), (prefers-contrast: more), (forced-colors: active)').matches`
+      )
+    } catch { /* Use solid surfaces if accessibility detection fails. */ }
+    await material.initialize(solidRequested)
+    if (window.isDestroyed()) return
+    if (settings.general.startMaximized || savedWindow.maximized) {
+      window.maximize()
+    }
+    window.show()
+  })
+
+  window.on('close', (event) => {
+    if (isQuitting) {
+      return
+    }
+
+    const behavior = store.get('settings').general.closeBehavior
+    if (behavior === 'quit') {
+      isQuitting = true
+      app.quit()
+      return
+    }
+
+    event.preventDefault()
+    if (behavior === 'hide') {
+      window.hide()
+      return
+    }
+
+    void confirmClose(window)
+  })
+
+  window.on('closed', () => {
+    mainWindow = null
+    mainWindowMaterial = null
+  })
+
+  loadRenderer(window)
+  return window
+}
+
+function installWindowStatePersistence(window: BrowserWindow): void {
+  let timer: NodeJS.Timeout | undefined
+  const save = () => {
+    if (window.isDestroyed()) {
+      return
+    }
+    const bounds = window.isMaximized() ? window.getNormalBounds() : window.getBounds()
+    store.set('window', { bounds, maximized: window.isMaximized() })
+  }
+  const schedule = () => {
+    clearTimeout(timer)
+    timer = setTimeout(save, 250)
+  }
+
+  window.on('move', schedule)
+  window.on('resize', schedule)
+  window.on('maximize', save)
+  window.on('unmaximize', save)
+  window.on('closed', () => clearTimeout(timer))
+}
+
+async function confirmClose(window: BrowserWindow): Promise<void> {
+  if (closePromptOpen) {
+    return
+  }
+  closePromptOpen = true
+  const language = store.get('settings').general.language
+  const labels = closeDialogLabels[language]
+
+  try {
+    const result = await dialog.showMessageBox(window, {
+      type: 'question',
+      title: 'MooTool',
+      message: labels.message,
+      buttons: [labels.hide, labels.quit, labels.cancel],
+      defaultId: 0,
+      cancelId: 2,
+      noLink: true
+    })
+    if (result.response === 0) {
+      window.hide()
+    } else if (result.response === 1) {
+      isQuitting = true
+      app.quit()
+    }
+  } finally {
+    closePromptOpen = false
+  }
+}
+
+function registerIpc(): void {
+  let aiIntegration: Promise<AiIntegrationService> | undefined
+  const getAiIntegration = () => aiIntegration ??= import('./aiIntegrationService').then(({ AiIntegrationService }) => new AiIntegrationService({
+    home: app.getPath('home'),
+    codexHome: process.env.CODEX_HOME,
+    claudeConfigDir: process.env.CLAUDE_CONFIG_DIR,
+    stateDirectory: join(app.getPath('userData'), 'ai-integration'),
+    getRoots: () => ({ notes: getQuickNoteRoot(), json: getJsonVaultRoot() }),
+    command: process.execPath,
+    entry: join(__dirname, 'mcp.js'),
+    unavailableReason: process.env.APPIMAGE || process.env.PORTABLE_EXECUTABLE_DIR || process.execPath.includes('/AppTranslocation/')
+      ? 'Install MooTool in a permanent location (macOS Applications, Windows installer or Linux deb) before adding AI integration.' : undefined
+  }))
+  ipcMain.handle('ai-integration:preview', async (event, input: unknown) => {
+    assertMainRenderer(event.sender)
+    return (await getAiIntegration()).preview(input)
+  })
+  ipcMain.handle('ai-integration:status', async (event, client: unknown) => {
+    assertMainRenderer(event.sender)
+    return (await getAiIntegration()).getStatus(client)
+  })
+  ipcMain.handle('ai-integration:access', async (event) => {
+    assertMainRenderer(event.sender)
+    return (await getAiIntegration()).getDataAccess()
+  })
+  ipcMain.handle('ai-integration:set-access', async (event, input: unknown) => {
+    assertMainRenderer(event.sender)
+    return (await getAiIntegration()).setDataAccess(input)
+  })
+  ipcMain.handle('ai-integration:install', async (event, id: unknown) => {
+    assertMainRenderer(event.sender)
+    return (await getAiIntegration()).install(id)
+  })
+  ipcMain.handle('ai-integration:test', async (event) => {
+    assertMainRenderer(event.sender)
+    return (await getAiIntegration()).testConnection()
+  })
+  ipcMain.handle('app:get-version', () => app.getVersion())
+  ipcMain.handle('app:get-paths', (): AppPaths => ({
+    userData: app.getPath('userData'),
+    documents: app.getPath('documents'),
+    downloads: app.getPath('downloads')
+  }))
+  ipcMain.handle('window:material-get', (event) =>
+    (event.sender === mainWindow?.webContents ? mainWindowMaterial : toolWindowManager.materialFor(event.sender))?.material ?? 'solid')
+  ipcMain.handle('window:material-status', () => mainWindowMaterial?.status(store.get('settings').appearance.windowMaterial) ?? null)
+  ipcMain.handle('window:fullscreen-get', (event) => resolveOwnerWindow(event.sender)?.isFullScreen() ?? false)
+  ipcMain.handle('window:material-accessibility', async (event, solid: unknown) => {
+    if (typeof solid !== 'boolean') return
+    if (event.sender === mainWindow?.webContents) await mainWindowMaterial?.setAccessibility(solid)
+    else await toolWindowManager.setMaterialAccessibility(event.sender, solid)
+  })
+  ipcMain.handle('theme:get-system', () => (nativeTheme.shouldUseDarkColors ? 'dark' : 'light'))
+  ipcMain.handle('system:set-prevent-display-sleep', (event, enabled: unknown) => {
+    assertToolWindowAccess(event.sender, 'messageBoard')
+    if (typeof enabled !== 'boolean') throw new Error('Invalid display sleep preference')
+
+    const senderId = event.sender.id
+    if (enabled && !displaySleepCleanupSenders.has(senderId)) {
+      displaySleepCleanupSenders.add(senderId)
+      event.sender.once('destroyed', () => {
+        displaySleepCleanupSenders.delete(senderId)
+        displaySleepService.set(senderId, false)
+      })
+    }
+    return displaySleepService.set(senderId, enabled)
+  })
+  ipcMain.handle('settings:get', () => store.get('settings'))
+  ipcMain.handle('shortcuts:global-status', (event) => {
+    assertMainRenderer(event.sender)
+    return commandShortcut.getStatus()
+  })
+  ipcMain.handle('shortcuts:global-retry', (event) => {
+    assertMainRenderer(event.sender)
+    const { globalSearchEnabled, globalSearch } = store.get('settings').shortcuts
+    const status = commandShortcut.apply(globalSearchEnabled, globalSearch)
+    broadcast('shortcuts:global-status-changed', status)
+    return status
+  })
+  // Vault changes await access revocation; serialize patches to avoid lost settings.
+  let settingsUpdates: Promise<unknown> = Promise.resolve()
+  ipcMain.handle('settings:update', (_event, patch: SettingsPatch) => {
+    const update = settingsUpdates.then(async () => {
+      const previous = store.get('settings')
+      const settings = mergeSettings(previous, isRecord(patch) ? patch : {})
+      if (previous.data.directory !== settings.data.directory || previous.vault.quickNotePath !== settings.vault.quickNotePath || previous.vault.jsonPath !== settings.vault.jsonPath) {
+        await (await getAiIntegration()).setDataAccess({ notes: false, json: false })
+      }
+      store.set('settings', settings)
+      if (previous.data.directory !== settings.data.directory) {
+        closeDataRepositories()
+        try {
+          openDataRepositories(settings)
+          store.set('activeHostId', null)
+        } catch (error) {
+          store.set('settings', previous)
+          openDataRepositories(previous)
+          throw error
+        }
+      }
+      applySettings(settings)
+      broadcast('settings:changed', settings)
+      return settings
+    })
+    settingsUpdates = update.catch(() => undefined)
+    return update
+  })
+  ipcMain.handle('settings:open', (_event, category?: unknown) => {
+    openSettingsPage(typeof category === 'string' ? category : undefined)
+  })
+  ipcMain.handle('window:dismiss', (event) => {
+    if (!store.get('settings').general.escapeHidesWindow) return
+    if (closeHttpResponseWindow(event.sender.id)) return
+    if (toolWindowManager.dismissOwner(event.sender)) return
+
+    const window = BrowserWindow.fromWebContents(event.sender)
+    if (!window || window.isDestroyed()) return
+    window.hide()
+  })
+  ipcMain.handle('update:check', () => checkForUpdates())
+  ipcMain.handle('update:get-state', (): UpdateDownloadState => updateManager.getState())
+  ipcMain.handle('update:open-release', async () => {
+    await shell.openExternal(lastUpdateResult?.releaseUrl ?? defaultReleaseUrl)
+  })
+  ipcMain.handle('update:download', () => updateManager.download())
+  ipcMain.handle('update:install', async () => {
+    isQuitting = true
+    try {
+      await updateManager.install()
+    } catch (error) {
+      isQuitting = false
+      throw error
+    }
+  })
+  ipcMain.handle('app:open-project', async () => {
+    await shell.openExternal(externalPages.github)
+  })
+  ipcMain.handle('app:open-external', async (_event, pageId: unknown) => {
+    if (!isExternalPageId(pageId)) throw new Error('Unknown external page')
+    await shell.openExternal(externalPages[pageId])
+  })
+  ipcMain.handle('secret:status', (_event, key: SecretKey): SecretStatus => {
+    const normalizedKey = normalizeSecretKey(key)
+    return {
+      key: normalizedKey,
+      stored: Boolean(store.get('secrets')[normalizedKey]),
+      encryptionAvailable: safeStorage.isEncryptionAvailable()
+    }
+  })
+  ipcMain.handle('secret:set', (_event, key: SecretKey, value: string): SecretStatus => {
+    const normalizedKey = normalizeSecretKey(key)
+    if (!safeStorage.isEncryptionAvailable()) {
+      throw new Error('Secure storage is unavailable')
+    }
+    if (typeof value !== 'string' || value.length > 8192) {
+      throw new Error('Invalid secret value')
+    }
+    const secrets = store.get('secrets')
+    if (value) {
+      secrets[normalizedKey] = safeStorage.encryptString(value).toString('base64')
+    } else {
+      delete secrets[normalizedKey]
+    }
+    store.set('secrets', secrets)
+    return { key: normalizedKey, stored: Boolean(value), encryptionAvailable: true }
+  })
+  ipcMain.handle('secret:clear', (_event, key: SecretKey): SecretStatus => {
+    const normalizedKey = normalizeSecretKey(key)
+    const secrets = store.get('secrets')
+    delete secrets[normalizedKey]
+    store.set('secrets', secrets)
+    return { key: normalizedKey, stored: false, encryptionAvailable: safeStorage.isEncryptionAvailable() }
+  })
+  ipcMain.handle('workspace:get', () => store.get('workspace'))
+  ipcMain.handle('command-palette:get', (event) => {
+    assertMainRenderer(event.sender)
+    return normalizeCommandPaletteState(store.get('commandPalette'))
+  })
+  ipcMain.handle('command-palette:read-clipboard', (event) => {
+    assertMainRenderer(event.sender)
+    const text = clipboard.readText()
+    const html = clipboard.availableFormats().includes('text/html') ? clipboard.readHTML() : ''
+    if (text.length > 100_000 || html.length > 100_000) throw new Error('app.command.tooLarge')
+    return { text, html }
+  })
+  ipcMain.handle('command-palette:import', async (event, input: unknown) => {
+    assertMainRenderer(event.sender)
+    if (!isRecord(input) || !isCommandActionId(input.actionId) || typeof input.content !== 'string' || input.content.length > 1_000_000) throw new Error('Invalid command result')
+    const kind = commandImportTarget(input.actionId)
+    const rootDirectory = kind === 'json' ? getJsonVaultRoot() : getQuickNoteRoot()
+    let relativePath: string
+    if (kind === 'json') {
+      JSON.parse(input.content)
+      const repository = new JsonVaultRepository(rootDirectory)
+      const file = await repository.createDefault(input.content)
+      relativePath = file.relativePath
+      await vaultWorkspaceService.remember({ kind, rootDirectory, relativePath }, repository)
+      jsonVaultCheckpointScheduler.recordActivity('Import command result')
+    } else {
+      const repository = new QuickNoteVaultRepository(rootDirectory)
+      const settings = store.get('settings')
+      const format = commandOutputFormat(input.actionId)
+      const syntax = format === 'markdown' ? 'text/markdown' : format === 'html' ? 'text/html' : 'text/plain'
+      const file = await repository.create({ content: input.content, syntax, title: messages[settings.general.language][commandActionTitles[input.actionId]],
+        fontName: settings.editor.quickNoteFontName, fontSize: settings.editor.quickNoteFontSize, lineWrap: settings.editor.softWrap })
+      relativePath = file.relativePath
+      await vaultWorkspaceService.remember({ kind, rootDirectory, relativePath }, repository)
+      quickNoteCheckpointScheduler.recordActivity('Import command result')
+    }
+    const result = { kind, rootDirectory, relativePath }
+    broadcast('command-palette:imported', result)
+    return result
+  })
+  ipcMain.handle('command-palette:update', (event, operation: unknown) => {
+    assertMainRenderer(event.sender)
+    const previous = normalizeCommandPaletteState(store.get('commandPalette'))
+    const state = updateCommandPaletteState(previous, operation)
+    store.set('commandPalette', state)
+    if (previous.pinnedActionIds.join(',') !== state.pinnedActionIds.join(',')) updateTray(store.get('settings'))
+    broadcast('command-palette:changed', state)
+    return state
+  })
+  ipcMain.handle('command-palette:open-action', (event, actionId: unknown) => {
+    assertMainRenderer(event.sender)
+    if (!isCommandActionId(actionId)) throw new Error('Invalid command action')
+    navigateMainWindow({ type: 'run-command-action', actionId })
+  })
+  ipcMain.handle('workspace:set', (_event, nextState: WorkspaceState) => {
+    const state = normalizeWorkspaceState(nextState)
+    store.set('workspace', state)
+    return state
+  })
+  ipcMain.handle('tool-window:snapshot', () => toolWindowManager.snapshot())
+  ipcMain.handle('tool-window:activate', (event, toolId: unknown) => {
+    assertMainRenderer(event.sender)
+    if (!isToolId(toolId)) throw new Error('Invalid tool id')
+    return toolWindowManager.activate(toolId)
+  })
+  ipcMain.handle('tool-window:set-workspace-bounds', (event, bounds: unknown) => {
+    assertMainRenderer(event.sender)
+    return toolWindowManager.setWorkspaceBounds(normalizeToolWorkspaceBounds(bounds))
+  })
+  ipcMain.handle('tool-window:get-state', (_event, toolId: unknown) => {
+    if (!isDetachableToolId(toolId)) throw new Error('Invalid detachable tool id')
+    return toolWindowManager.getStatus(toolId)
+  })
+  ipcMain.handle('tool-window:detach', (event, toolId: unknown) => {
+    if (!isDetachableToolId(toolId)) throw new Error('Invalid detachable tool id')
+    assertToolWindowAccess(event.sender, toolId)
+    return toolWindowManager.detach(toolId)
+  })
+  ipcMain.handle('tool-window:dock', (event, toolId: unknown) => {
+    if (!isDetachableToolId(toolId)) throw new Error('Invalid detachable tool id')
+    assertToolWindowAccess(event.sender, toolId)
+    return toolWindowManager.dock(toolId)
+  })
+  ipcMain.handle('tool-window:focus', (event, toolId: unknown) => {
+    assertMainRenderer(event.sender)
+    if (!isDetachableToolId(toolId)) throw new Error('Invalid detachable tool id')
+    return toolWindowManager.focus(toolId)
+  })
+  ipcMain.handle('tool-window:set-title', (event, toolId: unknown, title: unknown) => {
+    if (!isDetachableToolId(toolId) || !toolWindowManager.owns(toolId, event.sender)) throw new Error('Invalid tool window')
+    if (typeof title !== 'string') throw new Error('Invalid tool window title')
+    toolWindowManager.setTitle(toolId, title)
+  })
+  ipcMain.handle('draft:get', (_event, kind: string) => {
+    if (kind !== 'regex' && kind !== 'calculator') throw new Error('Invalid draft kind')
+    return historyRepository.getDraft(kind)
+  })
+  ipcMain.handle('draft:save', (_event, kind: string, value: string) => {
+    if ((kind !== 'regex' && kind !== 'calculator') || typeof value !== 'string') throw new Error('Invalid draft')
+    historyRepository.saveDraft(kind, value)
+  })
+  ipcMain.handle('history:list', (_event, query: HistoryQuery) => historyRepository.list(normalizeHistoryQuery(query)))
+  ipcMain.handle('history:save', (_event, input: SaveFuncHistoryInput) => {
+    historyRepository.save(normalizeHistoryInput(input))
+  })
+  ipcMain.handle('history:delete', (_event, id: number) => {
+    if (!Number.isSafeInteger(id) || id <= 0) throw new Error('Invalid history id')
+    historyRepository.delete(id)
+  })
+  ipcMain.handle('history:clear', (_event, funcType: string) => historyRepository.clear(normalizeFuncType(funcType)))
+  ipcMain.handle('favorite:list', (_event, kind: FavoriteKind, folderId?: unknown) => favoriteRepository.list(normalizeFavoriteKind(kind), normalizeOptionalPositiveId(folderId)))
+  ipcMain.handle('favorite:save', (_event, input: SaveFavoriteInput) => favoriteRepository.save(normalizeFavoriteInput(input)))
+  ipcMain.handle('favorite:move', (_event, id: unknown, direction: unknown) => {
+    if (direction !== -1 && direction !== 1) throw new Error('Invalid direction')
+    favoriteRepository.move(normalizePositiveId(id), direction)
+  })
+  ipcMain.handle('favorite:delete', (_event, id: number) => {
+    if (!Number.isSafeInteger(id) || id <= 0) throw new Error('Invalid favorite id')
+    favoriteRepository.delete(id)
+  })
+  ipcMain.handle('favorite-folder:list', (_event, kind: FavoriteKind) => favoriteRepository.listFolders(normalizeFavoriteKind(kind)))
+  ipcMain.handle('favorite-folder:create', (_event, input: SaveFavoriteFolderInput) => favoriteRepository.createFolder(normalizeFavoriteFolderInput(input)))
+  ipcMain.handle('favorite-folder:rename', (_event, input: RenameFavoriteFolderInput) => favoriteRepository.renameFolder(normalizeRenameFavoriteFolderInput(input)))
+  ipcMain.handle('favorite-folder:delete', (_event, id: unknown) => favoriteRepository.deleteFolder(normalizePositiveId(id)))
+  ipcMain.handle('http:list', (_event, keyword?: string) => p5Repository.listHttpRequests(normalizeKeyword(keyword)))
+  ipcMain.handle('http:save', (_event, request: unknown, response?: unknown) => p5Repository.saveHttpRequest(normalizeHttpRequest(request), response == null ? undefined : normalizeHttpResponse(response)))
+  ipcMain.handle('http:delete', (_event, id: unknown) => p5Repository.deleteHttpRequest(normalizePositiveId(id)))
+  ipcMain.handle('http:history-list', (_event, keyword?: string) => p5Repository.listHttpHistory(normalizeKeyword(keyword)))
+  ipcMain.handle('http:history-delete', (_event, id: unknown) => p5Repository.deleteHttpHistory(normalizePositiveId(id)))
+  ipcMain.handle('http:history-clear', () => p5Repository.clearHttpHistory())
+  registerHttpResponseWindows()
+  ipcMain.handle('http:send', async (_event, value: unknown) => {
+    const input = normalizeHttpSendInput(value)
+    const response = await networkService.sendHttp(input, getProxyConfiguration())
+    p5Repository.saveHttpHistory(input.request, response)
+    return response
+  })
+  ipcMain.handle('network:cancel', (_event, requestId: unknown) => networkService.cancel(normalizeRequestId(requestId)))
+  ipcMain.handle('translation:send', async (_event, value: unknown) => {
+    const input = normalizeTranslationInput(value)
+    const deeplApiKey = input.preferredProvider === 'deepl' ? readSecret('deeplApiKey') : undefined
+    const proxyUrl = input.preferredProvider === 'deepl' ? deepLApiOrigin(deeplApiKey ?? '') : undefined
+    const result = await networkService.translate(input, await getTranslationProxyConfiguration(proxyUrl), { deeplApiKey })
+    // Return first; SQLite write should not delay the renderer.
+    setImmediate(() => {
+      try {
+        p5Repository.saveTranslationHistory({ sourceText: input.text, targetText: result.text, sourceLang: input.sourceLang, targetLang: input.targetLang, translatorType: result.provider })
+      } catch (error) {
+        console.error('Failed to save translation history', error)
+      }
+    })
+    return result
+  })
+  ipcMain.handle('translation:words-list', (_event, keyword?: string) => p5Repository.listTranslationWords(normalizeKeyword(keyword)))
+  ipcMain.handle('translation:words-save', (_event, value: unknown) => p5Repository.saveTranslationWord(normalizeTranslationWordInput(value)))
+  ipcMain.handle('translation:words-delete', (_event, id: unknown) => p5Repository.deleteTranslationWord(normalizePositiveId(id)))
+  ipcMain.handle('translation:history-list', (_event, keyword?: string) => p5Repository.listTranslationHistory(normalizeKeyword(keyword)))
+  ipcMain.handle('translation:history-save', (_event, value: unknown) => p5Repository.saveTranslationHistory(normalizeTranslationHistoryInput(value)))
+  ipcMain.handle('translation:history-delete', (_event, id: unknown) => p5Repository.deleteTranslationHistory(normalizePositiveId(id)))
+  ipcMain.handle('translation:history-clear', () => p5Repository.clearTranslationHistory())
+  ipcMain.handle('host:list', (_event, value?: HostProfileListInput) => {
+    const input = normalizeHostProfileListInput(value)
+    return p5Repository.listHosts(input.keyword, input.includeContent)
+  })
+  ipcMain.handle('host:save', (_event, value: unknown) => {
+    const profile = p5Repository.saveHost(normalizeHostInput(value))
+    updateTray(store.get('settings'))
+    return profile
+  })
+  ipcMain.handle('host:delete', (_event, id: unknown) => {
+    const hostId = normalizePositiveId(id)
+    p5Repository.deleteHost(hostId)
+    if (store.get('activeHostId') === hostId) store.set('activeHostId', null)
+    updateTray(store.get('settings'))
+  })
+  ipcMain.handle('host:read-system', () => systemService.readHosts())
+  ipcMain.handle('host:write-system', async (_event, content: unknown, activeHostId?: unknown) => {
+    const result = await systemService.writeHosts(typeof content === 'string' ? content : '')
+    const hostId = typeof activeHostId === 'number' ? normalizePositiveId(activeHostId) : null
+    store.set('activeHostId', hostId)
+    updateTray(store.get('settings'))
+    return result
+  })
+  ipcMain.handle('system:network-command', (_event, value: unknown) => systemService.runNetwork(normalizeNetworkInput(value)))
+  ipcMain.handle('system:cancel', (_event, requestId: unknown) => systemService.cancel(normalizeRequestId(requestId)))
+  ipcMain.handle('system:environment', () => systemService.getEnvironment())
+  ipcMain.handle('system:environment-set', (_event, value: unknown) => systemService.setEnvironmentVariable(normalizeEnvironmentVariableInput(value)))
+  ipcMain.handle('system:environment-delete', (_event, value: unknown) => systemService.deleteEnvironmentVariable(normalizeDeleteEnvironmentVariableInput(value)))
+  ipcMain.handle('system:local-addresses', () => systemService.getLocalAddresses())
+  ipcMain.handle('system:info', () => systemService.getSystemInfo())
+  ipcMain.handle('runtime:run', (event, value: unknown) => {
+    const input = normalizeRuntimeExecutionInput(value)
+    const settings = store.get('settings')
+    return runtimeExecutionService.run(input, {
+      java: settings.runtime.javaPath,
+      groovy: settings.runtime.groovyPath,
+      python: settings.runtime.pythonPath,
+      node: settings.runtime.nodePath
+    }, (output) => {
+      if (!event.sender.isDestroyed()) event.sender.send('runtime:output', output)
+    })
+  })
+  ipcMain.handle('runtime:cancel', (_event, requestId: unknown) => runtimeExecutionService.cancel(normalizeRequestId(requestId)))
+  ipcMain.handle('regex:match', (event, input: unknown) => javaRegexService.match(event.sender.id, input, store.get('settings').runtime.javaPath))
+  ipcMain.handle('regex:cancel', event => javaRegexService.cancel(event.sender.id))
+  ipcMain.handle('runtime:detect', () => detectRuntimes(store.get('settings')))
+  ipcMain.handle('dialog:choose-directory', async (event, initialPath?: string) => {
+    const owner = resolveOwnerWindow(event.sender) ?? mainWindow
+    const options: OpenDialogOptions = {
+      defaultPath: typeof initialPath === 'string' && initialPath ? initialPath : undefined,
+      properties: ['openDirectory', 'createDirectory']
+    }
+    const result = owner
+      ? await dialog.showOpenDialog(owner, options)
+      : await dialog.showOpenDialog(options)
+    return result.canceled ? null : result.filePaths[0] ?? null
+  })
+  ipcMain.handle('files:open-text', async (event, kind: TextFileKind): Promise<TextFileResult | null> => {
+    const normalizedKind = normalizeTextFileKind(kind)
+    const owner = resolveOwnerWindow(event.sender) ?? mainWindow
+    const options: OpenDialogOptions = {
+      properties: ['openFile'],
+      filters: [textFileFilters[normalizedKind]]
+    }
+    const result = owner ? await dialog.showOpenDialog(owner, options) : await dialog.showOpenDialog(options)
+    if (result.canceled || !result.filePaths[0]) return null
+    const path = result.filePaths[0]
+    const fileStat = await stat(path)
+    if (fileStat.size > 20 * 1024 * 1024) throw new Error('File exceeds 20 MB limit')
+    return { path, name: basename(path), content: await readFile(path, 'utf8') }
+  })
+  ipcMain.handle('batch-rename:select', async (event) => {
+    assertToolWindowAccess(event.sender, 'batchRename')
+    const owner = resolveOwnerWindow(event.sender) ?? mainWindow
+    const options: OpenDialogOptions = { properties: ['openFile', 'multiSelections'] }
+    const result = owner ? await dialog.showOpenDialog(owner, options) : await dialog.showOpenDialog(options)
+    if (result.canceled) return null
+    return batchRenameService.select(event.sender.id, result.filePaths)
+  })
+  ipcMain.handle('batch-rename:preview', (event, ids: unknown, options: unknown) => {
+    assertToolWindowAccess(event.sender, 'batchRename')
+    return batchRenameService.preview(event.sender.id, ids, options)
+  })
+  ipcMain.handle('batch-rename:execute', async (event, token: unknown) => {
+    assertToolWindowAccess(event.sender, 'batchRename')
+    const result = await batchRenameService.execute(event.sender.id, token)
+    broadcast('batch-rename:status-changed', result.status)
+    return result
+  })
+  ipcMain.handle('batch-rename:undo', async (event) => {
+    assertToolWindowAccess(event.sender, 'batchRename')
+    const result = await batchRenameService.undo(event.sender.id)
+    broadcast('batch-rename:status-changed', result.status)
+    return result
+  })
+  ipcMain.handle('batch-rename:status', (event) => {
+    assertToolWindowAccess(event.sender, 'batchRename')
+    return batchRenameService.status()
+  })
+  ipcMain.handle('files:save-text', async (event, input: SaveTextFileInput): Promise<string | null> => {
+    if (!isRecord(input) || typeof input.content !== 'string' || input.content.length > 20 * 1024 * 1024) {
+      throw new Error('Invalid text file')
+    }
+    const kind = normalizeTextFileKind(input.kind)
+    const owner = resolveOwnerWindow(event.sender) ?? mainWindow
+    const defaultName = sanitizeDefaultFileName(input.defaultName, kind)
+    const options = { defaultPath: defaultName, filters: [textFileFilters[kind]] }
+    const result = owner ? await dialog.showSaveDialog(owner, options) : await dialog.showSaveDialog(options)
+    if (result.canceled || !result.filePath) return null
+    await writeFile(result.filePath, input.content, 'utf8')
+    return result.filePath
+  })
+  ipcMain.handle('files:digest', async (event, algorithm: DigestAlgorithmId): Promise<DigestFileResult | null> => {
+    const normalizedAlgorithm = normalizeDigestAlgorithm(algorithm)
+    const owner = resolveOwnerWindow(event.sender) ?? mainWindow
+    const options: OpenDialogOptions = { properties: ['openFile'] }
+    const result = owner ? await dialog.showOpenDialog(owner, options) : await dialog.showOpenDialog(options)
+    if (result.canceled || !result.filePaths[0]) return null
+    const path = result.filePaths[0]
+    const fileStat = await stat(path)
+    const digest = await hashFile(path, normalizedAlgorithm)
+    return { path, name: basename(path), size: fileStat.size, digest }
+  })
+  ipcMain.handle('files:choose-image', async (event): Promise<ImageFilePayload | null> => {
+    const owner = resolveOwnerWindow(event.sender) ?? mainWindow
+    const options: OpenDialogOptions = { properties: ['openFile'], filters: [imageFileFilter] }
+    const result = owner ? await dialog.showOpenDialog(owner, options) : await dialog.showOpenDialog(options)
+    if (result.canceled || !result.filePaths[0]) return null
+    return readImagePayload(result.filePaths[0])
+  })
+  ipcMain.handle('files:save-binary', async (event, input: SaveBinaryFileInput): Promise<string | null> => {
+    const normalized = normalizeBinaryFileInput(input)
+    const owner = resolveOwnerWindow(event.sender) ?? mainWindow
+    const options = {
+      defaultPath: sanitizeBinaryFileName(normalized.defaultName, normalized.kind),
+      filters: [binaryFileFilters[normalized.kind]]
+    }
+    const result = owner ? await dialog.showSaveDialog(owner, options) : await dialog.showSaveDialog(options)
+    if (result.canceled || !result.filePath) return null
+    await writeFile(result.filePath, decodeDataUrl(normalized.dataUrl))
+    return result.filePath
+  })
+  ipcMain.handle('clipboard:read-image', (): string | null => {
+    const image = clipboard.readImage()
+    return image.isEmpty() ? null : image.toDataURL()
+  })
+  ipcMain.handle('clipboard:write-image', (_event, dataUrl: string) => {
+    const image = nativeImage.createFromDataURL(normalizeDataUrl(dataUrl))
+    if (image.isEmpty()) throw new Error('Invalid image data')
+    const clipboardImage = process.platform === 'darwin'
+      ? nativeImage.createFromBuffer(image.toJPEG(100))
+      : image
+    clipboard.writeImage(clipboardImage)
+  })
+  ipcMain.handle('screen:capture', async (event): Promise<ScreenCapture[]> => {
+    const owner = resolveOwnerWindow(event.sender) ?? mainWindow
+    const wasVisible = owner?.isVisible() ?? false
+    if (wasVisible) owner?.hide()
+    try {
+      await delay(180)
+      const displays = screen.getAllDisplays()
+      const maxWidth = Math.min(3840, Math.max(...displays.map((display) => Math.round(display.size.width * display.scaleFactor)), 1920))
+      const maxHeight = Math.min(2160, Math.max(...displays.map((display) => Math.round(display.size.height * display.scaleFactor)), 1080))
+      const sources = await desktopCapturer.getSources({ types: ['screen'], thumbnailSize: { width: maxWidth, height: maxHeight }, fetchWindowIcons: false })
+      return sources.map((source) => {
+        const size = source.thumbnail.getSize()
+        return { id: source.id, name: source.name, width: size.width, height: size.height, dataUrl: source.thumbnail.toDataURL() }
+      })
+    } finally {
+      if (wasVisible && owner && !owner.isDestroyed()) { owner.show(); owner.focus() }
+    }
+  })
+  ipcMain.handle('screen:capture-region', (event): Promise<ScreenCaptureResult | null> => {
+    return startScreenCapture(resolveOwnerWindow(event.sender) ?? mainWindow)
+  })
+  ipcMain.handle('screen-capture:get-overlay', (event): ScreenCaptureOverlayData | null => {
+    const session = screenCaptureSession
+    const record = session?.overlays.get(event.sender.id)
+    if (!session || session.mode !== 'capture' || !record) return null
+    const size = record.image.getSize()
+    return {
+      displayId: String(record.display.id),
+      displayName: record.displayName,
+      width: size.width,
+      height: size.height,
+      dataUrl: record.image.toDataURL()
+    }
+  })
+  ipcMain.handle('screen-capture:confirm', (event, value: unknown) => {
+    const session = screenCaptureSession
+    const record = session?.overlays.get(event.sender.id)
+    if (!session || session.mode !== 'capture' || !record) return
+    const imageSize = record.image.getSize()
+    const rect = normalizeScreenCaptureRect(value, imageSize.width, imageSize.height)
+    const image = record.image.crop(rect)
+    const result = { width: rect.width, height: rect.height, dataUrl: image.toDataURL() }
+    setImmediate(() => finishScreenCapture(result))
+  })
+  ipcMain.handle('screen-capture:cancel', (event) => {
+    if (screenCaptureSession?.mode === 'capture' && screenCaptureSession.overlays.has(event.sender.id)) setImmediate(() => finishScreenCapture(null))
+  })
+  ipcMain.handle('screen-color:pick', (event): Promise<string | null> => {
+    return startScreenCapture(resolveOwnerWindow(event.sender) ?? mainWindow, 'color-picker')
+  })
+  ipcMain.handle('screen-color:get-overlay', (event): ScreenCaptureOverlayData | null => {
+    const session = screenCaptureSession
+    const record = session?.overlays.get(event.sender.id)
+    if (!session || session.mode !== 'color-picker' || !record) return null
+    const size = record.image.getSize()
+    return {
+      displayId: String(record.display.id),
+      displayName: record.displayName,
+      width: size.width,
+      height: size.height,
+      dataUrl: record.image.toDataURL()
+    }
+  })
+  ipcMain.handle('screen-color:confirm', (event, value: unknown) => {
+    const session = screenCaptureSession
+    if (!session || session.mode !== 'color-picker' || !session.overlays.has(event.sender.id)) return
+    const color = normalizeScreenColor(value)
+    setImmediate(() => finishScreenCapture(color))
+  })
+  ipcMain.handle('screen-color:cancel', (event) => {
+    if (screenCaptureSession?.mode === 'color-picker' && screenCaptureSession.overlays.has(event.sender.id)) setImmediate(() => finishScreenCapture(null))
+  })
+  ipcMain.handle('screen-color:consume-pending', (event): string | null => {
+    assertToolWindowAccess(event.sender, 'colorBoard')
+    const color = pendingScreenColor
+    pendingScreenColor = null
+    return color
+  })
+  ipcMain.handle('images:list', () => createImageRepository().list())
+  ipcMain.handle('ocr:status', async (event) => {
+    assertToolWindowAccess(event.sender, 'image')
+    await optionalOcrComponent?.initialize()
+    const component = optionalOcrComponent?.status()
+    if (component && component.status !== 'installed') return { available: false, engine: null, languages: [], reason: 'component', component }
+    return { ...await ocrService.status(), component }
+  })
+  ipcMain.handle('ocr:download', async (event) => {
+    assertToolWindowAccess(event.sender, 'image')
+    if (!optionalOcrComponent) throw new Error('OCR download unavailable')
+    await optionalOcrComponent.initialize()
+    return optionalOcrComponent.install()
+  })
+  ipcMain.handle('ocr:restart', (event) => {
+    assertToolWindowAccess(event.sender, 'image')
+    if (!app.isPackaged || optionalOcrComponent?.status().status !== 'restart') return false
+    app.relaunch()
+    app.quit()
+    return true
+  })
+  ipcMain.handle('ocr:recognize', (event, input: unknown) => {
+    assertToolWindowAccess(event.sender, 'image')
+    if (optionalOcrComponent && optionalOcrComponent.status().status !== 'installed') throw new Error('image.ocr.error.unavailable')
+    return ocrService.recognize(event.sender.id, input)
+  })
+  ipcMain.handle('ocr:cancel', (event, requestId: unknown) => {
+    assertToolWindowAccess(event.sender, 'image')
+    return ocrService.cancel(event.sender.id, requestId)
+  })
+  ipcMain.handle('images:read', (_event, name: string) => createImageRepository().read(normalizeImageName(name)))
+  ipcMain.handle('images:import', async (event) => {
+    const owner = resolveOwnerWindow(event.sender) ?? mainWindow
+    const options: OpenDialogOptions = { properties: ['openFile', 'multiSelections'], filters: [imageFileFilter] }
+    const result = owner ? await dialog.showOpenDialog(owner, options) : await dialog.showOpenDialog(options)
+    return result.canceled ? [] : createImageRepository().import(result.filePaths)
+  })
+  ipcMain.handle('images:save', (_event, input: SaveImageAssetInput) => {
+    if (!isRecord(input) || typeof input.name !== 'string' || typeof input.dataUrl !== 'string') throw new Error('Invalid image')
+    return createImageRepository().save({ name: normalizeImageName(input.name), dataUrl: normalizeDataUrl(input.dataUrl), createOnly: input.createOnly === true })
+  })
+  ipcMain.handle('images:rename', (_event, input: RenameImageAssetInput) => {
+    if (!isRecord(input) || typeof input.name !== 'string' || typeof input.nextName !== 'string') throw new Error('Invalid image rename')
+    return createImageRepository().rename({ name: normalizeImageName(input.name), nextName: normalizeImageName(input.nextName) })
+  })
+  ipcMain.handle('images:delete', (_event, names: string[]) => createImageRepository().delete(normalizeImageNames(names)))
+  ipcMain.handle('images:export', async (event, names: string[]): Promise<string | null> => {
+    const normalizedNames = normalizeImageNames(names)
+    const owner = resolveOwnerWindow(event.sender) ?? mainWindow
+    const result = owner
+      ? await dialog.showOpenDialog(owner, { properties: ['openDirectory', 'createDirectory'] })
+      : await dialog.showOpenDialog({ properties: ['openDirectory', 'createDirectory'] })
+    if (result.canceled || !result.filePaths[0]) return null
+    await createImageRepository().export(normalizedNames, result.filePaths[0])
+    return result.filePaths[0]
+  })
+  ipcMain.handle('images:open', async (_event, name: string) => {
+    const error = await shell.openPath(createImageRepository().pathFor(normalizeImageName(name)))
+    if (error) throw new Error(error)
+  })
+  const imageTasks = new Map<number, AbortController>()
+  ipcMain.handle('images:cancel-batch', event => imageTasks.get(event.sender.id)?.abort())
+  ipcMain.handle('images:vectorize-svg', async (event, names: string[], value: ImageVectorizeOptions, jobId?: string): Promise<ImageVectorizeResult | null> => {
+    const normalizedNames = normalizeImageNames(names)
+    const vectorizeOptions = normalizeImageVectorizeOptions(value)
+    const owner = resolveOwnerWindow(event.sender) ?? mainWindow
+    if (imageTasks.has(event.sender.id)) throw new Error('Image batch is already running')
+    const controller = new AbortController()
+    imageTasks.set(event.sender.id, controller)
+    const abort = () => controller.abort()
+    event.sender.once('destroyed', abort)
+    try {
+      const targets: Array<{ name: string; path: string }> = []
+      let outputPath: string
+
+      if (normalizedNames.length === 1) {
+        const defaultName = `${parse(normalizedNames[0]).name}.svg`
+        const saveOptions = { defaultPath: join(app.getPath('desktop'), defaultName), filters: [svgFileFilter] }
+        const result = owner ? await dialog.showSaveDialog(owner, saveOptions) : await dialog.showSaveDialog(saveOptions)
+        if (result.canceled || !result.filePath) return null
+        outputPath = extname(result.filePath).toLowerCase() === '.svg' ? result.filePath : `${result.filePath}.svg`
+        targets.push({ name: normalizedNames[0], path: outputPath })
+      } else {
+        const result = owner
+          ? await dialog.showOpenDialog(owner, { properties: ['openDirectory', 'createDirectory'] })
+          : await dialog.showOpenDialog({ properties: ['openDirectory', 'createDirectory'] })
+        if (result.canceled || !result.filePaths[0]) return null
+        outputPath = result.filePaths[0]
+        const reserved = new Set<string>()
+        for (const name of normalizedNames) {
+          targets.push({ name, path: await availableSvgPath(outputPath, parse(name).name, reserved) })
+        }
+      }
+
+      const writtenPaths: string[] = []
+      controller.signal.throwIfAborted()
+      const repository = createImageRepository()
+      const progress = await runImageBatch(targets.map(target => target.name), async (name, signal) => {
+        const target = targets.find(item => item.name === name)!
+        const image = nativeImage.createFromPath(repository.pathFor(name))
+        if (image.isEmpty()) throw new Error(`Unable to read image: ${name}`)
+        const size = image.getSize()
+        if (size.width * size.height > MAX_VECTOR_PIXELS) throw new Error(`${name} exceeds the 16 megapixel vectorization limit`)
+        const svg = await vectorizeInWorker(image.toPNG(), vectorizeOptions, signal)
+        signal.throwIfAborted()
+        await writeFile(target.path, svg, 'utf8')
+        writtenPaths.push(target.path)
+      }, controller.signal, progress => {
+        if (!event.sender.isDestroyed()) event.sender.send('images:batch-progress', { jobId, ...progress })
+      })
+      return { outputPath, files: writtenPaths, progress }
+    } finally {
+      event.sender.removeListener('destroyed', abort)
+      imageTasks.delete(event.sender.id)
+    }
+  })
+  const withPdfJob = async <T>(event: Electron.IpcMainInvokeEvent, id: unknown, operation: (job: PdfJob) => Promise<T>) => {
+    const jobId = id === undefined ? randomUUID() : normalizeRequestId(id)
+    const owner = event.sender.id
+    if (!pdfOutputOwners.has(owner)) {
+      pdfOutputOwners.add(owner)
+      event.sender.once('destroyed', () => { pdfOutputs.forget(owner); pdfOutputOwners.delete(owner) })
+    }
+    const cancel = () => { pdfTasks.cancel(event.sender.id, jobId) }
+    event.sender.once('destroyed', cancel)
+    event.sender.once('render-process-gone', cancel)
+    try {
+      return await pdfTasks.run(event.sender.id, jobId, progress => {
+        if (!event.sender.isDestroyed()) event.sender.send('pdf:progress', progress)
+      }, operation)
+    } finally {
+      event.sender.removeListener('destroyed', cancel)
+      event.sender.removeListener('render-process-gone', cancel)
+    }
+  }
+  ipcMain.handle('pdf:output-action', async (event, path: unknown, action: unknown) => {
+    const output = pdfOutputs.authorize(event.sender.id, path, action)
+    if (!(await lstat(output.path)).isFile()) throw new Error('PDF output is no longer a regular file')
+    if (output.action === 'reveal') shell.showItemInFolder(output.path)
+    else { const error = await shell.openPath(output.path); if (error) throw new Error(error) }
+  })
+  ipcMain.handle('pdf:cancel', (event, id: unknown) => pdfTasks.cancel(event.sender.id, normalizeRequestId(id)))
+  ipcMain.handle('pdf:choose-files', (event, id?: unknown) => withPdfJob(event, id, async job => {
+    const owner = resolveOwnerWindow(event.sender) ?? mainWindow
+    const options: OpenDialogOptions = { properties: ['openFile', 'multiSelections'], filters: [pdfFileFilter] }
+    const result = owner ? await dialog.showOpenDialog(owner, options) : await dialog.showOpenDialog(options)
+    if (result.canceled) return []
+    const files = await job.execute({ kind: 'inspect', paths: result.filePaths.slice(0, 20) })
+    for (const file of files) allowedPdfPaths.add(file.path)
+    return files
+  }))
+  ipcMain.handle('pdf:merge', (event, sources: PdfMergeSource[], id?: unknown) => withPdfJob(event, id, async job => {
+    const normalizedSources = normalizePdfMergeSources(sources)
+    const owner = resolveOwnerWindow(event.sender) ?? mainWindow
+    const options = { defaultPath: join(app.getPath('desktop'), 'merge.pdf'), filters: [pdfFileFilter] }
+    const result = owner ? await dialog.showSaveDialog(owner, options) : await dialog.showSaveDialog(options)
+    if (result.canceled || !result.filePath) return null
+    const output = await job.execute({ kind: 'merge', sources: normalizedSources, outputPath: result.filePath })
+    if (!event.sender.isDestroyed()) pdfOutputs.remember(event.sender.id, output.outputs)
+    return output
+  }))
+  ipcMain.handle('pdf:split', (event, tasks: PdfSplitTask[], id?: unknown) => withPdfJob(event, id, async job => {
+    const output = await job.execute({ kind: 'split', tasks: normalizePdfSplitTasks(tasks) })
+    if (!event.sender.isDestroyed()) pdfOutputs.remember(event.sender.id, output.outputs)
+    return output
+  }))
+  ipcMain.handle('json-vault:list', (_event, input?: JsonVaultListInput) => createJsonVaultRepository().list(normalizeJsonVaultListInput(input)))
+  ipcMain.handle('json-vault:workspace', () => {
+    const root = getJsonVaultRoot()
+    const repository = new JsonVaultRepository(root)
+    return vaultWorkspaceService.open('json', root, repository, async () => {
+      const file = await repository.createDefault()
+      jsonVaultCheckpointScheduler.recordActivity('Create JSON snippet')
+      return file
+    })
+  })
+  ipcMain.handle('vault:remember-file', (_event, input: RememberVaultFileInput) => {
+    if (!isRecord(input) || (input.kind !== 'json' && input.kind !== 'quickNote') || typeof input.rootDirectory !== 'string' || typeof input.relativePath !== 'string') throw new Error('Invalid vault selection')
+    // Ignore selection updates from a renderer still showing a previous vault.
+    const root = input.kind === 'json' ? getJsonVaultRoot() : getQuickNoteRoot()
+    if (root !== input.rootDirectory) return
+    const repository = input.kind === 'json' ? new JsonVaultRepository(root) : new QuickNoteVaultRepository(root)
+    return vaultWorkspaceService.remember(input, repository)
+  })
+  ipcMain.handle('json-vault:read', (_event, relativePath: string) => createJsonVaultRepository().read(relativePath))
+  ipcMain.handle('json-vault:save', async (_event, input: SaveJsonVaultFileInput) => {
+    if (!isRecord(input) || typeof input.relativePath !== 'string' || typeof input.content !== 'string') {
+      throw new Error('Invalid Vault file')
+    }
+    const result = await createJsonVaultRepository().save({ relativePath: input.relativePath, content: input.content })
+    jsonVaultCheckpointScheduler.recordActivity('Update JSON snippet')
+    return result
+  })
+  ipcMain.handle('json-vault:create-folder', async (_event, relativePath: string) => {
+    const result = await createJsonVaultRepository().createFolder(relativePath)
+    jsonVaultCheckpointScheduler.recordActivity('Create JSON Vault folder')
+    return result
+  })
+  ipcMain.handle('json-vault:rename', async (_event, input: RenameJsonVaultEntryInput) => {
+    if (!isRecord(input) || typeof input.relativePath !== 'string' || typeof input.name !== 'string') throw new Error('Invalid JSON Vault rename')
+    const root = getJsonVaultRoot()
+    const result = await new JsonVaultRepository(root).renameEntry(input)
+    vaultWorkspaceService.relocate('json', root, input.relativePath, result)
+    jsonVaultCheckpointScheduler.recordActivity('Rename JSON Vault entry')
+    return result
+  })
+  ipcMain.handle('json-vault:move', async (_event, input: MoveJsonVaultEntryInput) => {
+    if (!isRecord(input) || typeof input.relativePath !== 'string' || typeof input.targetDirectory !== 'string') throw new Error('Invalid JSON Vault move')
+    const root = getJsonVaultRoot()
+    const result = await new JsonVaultRepository(root).moveEntry(input)
+    vaultWorkspaceService.relocate('json', root, input.relativePath, result)
+    jsonVaultCheckpointScheduler.recordActivity('Move JSON Vault entry')
+    return result
+  })
+  ipcMain.handle('vault:export-files', async (event, kind: unknown, paths: unknown) => {
+    if ((kind !== 'json' && kind !== 'quickNote') || !Array.isArray(paths) || !paths.length || paths.some(path => typeof path !== 'string')) throw new Error('Invalid vault export')
+    const repository = kind === 'json' ? createJsonVaultRepository() : createQuickNoteRepository()
+    const files = await Promise.all([...new Set(paths as string[])].map(path => repository.read(path)))
+    const owner = BrowserWindow.fromWebContents(event.sender)
+    const options: OpenDialogOptions = { properties: ['openDirectory', 'createDirectory'] }
+    const result = owner ? await dialog.showOpenDialog(owner, options) : await dialog.showOpenDialog(options)
+    if (result.canceled || !result.filePaths[0]) return null
+    return exportVaultFiles(result.filePaths[0], files, kind)
+  })
+  ipcMain.handle('json-vault:duplicate', async (_event, relativePath: string) => {
+    const result = await createJsonVaultRepository().duplicate(relativePath)
+    jsonVaultCheckpointScheduler.recordActivity('Duplicate JSON snippet')
+    return result
+  })
+  ipcMain.handle('json-vault:delete', async (_event, relativePath: string) => {
+    await createJsonVaultRepository().delete(relativePath)
+    jsonVaultCheckpointScheduler.recordActivity('Delete JSON Vault entry')
+  })
+  ipcMain.handle('json-vault:open', async () => {
+    await mkdir(getJsonVaultRoot(), { recursive: true })
+    const error = await shell.openPath(getJsonVaultRoot())
+    if (error) throw new Error(error)
+  })
+  ipcMain.handle('json-vault:reveal', async (_event, relativePath: unknown) => {
+    if (typeof relativePath !== 'string') throw new Error('Invalid JSON Vault path')
+    shell.showItemInFolder(await createJsonVaultRepository().resolveEntry(relativePath))
+  })
+  ipcMain.handle('json-vault:set-editor-dirty', (_event, value: unknown) => {
+    jsonVaultEditorDirty = value === true
+  })
+  ipcMain.handle('vault-git:status', () => createVaultGitService().status())
+  ipcMain.handle('vault-git:history', () => createVaultGitService().history())
+  ipcMain.handle('vault-git:diff', (_event, input: VaultGitDiffInput) => {
+    if (!isRecord(input)) throw new Error('Invalid Git diff input')
+    return createVaultGitService().diff({
+      path: typeof input.path === 'string' ? input.path : undefined,
+      commit: typeof input.commit === 'string' ? input.commit : undefined
+    })
+  })
+  ipcMain.handle('vault-git:action', (_event, input: VaultGitActionInput) => {
+    if (!isRecord(input) || !vaultGitActions.includes(input.action as VaultGitActionInput['action'])) {
+      throw new Error('Invalid Git action')
+    }
+    return createVaultGitService().action({
+      action: input.action as VaultGitActionInput['action'],
+      message: typeof input.message === 'string' ? input.message : undefined,
+      remote: typeof input.remote === 'string' ? input.remote : undefined,
+      path: typeof input.path === 'string' ? input.path : undefined,
+      strategy: input.strategy === 'ours' || input.strategy === 'theirs' ? input.strategy : undefined
+    })
+  })
+  ipcMain.handle('quick-note:list', (_event, input?: QuickNoteListInput) => createQuickNoteRepository().list(normalizeQuickNoteListInput(input)))
+  ipcMain.handle('quick-note:workspace', () => {
+    const root = getQuickNoteRoot()
+    const repository = new QuickNoteVaultRepository(root)
+    const { editor } = store.get('settings')
+    return vaultWorkspaceService.open('quickNote', root, repository, async () => {
+      const file = await repository.create({ title: 'Untitled', fontName: editor.quickNoteFontName, fontSize: editor.quickNoteFontSize, lineWrap: editor.softWrap })
+      quickNoteCheckpointScheduler.recordActivity('Create Quick Note')
+      return file
+    })
+  })
+  ipcMain.handle('quick-note:read', (_event, relativePath: string) => createQuickNoteRepository().read(relativePath))
+  ipcMain.handle('quick-note:create', async (_event, input: CreateQuickNoteInput) => {
+    if (!isRecord(input)) throw new Error('Invalid Quick Note input')
+    const note = await createQuickNoteRepository().create({
+      title: typeof input.title === 'string' ? input.title : '',
+      parentPath: typeof input.parentPath === 'string' ? input.parentPath : undefined,
+      fontSize: typeof input.fontSize === 'number' ? input.fontSize : undefined,
+      fontName: typeof input.fontName === 'string' ? input.fontName : undefined,
+      lineWrap: typeof input.lineWrap === 'boolean' ? input.lineWrap : undefined
+    })
+    quickNoteCheckpointScheduler.recordActivity('Create Quick Note')
+    return note
+  })
+  ipcMain.handle('quick-note:save', async (_event, input: SaveQuickNoteInput) => {
+    if (!isRecord(input) || typeof input.relativePath !== 'string' || typeof input.content !== 'string' || !isRecord(input.metadata)) {
+      throw new Error('Invalid Quick Note')
+    }
+    const note = await createQuickNoteRepository().save(input)
+    quickNoteCheckpointScheduler.recordActivity('Update Quick Note')
+    return note
+  })
+  ipcMain.handle('quick-note:create-folder', async (_event, relativePath: string) => {
+    const result = await createQuickNoteRepository().createFolder(relativePath)
+    quickNoteCheckpointScheduler.recordActivity('Create Quick Note folder')
+    return result
+  })
+  ipcMain.handle('quick-note:rename', async (_event, input: RenameQuickNoteEntryInput) => {
+    if (!isRecord(input) || typeof input.relativePath !== 'string' || typeof input.name !== 'string') throw new Error('Invalid Quick Note rename')
+    const root = getQuickNoteRoot()
+    const result = await new QuickNoteVaultRepository(root).renameEntry(input)
+    vaultWorkspaceService.relocate('quickNote', root, input.relativePath, result)
+    quickNoteCheckpointScheduler.recordActivity('Rename Quick Note entry')
+    return result
+  })
+  ipcMain.handle('quick-note:move', async (_event, input: MoveQuickNoteEntryInput) => {
+    if (!isRecord(input) || typeof input.relativePath !== 'string' || typeof input.targetDirectory !== 'string') throw new Error('Invalid Quick Note move')
+    const root = getQuickNoteRoot()
+    const result = await new QuickNoteVaultRepository(root).moveEntry(input)
+    vaultWorkspaceService.relocate('quickNote', root, input.relativePath, result)
+    quickNoteCheckpointScheduler.recordActivity('Move Quick Note entry')
+    return result
+  })
+  ipcMain.handle('quick-note:duplicate', async (_event, relativePath: string) => {
+    const result = await createQuickNoteRepository().duplicate(relativePath)
+    quickNoteCheckpointScheduler.recordActivity('Duplicate Quick Note')
+    return result
+  })
+  ipcMain.handle('quick-note:delete', async (_event, relativePath: string) => {
+    await createQuickNoteRepository().delete(relativePath)
+    quickNoteCheckpointScheduler.recordActivity('Delete Quick Note entry')
+  })
+  ipcMain.handle('quick-note:import-attachment', async (event) => {
+    const owner = resolveOwnerWindow(event.sender) ?? mainWindow
+    const options: OpenDialogOptions = { properties: ['openFile'], filters: [imageFileFilter] }
+    const result = owner ? await dialog.showOpenDialog(owner, options) : await dialog.showOpenDialog(options)
+    if (result.canceled || !result.filePaths[0]) return null
+    if (nativeImage.createFromPath(result.filePaths[0]).isEmpty()) throw new Error('Invalid image attachment')
+    const attachment = await createQuickNoteRepository().importAttachment(result.filePaths[0])
+    quickNoteCheckpointScheduler.recordActivity('Add Quick Note attachment')
+    return attachment
+  })
+  ipcMain.handle('quick-note:import-clipboard-attachment', async (_event, pastedDataUrl?: unknown) => {
+    let data: Buffer
+    let extension = '.png'
+    if (pastedDataUrl !== undefined) {
+      const dataUrl = normalizeDataUrl(pastedDataUrl)
+      const mime = /^data:(image\/[\w.+-]+);base64,/i.exec(dataUrl)?.[1].toLocaleLowerCase()
+      const image = nativeImage.createFromDataURL(dataUrl)
+      if (image.isEmpty()) throw new Error('Invalid clipboard image')
+      const sourceExtension = clipboardImageExtension(mime)
+      extension = sourceExtension ?? '.png'
+      data = sourceExtension ? decodeDataUrl(dataUrl) : image.toPNG()
+    } else {
+      const image = clipboard.readImage()
+      if (image.isEmpty()) return null
+      data = image.toPNG()
+    }
+    const attachment = await createQuickNoteRepository().importAttachmentBuffer(data, extension)
+    quickNoteCheckpointScheduler.recordActivity('Paste Quick Note attachment')
+    return attachment
+  })
+  ipcMain.handle('quick-note:read-attachment', (_event, relativePath: string) => createQuickNoteRepository().readAttachment(relativePath))
+  ipcMain.handle('quick-note:open-vault', async () => {
+    await mkdir(getQuickNoteRoot(), { recursive: true })
+    const error = await shell.openPath(getQuickNoteRoot())
+    if (error) throw new Error(error)
+  })
+  ipcMain.handle('quick-note:reveal', async (_event, relativePath: unknown) => {
+    if (typeof relativePath !== 'string') throw new Error('Invalid Quick Note path')
+    shell.showItemInFolder(await createQuickNoteRepository().resolveEntry(relativePath))
+  })
+  ipcMain.handle('quick-note:set-editor-dirty', (_event, value: unknown) => {
+    quickNoteEditorDirty = value === true
+  })
+  ipcMain.handle('quick-note-git:status', () => createQuickNoteGitService().status())
+  ipcMain.handle('quick-note-git:history', () => createQuickNoteGitService().history())
+  ipcMain.handle('quick-note-git:diff', (_event, input: VaultGitDiffInput) => {
+    if (!isRecord(input)) throw new Error('Invalid Git diff input')
+    return createQuickNoteGitService().diff({
+      path: typeof input.path === 'string' ? input.path : undefined,
+      commit: typeof input.commit === 'string' ? input.commit : undefined
+    })
+  })
+  ipcMain.handle('quick-note-git:action', (_event, input: VaultGitActionInput) => {
+    if (!isRecord(input) || !vaultGitActions.includes(input.action as VaultGitActionInput['action'])) throw new Error('Invalid Git action')
+    return createQuickNoteGitService().action({
+      action: input.action as VaultGitActionInput['action'],
+      message: typeof input.message === 'string' ? input.message : undefined,
+      remote: typeof input.remote === 'string' ? input.remote : undefined,
+      path: typeof input.path === 'string' ? input.path : undefined,
+      strategy: input.strategy === 'ours' || input.strategy === 'theirs' ? input.strategy : undefined
+    })
+  })
+  ipcMain.handle('backup:info', () => createBackupService().getInfo())
+  ipcMain.handle('backup:export', async (event, kind: BackupKind) => {
+    if (!backupKinds.includes(kind)) throw new Error('Invalid backup kind')
+    const owner = resolveOwnerWindow(event.sender) ?? mainWindow
+    const options: OpenDialogOptions = {
+      properties: ['openDirectory', 'createDirectory'],
+      defaultPath: store.get('settings').tools.exportDirectory || app.getPath('documents')
+    }
+    const selection = owner ? await dialog.showOpenDialog(owner, options) : await dialog.showOpenDialog(options)
+    if (selection.canceled || !selection.filePaths[0]) return null
+    const result = await createBackupService().export(selection.filePaths[0], kind)
+    const error = await shell.openPath(result.directory)
+    if (error) throw new Error(error)
+    return result
+  })
+  ipcMain.handle('backup:open-location', async (_event, location: BackupLocation) => {
+    const info = createBackupService().getInfo()
+    const paths: Record<BackupLocation, string> = {
+      data: info.dataDirectory,
+      images: info.imagesPath,
+      quickNote: info.quickNotePath,
+      jsonVault: info.jsonVaultPath
+    }
+    if (!Object.hasOwn(paths, location)) throw new Error('Invalid backup location')
+    await mkdir(paths[location], { recursive: true })
+    const error = await shell.openPath(paths[location])
+    if (error) throw new Error(error)
+  })
+  ipcMain.handle('legacy-migration:default-source', () => join(app.getPath('home'), '.MooTool'))
+  ipcMain.handle('legacy-migration:preview', (_event, input: LegacyMigrationInput) => {
+    return createLegacyMigrationService().preview(normalizeLegacyMigrationInput(input))
+  })
+  ipcMain.handle('legacy-migration:run', async (_event, input: LegacyMigrationInput) => {
+    const normalized = normalizeLegacyMigrationInput(input)
+    const service = createLegacyMigrationService()
+    const preview = await service.preview(normalized)
+    if (preview.alreadyMigrated) return service.migrate(normalized, '')
+    const dataDirectory = getDataDirectory()
+    const backupTarget = join(dataDirectory, 'migration-backups')
+    closeDataRepositories()
+    let backupDirectory = ''
+    let repositoriesReopened = false
+    try {
+      const backup = await createBackupService().export(backupTarget, 'all')
+      backupDirectory = backup.directory
+      const result = await service.migrate(normalized, backup.directory)
+      const settings = mergeSettings(store.get('settings'), result.settingsPatch)
+      store.set('settings', settings)
+      openDataRepositories(settings)
+      repositoriesReopened = true
+      applySettings(settings)
+      broadcast('settings:changed', settings)
+      return result
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error)
+      throw new Error(backupDirectory ? `${message} (backup: ${backupDirectory})` : message)
+    } finally {
+      if (!repositoriesReopened) openDataRepositories()
+    }
+  })
+}
+
+function createJsonVaultRepository(): JsonVaultRepository {
+  return new JsonVaultRepository(getJsonVaultRoot())
+}
+
+function createImageRepository(): ImageRepository {
+  const settings = store.get('settings')
+  const dataDirectory = settings.data.directory || app.getPath('userData')
+  return new ImageRepository(join(dataDirectory, 'images'))
+}
+
+function createQuickNoteRepository(): QuickNoteVaultRepository {
+  return new QuickNoteVaultRepository(getQuickNoteRoot())
+}
+
+function createBackupService(): BackupService {
+  const settings = store.get('settings')
+  const dataDirectory = getDataDirectory(settings)
+  return new BackupService({
+    dataDirectory,
+    databasePath: join(dataDirectory, 'MooToolNext.db'),
+    settingsPath: store.path,
+    imagesPath: join(dataDirectory, 'images'),
+    quickNotePath: getQuickNoteRoot(),
+    jsonVaultPath: getJsonVaultRoot()
+  })
+}
+
+function createLegacyMigrationService(): LegacyMigrationService {
+  return new LegacyMigrationService({
+    databasePath: join(getDataDirectory(), 'MooToolNext.db'),
+    quickNotePath: getQuickNoteRoot(),
+    jsonVaultPath: getJsonVaultRoot()
+  })
+}
+
+function normalizeLegacyMigrationInput(value: unknown): LegacyMigrationInput {
+  if (!isRecord(value) || typeof value.sourceDirectory !== 'string' || !value.sourceDirectory.trim()) {
+    throw new Error('Invalid legacy migration source')
+  }
+  return { sourceDirectory: value.sourceDirectory.trim().slice(0, 4096) }
+}
+
+function getDataDirectory(settings: AppSettings = store.get('settings')): string {
+  return settings.data.directory || app.getPath('userData')
+}
+
+function openDataRepositories(settings: AppSettings = store.get('settings')): void {
+  const databasePath = join(getDataDirectory(settings), 'MooToolNext.db')
+  historyRepository = new HistoryRepository(databasePath)
+  favoriteRepository = new FavoriteRepository(databasePath)
+  p5Repository = new P5Repository(databasePath)
+}
+
+function closeDataRepositories(): void {
+  historyRepository?.close()
+  favoriteRepository?.close()
+  p5Repository?.close()
+}
+
+function createVaultGitService(): VaultGitService {
+  const settings = store.get('settings')
+  return new VaultGitService(getJsonVaultRoot(), {
+    username: settings.vault.gitUsername,
+    token: readSecret('gitToken'),
+    askPassPath: gitAskPassPath
+  })
+}
+
+function createQuickNoteGitService(): VaultGitService {
+  const settings = store.get('settings')
+  return new VaultGitService(getQuickNoteRoot(), {
+    username: settings.vault.gitUsername,
+    token: readSecret('gitToken'),
+    askPassPath: gitAskPassPath
+  })
+}
+
+function getJsonVaultRoot(): string {
+  const settings = store.get('settings')
+  const dataDirectory = settings.data.directory || app.getPath('userData')
+  return settings.vault.jsonPath || join(dataDirectory, 'json-vault')
+}
+
+function getQuickNoteRoot(): string {
+  const settings = store.get('settings')
+  const dataDirectory = settings.data.directory || app.getPath('userData')
+  return settings.vault.quickNotePath || join(dataDirectory, 'quick-notes')
+}
+
+function normalizeJsonVaultListInput(value: unknown): JsonVaultListInput {
+  if (value == null) return {}
+  if (!isRecord(value)) throw new Error('Invalid JSON Vault list input')
+  return {
+    keyword: typeof value.keyword === 'string' ? value.keyword.slice(0, 300) : undefined,
+    includeContent: typeof value.includeContent === 'boolean' ? value.includeContent : undefined,
+    hideIgnored: typeof value.hideIgnored === 'boolean' ? value.hideIgnored : undefined,
+    sort: value.sort === 'name' || value.sort === 'modified' ? value.sort : undefined
+  }
+}
+
+function normalizeHostProfileListInput(value: unknown): Required<HostProfileListInput> {
+  if (value == null) return { keyword: '', includeContent: true }
+  if (!isRecord(value)) throw new Error('Invalid Host profile list input')
+  return {
+    keyword: normalizeKeyword(value.keyword),
+    includeContent: typeof value.includeContent === 'boolean' ? value.includeContent : true
+  }
+}
+
+function normalizeQuickNoteListInput(value: unknown): QuickNoteListInput {
+  if (value == null) return {}
+  if (!isRecord(value)) throw new Error('Invalid Quick Note list input')
+  const sort = value.sort === 'name' || value.sort === 'created' || value.sort === 'modified' ? value.sort : undefined
+  return {
+    keyword: typeof value.keyword === 'string' ? value.keyword.slice(0, 300) : undefined,
+    includeContent: typeof value.includeContent === 'boolean' ? value.includeContent : undefined,
+    hideIgnored: typeof value.hideIgnored === 'boolean' ? value.hideIgnored : undefined,
+    sort
+  }
+}
+
+function normalizeRuntimeExecutionInput(value: unknown): RuntimeExecutionInput {
+  if (!isRecord(value) || typeof value.requestId !== 'string' || typeof value.code !== 'string' || !codeRuntimeIds.includes(value.runtime as RuntimeExecutionInput['runtime'])) {
+    throw new Error('Invalid runtime request')
+  }
+  if (value.arguments !== undefined && (!Array.isArray(value.arguments) || value.arguments.some((item) => typeof item !== 'string'))) {
+    throw new Error('Invalid runtime arguments')
+  }
+  return {
+    requestId: normalizeRequestId(value.requestId),
+    runtime: value.runtime as RuntimeExecutionInput['runtime'],
+    code: value.code,
+    timeoutMs: typeof value.timeoutMs === 'number' ? value.timeoutMs : undefined,
+    arguments: value.arguments as string[] | undefined,
+    workingDirectory: typeof value.workingDirectory === 'string' ? value.workingDirectory : undefined
+  }
+}
+
+function configureQuickNoteWatcher(): void {
+  quickNoteWatcherGeneration += 1
+  const generation = quickNoteWatcherGeneration
+  quickNoteWatcher?.close()
+  quickNoteWatcher = null
+  clearTimeout(quickNoteWatchTimer)
+  const root = getQuickNoteRoot()
+  void mkdir(root, { recursive: true }).then(() => {
+    if (generation !== quickNoteWatcherGeneration || isQuitting) return
+    try {
+      quickNoteWatcher = watch(root, { recursive: true }, (_event, filename) => {
+        const changedPath = typeof filename === 'string' ? filename.replaceAll('\\', '/') : ''
+        if (changedPath === 'attachments' || changedPath.startsWith('attachments/')) return
+        clearTimeout(quickNoteWatchTimer)
+        quickNoteWatchTimer = setTimeout(() => broadcast('quick-note:vault-changed', changedPath), 180)
+      })
+      quickNoteWatcher.on('error', () => {
+        quickNoteWatcher?.close()
+        quickNoteWatcher = null
+      })
+    } catch {
+      quickNoteWatcher = null
+    }
+  })
+}
+
+function configureJsonVaultWatcher(): void {
+  jsonVaultWatcherGeneration += 1
+  const generation = jsonVaultWatcherGeneration
+  jsonVaultWatcher?.close()
+  jsonVaultWatcher = null
+  clearTimeout(jsonVaultWatchTimer)
+  const root = getJsonVaultRoot()
+  void mkdir(root, { recursive: true }).then(() => {
+    if (generation !== jsonVaultWatcherGeneration || isQuitting) return
+    try {
+      jsonVaultWatcher = watch(root, { recursive: true }, (_event, filename) => {
+        clearTimeout(jsonVaultWatchTimer)
+        jsonVaultWatchTimer = setTimeout(() => broadcast('json-vault:changed', typeof filename === 'string' ? filename : ''), 180)
+      })
+      jsonVaultWatcher.on('error', () => {
+        jsonVaultWatcher?.close()
+        jsonVaultWatcher = null
+      })
+    } catch {
+      jsonVaultWatcher = null
+    }
+  })
+}
+
+function configureQuickNoteAutoPull(settings: AppSettings): void {
+  clearInterval(quickNotePullTimer)
+  quickNotePullTimer = undefined
+  if (settings.vault.autoPullMinutes <= 0) return
+  quickNotePullTimer = setInterval(() => {
+    void pullQuickNoteVault()
+  }, settings.vault.autoPullMinutes * 60_000)
+}
+
+function configureJsonVaultAutoPull(settings: AppSettings): void {
+  clearInterval(jsonVaultPullTimer)
+  jsonVaultPullTimer = undefined
+  if (settings.vault.autoPullMinutes <= 0) return
+  jsonVaultPullTimer = setInterval(() => {
+    void pullJsonVault()
+  }, settings.vault.autoPullMinutes * 60_000)
+}
+
+async function pullQuickNoteVault(): Promise<void> {
+  if (quickNoteEditorDirty) return
+  const service = createQuickNoteGitService()
+  const status = await service.status()
+  if (!status.repository || !status.remote || status.merging || status.conflicts > 0 || status.changes.length > 0) return
+  const result = await service.action({ action: 'pull' })
+  const updatedStatus = await service.status()
+  if (result.success || updatedStatus.merging || updatedStatus.conflicts > 0) broadcast('quick-note:vault-changed', '')
+}
+
+async function pullJsonVault(): Promise<void> {
+  if (jsonVaultEditorDirty) return
+  const service = createVaultGitService()
+  const status = await service.status()
+  if (!status.repository || !status.remote || status.merging || status.conflicts > 0 || status.changes.length > 0) return
+  const result = await service.action({ action: 'pull' })
+  const updatedStatus = await service.status()
+  if (result.success || updatedStatus.merging || updatedStatus.conflicts > 0) broadcast('json-vault:changed', '')
+}
+
+function readSecret(key: SecretKey): string {
+  const encoded = store.get('secrets')[key]
+  if (!encoded || !safeStorage.isEncryptionAvailable()) return ''
+  try {
+    return safeStorage.decryptString(Buffer.from(encoded, 'base64'))
+  } catch {
+    return ''
+  }
+}
+
+function getProxyConfiguration(): ProxyConfiguration {
+  const network = store.get('settings').network
+  return {
+    enabled: network.proxyEnabled,
+    host: network.proxyHost,
+    port: network.proxyPort,
+    username: network.proxyUsername,
+    password: readSecret('proxyPassword')
+  }
+}
+
+/** Match Java: JVM picks up OS proxy; undici does not, so resolve Chromium/system proxy when app proxy is off. */
+async function getTranslationProxyConfiguration(url = 'https://translate.googleapis.com/'): Promise<ProxyConfiguration> {
+  const configured = getProxyConfiguration()
+  if (configured.enabled) return configured
+  try {
+    const resolved = await session.defaultSession.resolveProxy(url)
+    const parsed = parseChromiumProxyDirective(resolved)
+    if (!parsed) return configured
+    return {
+      enabled: true,
+      host: parsed.host,
+      port: String(parsed.port),
+      username: '',
+      password: ''
+    }
+  } catch {
+    return configured
+  }
+}
+
+async function prepareGitAskPass(): Promise<string> {
+  const directory = join(app.getPath('userData'), 'runtime')
+  await mkdir(directory, { recursive: true })
+  const windows = process.platform === 'win32'
+  const path = join(directory, windows ? 'mootool-git-askpass.cmd' : 'mootool-git-askpass.sh')
+  const script = windows
+    ? '@echo off\r\necho %1 | findstr /I "Username" >nul\r\nif %errorlevel%==0 (echo %MOOTOOL_GIT_USERNAME%) else (echo %MOOTOOL_GIT_TOKEN%)\r\n'
+    : '#!/bin/sh\ncase "$1" in\n  *Username*) printf "%s" "$MOOTOOL_GIT_USERNAME" ;;\n  *) printf "%s" "$MOOTOOL_GIT_TOKEN" ;;\nesac\n'
+  await writeFile(path, script, { encoding: 'utf8', mode: 0o700 })
+  if (!windows) await chmod(path, 0o700)
+  return path
+}
+
+async function detectRuntimes(settings: AppSettings): Promise<RuntimeStatus[]> {
+  const env = await getRuntimeEnvironment(true)
+  return Promise.all([
+    detectRuntime('java', settings.runtime.javaPath, env),
+    detectRuntime('groovy', settings.runtime.groovyPath, env),
+    detectRuntime('python', settings.runtime.pythonPath, env),
+    detectRuntime('node', settings.runtime.nodePath, env)
+  ])
+}
+
+function applySettings(settings: AppSettings): void {
+  const shortcutStatus = commandShortcut.apply(settings.shortcuts.globalSearchEnabled, settings.shortcuts.globalSearch)
+  broadcast('shortcuts:global-status-changed', shortcutStatus)
+  nativeTheme.themeSource = settings.appearance.theme
+  rebuildApplicationMenu(settings.general.language)
+  updateTray(settings)
+  configureQuickNoteWatcher()
+  configureQuickNoteAutoPull(settings)
+  configureJsonVaultWatcher()
+  configureJsonVaultAutoPull(settings)
+  quickNoteCheckpointScheduler.start()
+  jsonVaultCheckpointScheduler.start()
+  configureUpdateChecks(settings)
+  updateManager.setAutoDownload(settings.general.autoDownloadUpdates)
+}
+
+function rebuildApplicationMenu(language: AppLanguage): void {
+  const labels = menuLabels[language]
+  const settingsItem: MenuItemConstructorOptions = {
+    label: labels.settings,
+    accelerator: 'CommandOrControl+,',
+    click: () => openSettingsPage()
+  }
+  const searchItem: MenuItemConstructorOptions = {
+    label: labels.search,
+    accelerator: 'CommandOrControl+K',
+    click: () => navigateMainWindow('focus-search')
+  }
+  const updateItem: MenuItemConstructorOptions = {
+    label: labels.checkUpdates,
+    click: () => {
+      openSettingsPage('about')
+      void checkForUpdatesAndBroadcast()
+    }
+  }
+  const settingsLink = (label: string, category: string): MenuItemConstructorOptions => ({
+    label,
+    click: () => openSettingsPage(category)
+  })
+
+  const template: MenuItemConstructorOptions[] = [
+    ...(process.platform === 'darwin' ? [{
+      label: app.name,
+      submenu: [
+        settingsLink(labels.about, 'about'),
+        updateItem,
+        { type: 'separator' as const },
+        settingsItem,
+        settingsLink(labels.backup, 'data'),
+        settingsLink(labels.shortcuts, 'shortcuts'),
+        { type: 'separator' as const },
+        { role: 'hide' as const, label: labels.hide },
+        { role: 'hideOthers' as const, label: labels.hideOthers },
+        { role: 'unhide' as const, label: labels.showAll },
+        { type: 'separator' as const },
+        { role: 'quit' as const, label: labels.quit }
+      ]
+    }] : [{
+      label: labels.file,
+      submenu: [settingsItem, settingsLink(labels.backup, 'data'), settingsLink(labels.shortcuts, 'shortcuts'), updateItem, { type: 'separator' as const }, { role: 'quit' as const, label: labels.quit }]
+    }]),
+    {
+      label: labels.edit,
+      submenu: [
+        { role: 'undo', label: labels.undo },
+        { role: 'redo', label: labels.redo },
+        { type: 'separator' },
+        { role: 'cut', label: labels.cut },
+        { role: 'copy', label: labels.copy },
+        { role: 'paste', label: labels.paste },
+        { role: 'selectAll', label: labels.selectAll },
+        { type: 'separator' },
+        searchItem
+      ]
+    },
+    {
+      label: labels.view,
+      submenu: [
+        { role: 'resetZoom', label: labels.actualSize },
+        { role: 'zoomIn', label: labels.zoomIn },
+        { role: 'zoomOut', label: labels.zoomOut },
+        { type: 'separator' },
+        { role: 'togglefullscreen', label: labels.fullscreen },
+        { type: 'separator' },
+        settingsLink(labels.appearance, 'appearance'),
+        settingsLink(labels.layout, 'layout'),
+        ...(isDev ? [{ type: 'separator' as const }, { role: 'reload' as const }, { role: 'toggleDevTools' as const }] : [])
+      ]
+    },
+    {
+      label: labels.window,
+      submenu: [
+        { role: 'minimize', label: labels.minimize },
+        { role: 'zoom', label: labels.zoom },
+        { type: 'separator' },
+        { role: 'front', label: labels.bringAllToFront }
+      ]
+    },
+    {
+      label: labels.tools,
+      submenu: [
+        searchItem,
+        { type: 'separator' },
+        settingsLink(labels.runtime, 'runtime'),
+        settingsLink(labels.toolDefaults, 'tools')
+      ]
+    }
+  ]
+  Menu.setApplicationMenu(Menu.buildFromTemplate(template))
+}
+
+function configureUpdateChecks(settings: AppSettings): void {
+  clearTimeout(updateStartupTimer)
+  clearInterval(updateIntervalTimer)
+  updateStartupTimer = undefined
+  updateIntervalTimer = undefined
+  if (!settings.general.autoCheckUpdates || process.env.NODE_ENV === 'test') return
+  updateStartupTimer = setTimeout(() => { void checkForUpdatesAndBroadcast(true) }, 2500)
+  updateIntervalTimer = setInterval(() => { void checkForUpdatesAndBroadcast(true) }, 60 * 60 * 1000)
+}
+
+function checkForUpdates(): Promise<UpdateCheckResult> {
+  if (!updateCheckPromise) {
+    updateCheckPromise = updateService.check(app.getVersion())
+      .then((result) => {
+        lastUpdateResult = result
+        updateManager.prepare(result, store.get('settings').general.autoDownloadUpdates)
+        return result
+      })
+      .finally(() => {
+        updateCheckPromise = null
+      })
+  }
+  return updateCheckPromise
+}
+
+async function checkForUpdatesAndBroadcast(automatic = false): Promise<void> {
+  try {
+    const result = await checkForUpdates()
+    if (!automatic || result.status === 'available') {
+      broadcast('update:checked', { type: 'result', result } satisfies UpdateCheckEvent)
+    }
+  } catch (error) {
+    if (!automatic) {
+      broadcast('update:checked', { type: 'error', message: error instanceof Error ? error.message : String(error) } satisfies UpdateCheckEvent)
+    }
+  }
+}
+
+function startScreenCapture(owner: BaseWindow | null): Promise<ScreenCaptureResult | null>
+function startScreenCapture(owner: BaseWindow | null, mode: 'capture'): Promise<ScreenCaptureResult | null>
+function startScreenCapture(owner: BaseWindow | null, mode: 'color-picker'): Promise<string | null>
+async function startScreenCapture(owner: BaseWindow | null, mode: ScreenOverlayMode = 'capture'): Promise<ScreenOverlayResult> {
+  if (screenCaptureSession) return null
+
+  const focusedWindow = BaseWindow.getFocusedWindow() ?? owner
+  const hiddenWindows = BaseWindow.getAllWindows().filter((window) => window.isVisible() && !window.isDestroyed())
+  for (const window of hiddenWindows) window.hide()
+
+  let displays: Display[]
+  let sources: Awaited<ReturnType<typeof desktopCapturer.getSources>>
+  try {
+    await delay(180)
+    displays = screen.getAllDisplays()
+    const maxWidth = Math.max(...displays.map((display) => Math.round(display.size.width * display.scaleFactor)), 1920)
+    const maxHeight = Math.max(...displays.map((display) => Math.round(display.size.height * display.scaleFactor)), 1080)
+    sources = await desktopCapturer.getSources({
+      types: ['screen'],
+      thumbnailSize: { width: maxWidth, height: maxHeight },
+      fetchWindowIcons: false
+    })
+  } catch (error) {
+    restoreScreenCaptureWindows(hiddenWindows, focusedWindow)
+    throw error
+  }
+
+  const availableSources = sources.filter((source) => !source.thumbnail.isEmpty())
+  if (displays.length === 0 || availableSources.length === 0) {
+    restoreScreenCaptureWindows(hiddenWindows, focusedWindow)
+    throw new Error('No display is available for capture')
+  }
+
+  let resolveSession!: (result: ScreenOverlayResult) => void
+  const promise = new Promise<ScreenOverlayResult>((resolve) => { resolveSession = resolve })
+  const session: ScreenCaptureSession = {
+    mode,
+    overlays: new Map(),
+    hiddenWindows,
+    focusedWindow,
+    promise,
+    resolve: resolveSession,
+    completing: false
+  }
+  screenCaptureSession = session
+
+  const usedSources = new Set<number>()
+  const loads: Promise<void>[] = []
+  for (const [displayIndex, display] of displays.entries()) {
+    let sourceIndex = availableSources.findIndex((source, index) => !usedSources.has(index) && source.display_id === String(display.id))
+    if (sourceIndex < 0) sourceIndex = availableSources.findIndex((_source, index) => !usedSources.has(index))
+    if (sourceIndex < 0) continue
+    usedSources.add(sourceIndex)
+    const source = availableSources[sourceIndex]
+    const overlay = new BrowserWindow({
+      ...display.bounds,
+      frame: false,
+      show: false,
+      resizable: false,
+      movable: false,
+      minimizable: false,
+      maximizable: false,
+      fullscreenable: false,
+      skipTaskbar: true,
+      hasShadow: false,
+      acceptFirstMouse: true,
+      enableLargerThanScreen: true,
+      roundedCorners: false,
+      backgroundColor: '#000000',
+      title: `MooTool ${mode === 'capture' ? 'Capture' : 'Color Picker'} ${displayIndex + 1}`,
+      webPreferences: {
+        preload: join(__dirname, '../preload/index.js'),
+        sandbox: true,
+        contextIsolation: true,
+        nodeIntegration: false,
+        backgroundThrottling: false
+      }
+    })
+    overlay.setMenuBarVisibility(false)
+    overlay.setAlwaysOnTop(true, 'screen-saver')
+    if (process.platform === 'darwin') {
+      overlay.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true, skipTransformProcessType: true })
+    }
+    const record: ScreenCaptureOverlayRecord = {
+      window: overlay,
+      display,
+      displayName: source.name || `Display ${displayIndex + 1}`,
+      image: source.thumbnail
+    }
+    session.overlays.set(overlay.webContents.id, record)
+    overlay.on('closed', () => {
+      if (screenCaptureSession === session && !session.completing) finishScreenCapture(null)
+    })
+    loads.push(loadScreenCaptureRenderer(overlay, mode))
+  }
+
+  if (session.overlays.size === 0) {
+    finishScreenCapture(null)
+    return promise
+  }
+
+  try {
+    await Promise.all(loads)
+  } catch {
+    if (screenCaptureSession === session) finishScreenCapture(null)
+    return promise
+  }
+  if (screenCaptureSession !== session) return promise
+
+  const cursorDisplay = screen.getDisplayNearestPoint(screen.getCursorScreenPoint())
+  let focusedOverlay: BrowserWindow | null = null
+  for (const record of session.overlays.values()) {
+    record.window.showInactive()
+    if (record.display.id === cursorDisplay.id) focusedOverlay = record.window
+  }
+  const target = focusedOverlay ?? session.overlays.values().next().value?.window
+  target?.show()
+  target?.focus()
+  return promise
+}
+
+function finishScreenCapture(result: ScreenOverlayResult, restoreWindows = true): void {
+  const session = screenCaptureSession
+  if (!session || session.completing) return
+  session.completing = true
+  screenCaptureSession = null
+  for (const record of session.overlays.values()) {
+    if (!record.window.isDestroyed()) record.window.destroy()
+  }
+  if (restoreWindows) restoreScreenCaptureWindows(session.hiddenWindows, session.focusedWindow)
+  session.resolve(result)
+}
+
+async function captureScreenFromTray(): Promise<void> {
+  const labels = menuLabels[store.get('settings').general.language]
+  try {
+    const result = await startScreenCapture(null)
+    if (!result) return
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19)
+    const saved = await createImageRepository().save({ name: `Screenshot-${timestamp}.png`, dataUrl: result.dataUrl })
+    if (Notification.isSupported()) {
+      new Notification({ title: 'MooTool', body: `${labels.screenshot}: ${saved.name}` }).show()
+    }
+  } catch (error) {
+    dialog.showErrorBox(labels.screenshot, error instanceof Error ? error.message : String(error))
+  }
+}
+
+async function pickScreenColorFromTray(): Promise<void> {
+  const labels = menuLabels[store.get('settings').general.language]
+  try {
+    const color = await startScreenCapture(null, 'color-picker')
+    if (!color) return
+    pendingScreenColor = color
+    openToolFromTray('colorBoard')
+    broadcast('screen-color:picked', color)
+  } catch (error) {
+    dialog.showErrorBox(labels.colorPicker, error instanceof Error ? error.message : String(error))
+  }
+}
+
+function restoreScreenCaptureWindows(windows: BaseWindow[], focusedWindow: BaseWindow | null): void {
+  for (const window of windows) {
+    if (!window.isDestroyed()) window.show()
+  }
+  if (focusedWindow && !focusedWindow.isDestroyed()) focusedWindow.focus()
+}
+
+function normalizeScreenCaptureRect(value: unknown, imageWidth: number, imageHeight: number): ScreenCaptureRect {
+  if (!isRecord(value)) throw new Error('Invalid screen capture rectangle')
+  const number = (key: keyof ScreenCaptureRect) => {
+    const entry = value[key]
+    if (typeof entry !== 'number' || !Number.isFinite(entry)) throw new Error('Invalid screen capture rectangle')
+    return Math.round(entry)
+  }
+  const x = Math.min(imageWidth - 1, Math.max(0, number('x')))
+  const y = Math.min(imageHeight - 1, Math.max(0, number('y')))
+  return {
+    x,
+    y,
+    width: Math.min(imageWidth - x, Math.max(1, number('width'))),
+    height: Math.min(imageHeight - y, Math.max(1, number('height')))
+  }
+}
+
+function normalizeScreenColor(value: unknown): string {
+  if (typeof value !== 'string' || !/^#[0-9a-fA-F]{6}$/.test(value)) throw new Error('Invalid screen color')
+  return value.toUpperCase()
+}
+
+function updateTray(settings: AppSettings): void {
+  if (!settings.general.trayEnabled) {
+    tray?.destroy()
+    tray = null
+    return
+  }
+
+  if (!tray) {
+    const traySize = process.platform === 'darwin' ? 20 : 24
+    const trayImage = nativeImage.createFromPath(getTrayIconPath()).resize({ width: traySize, height: traySize })
+    if (trayImage.isEmpty()) return
+    if (process.platform === 'darwin') trayImage.setTemplateImage(true)
+    tray = new Tray(trayImage)
+    tray.setToolTip('MooTool')
+    tray.on('click', showMainWindow)
+  }
+
+  const labels = menuLabels[settings.general.language]
+  const profiles = p5Repository.listHosts()
+  const activeHostId = profiles.some((profile) => profile.id === store.get('activeHostId'))
+    ? store.get('activeHostId')
+    : null
+  if (activeHostId !== store.get('activeHostId')) store.set('activeHostId', null)
+  tray.setContextMenu(Menu.buildFromTemplate(buildTrayMenuTemplate(labels, profiles, activeHostId, {
+    openApp: showMainWindow,
+    openCommandPalette: () => navigateMainWindow('focus-search'),
+    runCommandAction: (actionId) => navigateMainWindow({ type: 'run-command-action', actionId }),
+    openSettings: () => openSettingsPage(),
+    openColorPicker: () => { void pickScreenColorFromTray() },
+    captureScreen: () => { void captureScreenFromTray() },
+    openTranslation: () => openToolFromTray('translation'),
+    switchHost: (profile) => { void switchHostFromTray(profile.id) },
+    quit: () => { isQuitting = true; app.quit() }
+  }, trayCommandActions(store.get('commandPalette')).map((actionId) => ({ actionId, label: messages[settings.general.language][commandActionTitles[actionId]] })))))
+}
+
+async function switchHostFromTray(hostId: number): Promise<void> {
+  const profile = p5Repository.listHosts().find((item) => item.id === hostId)
+  if (!profile) {
+    updateTray(store.get('settings'))
+    return
+  }
+  const labels = menuLabels[store.get('settings').general.language]
+  try {
+    await systemService.writeHosts(profile.content)
+    store.set('activeHostId', profile.id)
+    updateTray(store.get('settings'))
+    if (Notification.isSupported()) {
+      new Notification({ title: 'MooTool', body: labels.hostSwitched.replace('{name}', profile.name) }).show()
+    }
+  } catch (error) {
+    updateTray(store.get('settings'))
+    dialog.showErrorBox(labels.hostSwitchFailed, error instanceof Error ? error.message : String(error))
+  }
+}
+
+function showMainWindow(): BrowserWindow {
+  const window = mainWindow ?? createMainWindow()
+  if (window.isMinimized()) window.restore()
+  window.show()
+  window.focus()
+  return window
+}
+
+function updateApplicationWindowActivity(): void {
+  setTimeout(() => {
+    const active = Boolean(BaseWindow.getFocusedWindow())
+    quickNoteCheckpointScheduler.setWindowActive(active)
+    jsonVaultCheckpointScheduler.setWindowActive(active)
+  })
+}
+
+function navigateMainWindow(event: AppNavigationEvent): void {
+  const window = showMainWindow()
+  const send = () => {
+    if (!window.isDestroyed()) window.webContents.send('app:navigate', event)
+  }
+  if (window.webContents.isLoadingMainFrame()) {
+    window.webContents.once('did-finish-load', send)
+  } else {
+    send()
+  }
+}
+
+function openSettingsPage(category?: string): void {
+  navigateMainWindow({ type: 'open-settings', ...(category ? { category } : {}) })
+}
+
+function openToolFromTray(toolId: Exclude<ToolId, 'mootool'>): void {
+  if (!toolWindowManager.focus(toolId)) navigateMainWindow({ type: 'open-tool', toolId })
+}
+
+function broadcast(channel: string, payload: unknown): void {
+  for (const window of BrowserWindow.getAllWindows()) {
+    window.webContents.send(channel, payload)
+  }
+  toolWindowManager?.sendToAll(channel, payload)
+}
+
+function resolveOwnerWindow(sender: WebContents): BaseWindow | null {
+  return toolWindowManager?.resolveOwner(sender) ?? BrowserWindow.fromWebContents(sender)
+}
+
+function assertMainRenderer(sender: WebContents): void {
+  if (!mainWindow || mainWindow.isDestroyed() || sender.id !== mainWindow.webContents.id) {
+    throw new Error('This operation is only available from the main window')
+  }
+}
+
+function assertToolWindowAccess(sender: WebContents, toolId: Exclude<ToolId, 'mootool'>): void {
+  const fromMain = Boolean(mainWindow && !mainWindow.isDestroyed() && sender.id === mainWindow.webContents.id)
+  if (!fromMain && !toolWindowManager.owns(toolId, sender)) throw new Error('Invalid tool window access')
+}
+
+function normalizeToolWorkspaceBounds(value: unknown): ToolWorkspaceBounds {
+  if (!isRecord(value)) throw new Error('Invalid tool workspace bounds')
+  const fields = ['x', 'y', 'width', 'height'] as const
+  const normalized = Object.fromEntries(fields.map((field) => {
+    const entry = value[field]
+    if (typeof entry !== 'number' || !Number.isFinite(entry)) throw new Error('Invalid tool workspace bounds')
+    return [field, entry]
+  }))
+  if (normalized.width <= 0 || normalized.height <= 0) throw new Error('Invalid tool workspace bounds')
+  return normalized as ToolWorkspaceBounds
+}
+
+function normalizeWorkspaceState(value: WorkspaceState): WorkspaceState {
+  if (!isRecord(value)) {
+    return defaultWorkspaceState
+  }
+  return {
+    activeToolId: typeof value.activeToolId === 'string' ? value.activeToolId : defaultWorkspaceState.activeToolId,
+    recentToolIds: Array.isArray(value.recentToolIds)
+      ? value.recentToolIds.filter((item): item is string => typeof item === 'string').slice(0, 5)
+      : []
+  }
+}
+
+function normalizeHistoryQuery(value: HistoryQuery): HistoryQuery {
+  if (!isRecord(value)) throw new Error('Invalid history query')
+  return {
+    funcType: normalizeFuncType(value.funcType),
+    keyword: typeof value.keyword === 'string' ? value.keyword.slice(0, 200) : undefined
+  }
+}
+
+function normalizeHistoryInput(value: SaveFuncHistoryInput): SaveFuncHistoryInput {
+  if (!isRecord(value) || typeof value.inputText !== 'string' || typeof value.outputText !== 'string') {
+    throw new Error('Invalid history input')
+  }
+  return {
+    funcType: normalizeFuncType(value.funcType),
+    summary: typeof value.summary === 'string' ? value.summary.slice(0, 200) : undefined,
+    inputText: value.inputText.slice(0, 20 * 1024 * 1024),
+    outputText: value.outputText.slice(0, 20 * 1024 * 1024),
+    extraData: typeof value.extraData === 'string' ? value.extraData.slice(0, 100_000) : null
+  }
+}
+
+function normalizeFuncType(value: unknown): string {
+  if (typeof value !== 'string' || !/^[a-zA-Z][a-zA-Z0-9_-]{0,63}$/.test(value)) {
+    throw new Error('Invalid function type')
+  }
+  return value
+}
+
+function normalizeFavoriteKind(value: unknown): FavoriteKind {
+  if (favoriteKinds.includes(value as FavoriteKind)) return value as FavoriteKind
+  throw new Error('Unsupported favorite kind')
+}
+
+function normalizeOptionalPositiveId(value: unknown): number | undefined {
+  return value == null ? undefined : normalizePositiveId(value)
+}
+
+function normalizeFavoriteInput(value: SaveFavoriteInput): SaveFavoriteInput {
+  if (!isRecord(value) || typeof value.name !== 'string' || typeof value.value !== 'string') {
+    throw new Error('Invalid favorite')
+  }
+  const name = value.name.trim().slice(0, 120)
+  const favoriteValue = value.value.trim().slice(0, 100_000)
+  if (!name || !favoriteValue) throw new Error('Favorite name and value are required')
+  return {
+    id: normalizeOptionalPositiveId(value.id),
+    kind: normalizeFavoriteKind(value.kind),
+    folderId: normalizeOptionalPositiveId(value.folderId),
+    name,
+    value: favoriteValue,
+    description: typeof value.description === 'string' ? value.description.trim().slice(0, 1000) : ''
+  }
+}
+
+function normalizeFavoriteFolderInput(value: SaveFavoriteFolderInput): SaveFavoriteFolderInput {
+  if (!isRecord(value) || typeof value.title !== 'string') throw new Error('Invalid favorite folder')
+  const title = value.title.trim().slice(0, 120)
+  if (!title) throw new Error('Favorite folder title is required')
+  return { kind: normalizeFavoriteKind(value.kind), title }
+}
+
+function normalizeRenameFavoriteFolderInput(value: RenameFavoriteFolderInput): RenameFavoriteFolderInput {
+  if (!isRecord(value) || typeof value.title !== 'string') throw new Error('Invalid favorite folder')
+  const title = value.title.trim().slice(0, 120)
+  if (!title) throw new Error('Favorite folder title is required')
+  return { id: normalizePositiveId(value.id), title }
+}
+
+function normalizeTextFileKind(value: unknown): TextFileKind {
+  if (value === 'json' || value === 'xml' || value === 'text' || value === 'source' || value === 'markdown' || value === 'html') return value
+  throw new Error('Unsupported text file type')
+}
+
+function sanitizeDefaultFileName(value: unknown, kind: TextFileKind): string {
+  const extension = kind === 'json' ? '.json' : kind === 'xml' ? '.xml' : kind === 'markdown' ? '.md' : kind === 'html' ? '.html' : '.txt'
+  const raw = typeof value === 'string' ? basename(value) : `untitled${extension}`
+  const sanitized = raw.replace(/[^a-zA-Z0-9._-]/g, '_').slice(0, 120) || `untitled${extension}`
+  return extname(sanitized) ? sanitized : `${sanitized}${extension}`
+}
+
+function normalizeDigestAlgorithm(value: unknown): DigestAlgorithmId {
+  if (!digestAlgorithmIds.includes(value as DigestAlgorithmId)) throw new Error('Unsupported digest algorithm')
+  return value as DigestAlgorithmId
+}
+
+async function hashFile(path: string, algorithm: DigestAlgorithmId): Promise<string> {
+  const nodeAlgorithm = algorithm.toLowerCase().replace('-', '')
+  if (!getHashes().includes(nodeAlgorithm)) throw new Error(`${algorithm} is unavailable in this runtime`)
+  return new Promise((resolve, reject) => {
+    const hash = createHash(nodeAlgorithm)
+    const stream = createReadStream(path)
+    stream.on('error', reject)
+    stream.on('data', (chunk) => hash.update(chunk))
+    stream.on('end', () => resolve(hash.digest('hex')))
+  })
+}
+
+async function readImagePayload(path: string): Promise<ImageFilePayload> {
+  const fileStat = await stat(path)
+  if (fileStat.size > 100 * 1024 * 1024) throw new Error('Image exceeds 100 MB limit')
+  const image = nativeImage.createFromPath(path)
+  if (image.isEmpty()) throw new Error('Unable to read image')
+  const size = image.getSize()
+  return { path, name: basename(path), size: fileStat.size, width: size.width, height: size.height, dataUrl: image.toDataURL() }
+}
+
+function normalizeBinaryFileInput(value: unknown): SaveBinaryFileInput {
+  if (!isRecord(value) || (value.kind !== 'image' && value.kind !== 'pdf' && value.kind !== 'binary') || typeof value.defaultName !== 'string' || typeof value.dataUrl !== 'string') {
+    throw new Error('Invalid binary file')
+  }
+  const dataUrl = normalizeDataUrl(value.dataUrl)
+  if (dataUrl.length > 140 * 1024 * 1024) throw new Error('Binary data exceeds limit')
+  return { kind: value.kind, defaultName: value.defaultName, dataUrl }
+}
+
+function normalizeDataUrl(value: unknown): string {
+  if (typeof value !== 'string' || !/^data:[\w.+/-]+;base64,[A-Za-z0-9+/=\r\n]+$/.test(value)) throw new Error('Invalid data URL')
+  return value
+}
+
+function decodeDataUrl(dataUrl: string): Buffer {
+  return Buffer.from(dataUrl.slice(dataUrl.indexOf(',') + 1).replace(/\s+/g, ''), 'base64')
+}
+
+function clipboardImageExtension(mime: string | undefined): string | null {
+  if (mime === 'image/png') return '.png'
+  if (mime === 'image/jpeg' || mime === 'image/jpg' || mime === 'image/pjpeg' || mime === 'image/jfif') return '.jpg'
+  if (mime === 'image/gif') return '.gif'
+  if (mime === 'image/bmp' || mime === 'image/x-ms-bmp') return '.bmp'
+  if (mime === 'image/webp') return '.webp'
+  return null
+}
+
+function sanitizeBinaryFileName(value: unknown, kind: SaveBinaryFileInput['kind']): string {
+  const fallback = kind === 'image' ? 'image.png' : kind === 'pdf' ? 'document.pdf' : 'data.bin'
+  const raw = typeof value === 'string' ? basename(value) : fallback
+  const name = raw.replace(/[^a-zA-Z0-9._-]/g, '_').slice(0, 140) || fallback
+  if (extname(name)) return name
+  return kind === 'image' ? `${name}.png` : kind === 'pdf' ? `${name}.pdf` : `${name}.bin`
+}
+
+function normalizeImageName(value: unknown): string {
+  if (typeof value !== 'string' || value.length > 200 || basename(value) !== value || value === '.' || value === '..') throw new Error('Invalid image name')
+  return value
+}
+
+function normalizeImageNames(value: unknown): string[] {
+  if (!Array.isArray(value) || value.length === 0 || value.length > 100) throw new Error('Invalid image selection')
+  return value.map(normalizeImageName)
+}
+
+async function availableSvgPath(directory: string, rawBaseName: string, reserved: Set<string>): Promise<string> {
+  const baseName = rawBaseName.replace(/[^a-zA-Z0-9._\-\u4e00-\u9fff\u3040-\u30ff]/g, '_').slice(0, 140) || 'image'
+  let suffix = 1
+  while (true) {
+    const fileName = suffix === 1 ? `${baseName}.svg` : `${baseName}_${suffix}.svg`
+    const candidate = join(directory, fileName)
+    if (!reserved.has(candidate) && !(await pathExists(candidate))) {
+      reserved.add(candidate)
+      return candidate
+    }
+    suffix += 1
+  }
+}
+
+async function pathExists(path: string): Promise<boolean> {
+  try {
+    await stat(path)
+    return true
+  } catch {
+    return false
+  }
+}
+
+function normalizePdfMergeSources(value: unknown): PdfMergeSource[] {
+  if (!Array.isArray(value) || value.length < 2 || value.length > 20) throw new Error('Select between 2 and 20 PDF files')
+  return value.map((source) => {
+    if (!isRecord(source) || typeof source.path !== 'string' || typeof source.pages !== 'string' || !allowedPdfPaths.has(source.path)) throw new Error('Invalid PDF source')
+    return { path: source.path, pages: source.pages.slice(0, 1000) }
+  })
+}
+
+function normalizePdfSplitTasks(value: unknown): PdfSplitTask[] {
+  if (!Array.isArray(value) || value.length === 0 || value.length > 20) throw new Error('Select between 1 and 20 PDF tasks')
+  return value.map((task) => {
+    if (!isRecord(task) || typeof task.path !== 'string' || typeof task.pageRange !== 'string' || typeof task.customRule !== 'string' || !allowedPdfPaths.has(task.path) || !['odd', 'even', 'custom'].includes(String(task.rule))) throw new Error('Invalid PDF task')
+    return { path: task.path, pageRange: task.pageRange.slice(0, 1000), rule: task.rule as PdfSplitTask['rule'], customRule: task.customRule.slice(0, 1000) }
+  })
+}
+
+function delay(milliseconds: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, milliseconds))
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value)
+}
+
+function normalizeSecretKey(value: unknown): SecretKey {
+  if (value === 'proxyPassword' || value === 'gitToken' || value === 'deeplApiKey') {
+    return value
+  }
+  throw new Error('Unsupported secret key')
+}
+
+type MenuLabels = Record<'file' | 'edit' | 'view' | 'window' | 'tools' | 'search' | 'settings' | 'checkUpdates' | 'open' | 'quit' |
+  'about' | 'backup' | 'shortcuts' | 'appearance' | 'layout' | 'runtime' | 'toolDefaults' | 'undo' | 'redo' | 'cut' | 'copy' |
+  'paste' | 'selectAll' | 'actualSize' | 'zoomIn' | 'zoomOut' | 'fullscreen' | 'minimize' | 'zoom' | 'bringAllToFront' |
+  'hide' | 'hideOthers' | 'showAll' | 'colorPicker' | 'screenshot' | 'translation' | 'hostSwitched' | 'hostSwitchFailed' | 'commandPalette' | 'quickActions', string>
+
+const menuLabels: Record<AppLanguage, MenuLabels> = {
+  'zh-CN': {
+    commandPalette: '命令面板…',
+    quickActions: '快捷动作',
+    file: '文件', edit: '编辑', view: '显示', window: '窗口', tools: '工具', search: '搜索工具', settings: '设置…', checkUpdates: '检查更新…',
+    open: '打开 MooTool', quit: '退出 MooTool', about: '关于 MooTool', backup: '同步与备份…', shortcuts: '快捷键…', appearance: '外观…',
+    layout: '布局与习惯…', runtime: '运行环境…', toolDefaults: '工具默认值…', undo: '撤销', redo: '重做', cut: '剪切', copy: '复制',
+    paste: '粘贴', selectAll: '全选', actualSize: '实际大小', zoomIn: '放大', zoomOut: '缩小', fullscreen: '进入全屏幕', minimize: '最小化',
+    zoom: '缩放', bringAllToFront: '前置全部窗口', hide: '隐藏 MooTool', hideOthers: '隐藏其他', showAll: '全部显示',
+    colorPicker: '取色器', screenshot: '截图', translation: '翻译', hostSwitched: 'Host 已切换：{name}', hostSwitchFailed: 'Host 切换失败'
+  },
+  'en-US': {
+    commandPalette: 'Command Palette…',
+    quickActions: 'Quick Actions',
+    file: 'File', edit: 'Edit', view: 'View', window: 'Window', tools: 'Tools', search: 'Search Tools', settings: 'Settings…', checkUpdates: 'Check for Updates…',
+    open: 'Open MooTool', quit: 'Quit MooTool', about: 'About MooTool', backup: 'Sync and Backup…', shortcuts: 'Keyboard Shortcuts…', appearance: 'Appearance…',
+    layout: 'Layout and Behavior…', runtime: 'Runtimes…', toolDefaults: 'Tool Defaults…', undo: 'Undo', redo: 'Redo', cut: 'Cut', copy: 'Copy',
+    paste: 'Paste', selectAll: 'Select All', actualSize: 'Actual Size', zoomIn: 'Zoom In', zoomOut: 'Zoom Out', fullscreen: 'Enter Full Screen', minimize: 'Minimize',
+    zoom: 'Zoom', bringAllToFront: 'Bring All to Front', hide: 'Hide MooTool', hideOthers: 'Hide Others', showAll: 'Show All',
+    colorPicker: 'Color Picker', screenshot: 'Capture', translation: 'Translation', hostSwitched: 'Host switched: {name}', hostSwitchFailed: 'Host switch failed'
+  },
+  'ja-JP': {
+    commandPalette: 'コマンドパレット…',
+    quickActions: 'クイックアクション',
+    file: 'ファイル', edit: '編集', view: '表示', window: 'ウインドウ', tools: 'ツール', search: 'ツールを検索', settings: '設定…', checkUpdates: 'アップデートを確認…',
+    open: 'MooTool を開く', quit: 'MooTool を終了', about: 'MooTool について', backup: '同期とバックアップ…', shortcuts: 'キーボードショートカット…', appearance: '外観…',
+    layout: 'レイアウトと操作…', runtime: '実行環境…', toolDefaults: 'ツールのデフォルト…', undo: '取り消す', redo: 'やり直す', cut: 'カット', copy: 'コピー',
+    paste: 'ペースト', selectAll: 'すべてを選択', actualSize: '実際のサイズ', zoomIn: '拡大', zoomOut: '縮小', fullscreen: 'フルスクリーンにする', minimize: 'しまう',
+    zoom: '拡大／縮小', bringAllToFront: 'すべてを手前に移動', hide: 'MooTool を隠す', hideOthers: 'ほかを隠す', showAll: 'すべてを表示',
+    colorPicker: 'スポイト', screenshot: 'スクリーンショット', translation: '翻訳', hostSwitched: 'Host を切り替えました：{name}', hostSwitchFailed: 'Host の切り替えに失敗しました'
+  }
+}
+
+const closeDialogLabels: Record<AppLanguage, { message: string; hide: string; quit: string; cancel: string }> = {
+  'zh-CN': { message: '关闭窗口后如何处理 MooTool？', hide: '隐藏到后台', quit: '退出 MooTool', cancel: '取消' },
+  'en-US': { message: 'What should MooTool do when this window closes?', hide: 'Hide', quit: 'Quit MooTool', cancel: 'Cancel' },
+  'ja-JP': { message: 'ウィンドウを閉じるときの動作を選択してください。', hide: 'バックグラウンドに隠す', quit: 'MooTool を終了', cancel: 'キャンセル' }
+}
+
+const textFileFilters: Record<TextFileKind, { name: string; extensions: string[] }> = {
+  markdown: { name: 'Markdown', extensions: ['md'] },
+  html: { name: 'HTML', extensions: ['html', 'htm'] },
+  json: { name: 'JSON', extensions: ['json'] },
+  xml: { name: 'XML', extensions: ['xml'] },
+  text: { name: 'Text', extensions: ['txt', 'text', 'log'] },
+  source: { name: 'Source files', extensions: ['java', 'xml', 'html', 'htm', 'conf', 'nginx', 'txt', 'text', 'log'] }
+}
+
+const imageFileFilter = { name: 'Images', extensions: ['png', 'jpg', 'jpeg', 'gif', 'bmp', 'webp'] }
+const svgFileFilter = { name: 'Scalable Vector Graphics', extensions: ['svg'] }
+const pdfFileFilter = { name: 'PDF', extensions: ['pdf'] }
+const binaryFileFilters: Record<SaveBinaryFileInput['kind'], { name: string; extensions: string[] }> = {
+  image: imageFileFilter,
+  pdf: pdfFileFilter,
+  binary: { name: 'Binary', extensions: ['bin', 'dat'] }
+}
+
+const vaultGitActions: VaultGitActionInput['action'][] = ['init', 'configure-remote', 'commit', 'fetch', 'pull', 'push', 'discard', 'abort-merge', 'resolve-conflict', 'continue-operation']
+
+async function cleanPendingUpdates(): Promise<void> {
+  if (updateCleanupRunning) return
+  updateCleanupRunning = true
+  try {
+    await cleanupUpdateFiles(join(app.getPath('userData'), 'pending-updates'), (fileName) => {
+      const state = updateManager.getState()
+      return state.status === 'downloading' || (state.status === 'ready' && state.fileName === fileName)
+    })
+  } catch (error) {
+    console.warn('Could not clean pending updates:', error)
+  } finally {
+    updateCleanupRunning = false
+  }
+}
+
+const javaRegexService = new JavaRegexService()
+
+app.whenReady().then(async () => {
+  if (process.platform === 'darwin' && app.isPackaged && process.env.NODE_ENV !== 'test') {
+    await cleanPendingUpdates()
+    updateCleanupTimer = setInterval(() => { void cleanPendingUpdates() }, UPDATE_CLEANUP_INTERVAL)
+    updateCleanupTimer.unref()
+  }
+  const initialSettings = createInitialSettings(app.getPreferredSystemLanguages())
+  store = new Store<PersistedStore>({
+    name: 'mootool-next',
+    defaults: {
+      settings: process.env.NODE_ENV === 'test'
+        ? mergeSettings(initialSettings, { general: { legacyMigrationHintDismissed: true } })
+        : initialSettings,
+      workspace: defaultWorkspaceState,
+      commandPalette: defaultCommandPaletteState,
+      window: defaultWindowState,
+      toolWindows: {},
+      secrets: {},
+      activeHostId: null,
+      vaultActiveFiles: {}
+    }
+  })
+  store.set('settings', mergeSettings(defaultAppSettings, store.get('settings') as SettingsPatch))
+  store.set('commandPalette', normalizeCommandPaletteState(store.get('commandPalette')))
+  openDataRepositories()
+  batchRenameService = new BatchRenameService(join(app.getPath('userData'), 'file-operations'))
+  const ocrHelper = app.isPackaged ? join(process.resourcesPath, 'native', 'mootool-ocr') : join(__dirname, '../native/mootool-ocr')
+  const testPpOcr = process.env.NODE_ENV === 'test' && process.env.MOOTOOL_OCR_BACKEND === 'pp-ocrv6-small'
+  let ocrResources = app.isPackaged ? join(process.resourcesPath, 'ocr') : join(__dirname, '../ocr', `${process.platform}-${process.arch}`)
+  if (app.isPackaged && process.platform !== 'darwin') {
+    try {
+      const target = `${process.platform}-${process.arch}`
+      const metadata = join(process.resourcesPath, 'optional-components', `${target}.json`)
+      if ((await stat(metadata)).size > 200000) throw new Error('Invalid OCR component metadata')
+      const manifest = parseComponentManifest(JSON.parse(await readFile(metadata, 'utf8')), target)
+      optionalOcrComponent = new OptionalOcrComponent(manifest, join(app.getPath('userData'), 'components', 'ocr'))
+      ocrResources = optionalOcrComponent.directory
+    } catch (error) { console.warn('Optional OCR metadata unavailable:', error) }
+  }
+  const ocrBackend = process.platform === 'darwin' && !testPpOcr
+    ? new VisionOcrBackend(ocrHelper, process.platform, Number(process.getSystemVersion().split('.')[0]))
+    : new PpOcrBackend(ocrResources, join(__dirname, 'ppOcrWorker.js'), path => utilityProcess.fork(path, [], { stdio: 'ignore', serviceName: 'MooTool Offline OCR', allowLoadingUnsignedLibraries: process.platform === 'darwin' }))
+  ocrService = new OcrService(ocrBackend, app.getPath('temp'), (dataUrl) => {
+    const image = nativeImage.createFromDataURL(dataUrl)
+    if (image.isEmpty()) throw new Error('image.ocr.error.input')
+    const { width, height } = image.getSize()
+    if (width > 16384 || height > 16384 || width * height > 32000000) throw new Error('image.ocr.error.tooLarge')
+    return { png: image.toPNG(), width, height }
+  })
+  app.on('web-contents-created', (_event, contents) => { const id = contents.id; contents.once('destroyed', () => { batchRenameService.release(id); ocrService.release(id) }) })
+  systemService = new SystemService(app.getPath('temp'))
+  runtimeExecutionService = new RuntimeExecutionService(join(app.getPath('temp'), 'mootool-runtime'))
+  gitAskPassPath = await prepareGitAskPass()
+  toolWindowManager = new ToolWindowManager({
+    enabled: process.env.NODE_ENV !== 'test' || process.env.MOOTOOL_TOOL_VIEWS === '1',
+    getMainWindow: () => mainWindow,
+    loadTool: loadToolRenderer,
+    onRecoveryFailed: (toolId, owner) => {
+      const language = store.get('settings').general.language
+      const text = messages[language]
+      const options = { type: 'error' as const, message: text['toolWindow.crashed'],
+        detail: text['toolWindow.recoveryDetail'], buttons: [text['toolWindow.reload'], text['common.close']], cancelId: 1 }
+      void (owner && !owner.isDestroyed() ? dialog.showMessageBox(owner, options) : dialog.showMessageBox(options))
+        .then(result => { if (result.response === 0 && !isQuitting) toolWindowManager.reload(toolId) })
+        .catch(() => undefined)
+    },
+    preloadPath: join(__dirname, '../preload/index.js'),
+    getWindowState: (toolId) => store.get('toolWindows')[toolId],
+    setWindowState: (toolId, state) => {
+      store.set('toolWindows', { ...store.get('toolWindows'), [toolId]: state })
+    },
+    backgroundColor: () => nativeTheme.shouldUseDarkColors ? '#171719' : '#f7f7f8',
+    icon: () => app.isPackaged ? undefined : getDevelopmentIconPath(),
+    onWindowFocusChanged: updateApplicationWindowActivity,
+    materialMode: () => mainWindowMaterial?.mode ?? store.get('settings').appearance.windowMaterial,
+    materialDependencies: {
+      platform: process.platform,
+      systemVersion: process.getSystemVersion(),
+      dark: () => nativeTheme.shouldUseDarkColors,
+      highContrast: () => nativeTheme.shouldUseHighContrastColors,
+      loadGlass: loadNativeGlass
+    }
+  })
+
+  if (process.platform === 'darwin' && !app.isPackaged) {
+    app.dock?.setIcon(getDevelopmentIconPath())
+  }
+
+  registerIpc()
+  applySettings(store.get('settings'))
+
+  nativeTheme.on('updated', () => {
+    const systemTheme = nativeTheme.shouldUseDarkColors ? 'dark' : 'light'
+    const opaqueBackground = systemTheme === 'dark' ? '#171719' : '#f7f7f8'
+    toolWindowManager.updateBackground(opaqueBackground)
+    for (const browserWindow of BrowserWindow.getAllWindows()) {
+      if (browserWindow !== mainWindow) browserWindow.setBackgroundColor(opaqueBackground)
+      browserWindow.webContents.send('theme:system-changed', systemTheme)
+    }
+    void mainWindowMaterial?.refresh()
+    toolWindowManager.sendToAll('theme:system-changed', systemTheme)
+  })
+
+  createMainWindow()
+
+  app.on('activate', showMainWindow)
+})
+
+app.on('before-quit', () => {
+  pdfTasks.dispose()
+  ocrService?.stop()
+  isQuitting = true
+  commandShortcut.dispose()
+  javaRegexService.dispose()
+  displaySleepService.dispose()
+  displaySleepCleanupSenders.clear()
+  finishScreenCapture(null, false)
+  toolWindowManager?.dispose()
+  quickNoteWatcherGeneration += 1
+  jsonVaultWatcherGeneration += 1
+  runtimeExecutionService?.cancelAll()
+  quickNoteWatcher?.close()
+  jsonVaultWatcher?.close()
+  clearTimeout(quickNoteWatchTimer)
+  clearTimeout(jsonVaultWatchTimer)
+  clearInterval(quickNotePullTimer)
+  clearInterval(jsonVaultPullTimer)
+  quickNoteCheckpointScheduler.stop()
+  jsonVaultCheckpointScheduler.stop()
+  clearTimeout(updateStartupTimer)
+  clearInterval(updateIntervalTimer)
+  clearInterval(updateCleanupTimer)
+  closeDataRepositories()
+})
+
+app.on('window-all-closed', () => {
+  if (process.platform !== 'darwin' && !store?.get('settings').general.trayEnabled) {
+    app.quit()
+  }
+})

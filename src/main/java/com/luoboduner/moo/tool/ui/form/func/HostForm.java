@@ -1,0 +1,520 @@
+package com.luoboduner.moo.tool.ui.form.func;
+
+import cn.hutool.core.io.FileUtil;
+import com.formdev.flatlaf.FlatClientProperties;
+import com.formdev.flatlaf.extras.FlatSVGIcon;
+import com.luoboduner.moo.tool.ui.component.SearchFieldUiUtil;
+import com.intellij.uiDesigner.core.GridConstraints;
+import com.intellij.uiDesigner.core.GridLayoutManager;
+import com.intellij.uiDesigner.core.Spacer;
+import com.luoboduner.moo.tool.App;
+import com.luoboduner.moo.tool.dao.THostMapper;
+import com.luoboduner.moo.tool.domain.THost;
+import com.luoboduner.moo.tool.ui.Init;
+import com.luoboduner.moo.tool.ui.UiConsts;
+import com.luoboduner.moo.tool.ui.component.ToolbarUiUtil;
+import com.luoboduner.moo.tool.ui.component.textviewer.HostRTextScrollPane;
+import com.luoboduner.moo.tool.ui.component.textviewer.HostRSyntaxTextViewer;
+import com.luoboduner.moo.tool.ui.dialog.CommonTipsDialog;
+import com.luoboduner.moo.tool.ui.dialog.TranslationDialog;
+import com.luoboduner.moo.tool.ui.frame.ColorPickerFrame;
+import com.luoboduner.moo.tool.ui.listener.func.HostListener;
+import com.luoboduner.moo.tool.ui.startup.EdtGuard;
+import com.luoboduner.moo.tool.ui.startup.HostLoadData;
+import com.luoboduner.moo.tool.util.AlertUtil;
+import com.luoboduner.moo.tool.util.HostFileUtil;
+import com.luoboduner.moo.tool.util.I18n;
+import com.luoboduner.moo.tool.util.I18nUiUtil;
+import com.luoboduner.moo.tool.util.MybatisUtil;
+import com.luoboduner.moo.tool.util.SystemUtil;
+import com.luoboduner.moo.tool.util.UndoUtil;
+import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.exception.ExceptionUtils;
+
+import javax.swing.*;
+import java.awt.*;
+import java.io.File;
+import java.util.List;
+
+import static java.awt.GraphicsDevice.WindowTranslucency.TRANSLUCENT;
+
+/**
+ * <pre>
+ * Host
+ * </pre>
+ *
+ * @author <a href="https://github.com/rememberber">Zhou Bo</a>
+ * @since 2019/9/7.
+ */
+@Getter
+@Slf4j
+public class HostForm {
+    private JPanel hostPanel;
+    private JList<THost> noteList;
+    private JButton deleteButton;
+    private JButton saveButton;
+    private JSplitPane splitPane;
+    private JButton addButton;
+    private JButton switchButton;
+    private JPanel rightPanel;
+    private JPanel controlPanel;
+    private JButton exportButton;
+    private JButton currentHostButton;
+    private JButton findButton;
+    private JPanel findReplacePanel;
+    private JTextField searchTextField;
+
+    private static HostForm hostForm;
+
+    private static boolean i18nRegistered;
+
+    private static boolean viewShellInitialized;
+
+    private static THostMapper hostMapper = MybatisUtil.getSqlSession().getMapper(THostMapper.class);
+
+    public static final String WIN_HOST_FILE_PATH = HostFileUtil.WIN_HOST_FILE_PATH;
+
+    public static final String MAC_HOST_FILE_PATH = HostFileUtil.MAC_HOST_FILE_PATH;
+
+    public static final String LINUX_HOST_FILE_PATH = HostFileUtil.LINUX_HOST_FILE_PATH;
+
+    public static final String MAC_HOST_DIR_PATH = "/etc/";
+
+    public static final String LINUX_HOST_DIR_PATH = "/etc/";
+
+    public static String getNotSupportedTips() {
+        return HostFileUtil.getNotSupportedTips();
+    }
+
+    private HostRSyntaxTextViewer textArea;
+
+    private HostRTextScrollPane scrollPane;
+
+    private JToolBar actionToolBar;
+
+    private JPanel actionToolBarPanel;
+
+    private HostForm() {
+        textArea = new HostRSyntaxTextViewer();
+        scrollPane = new HostRTextScrollPane(textArea);
+
+        currentHostButton = new JButton();
+        currentHostButton.setText("");
+        currentHostButton.setToolTipText("查看系统当前host");
+        addButton = new JButton();
+        addButton.setText("");
+        addButton.setToolTipText("新建(Ctrl+N)");
+        findButton = new JButton();
+        findButton.setText("");
+        findButton.setToolTipText("查找(Ctrl+F)");
+        saveButton = new JButton();
+        saveButton.setText("");
+        saveButton.setToolTipText("保存(Ctrl+S)");
+        deleteButton = new JButton();
+        deleteButton.setText("");
+        deleteButton.setToolTipText("删除");
+        exportButton = new JButton();
+        exportButton.setText("");
+        exportButton.setToolTipText("导出");
+        switchButton = new JButton();
+        switchButton.setText("");
+        switchButton.setToolTipText("切换host");
+
+        actionToolBar = new JToolBar();
+        ToolbarUiUtil.configure(actionToolBar);
+        actionToolBar.add(currentHostButton);
+        actionToolBar.add(addButton);
+        actionToolBar.add(findButton);
+        actionToolBar.add(saveButton);
+        ToolbarUiUtil.addGroupSeparator(actionToolBar);
+        actionToolBar.add(deleteButton);
+        actionToolBar.add(exportButton);
+        actionToolBar.add(switchButton);
+        actionToolBarPanel.add(actionToolBar, BorderLayout.EAST);
+
+        UndoUtil.register(this);
+    }
+
+    public static void setHost(String hostName, String hostText) {
+        HostForm hostForm = HostForm.getInstance();
+        hostForm.getSwitchButton().setEnabled(false);
+        boolean success = false;
+        try {
+            HostFileUtil.writeSystemHosts(hostText);
+            onHostSwitched(hostName);
+            success = true;
+        } catch (HostFileUtil.HostWriteException e) {
+            log.warn("Switch host failed: {}", e.getMessage());
+            showHostWriteError(hostForm, e);
+        } catch (Exception ex) {
+            log.error(ExceptionUtils.getStackTrace(ex));
+            showError(hostForm, ex.getMessage(), I18n.get("host.switchFailed"));
+        } finally {
+            boolean switchSuccess = success;
+            SwingUtilities.invokeLater(() -> {
+                JButton switchButton = hostForm.getSwitchButton();
+                switchButton.setEnabled(true);
+                showSwitchButtonFeedback(switchButton, switchSuccess);
+            });
+        }
+    }
+
+    private static void showSwitchButtonFeedback(JButton switchButton, boolean success) {
+        String message = success ? I18n.get("common.success") : I18n.get("host.switchFailed");
+        AlertUtil.buttonInfo(switchButton, "", message, 1500);
+    }
+
+    private static void onHostSwitched(String hostName) {
+        Runnable updateUi = () -> {
+            if (App.trayIcon != null) {
+                App.trayIcon.displayMessage("MooTool", I18n.format("host.switched", hostName), TrayIcon.MessageType.INFO);
+            }
+            highlightHostMenu(hostName);
+        };
+        if (SwingUtilities.isEventDispatchThread()) {
+            updateUi.run();
+        } else {
+            SwingUtilities.invokeLater(updateUi);
+        }
+    }
+
+    private static void showHostWriteError(HostForm hostForm, HostFileUtil.HostWriteException e) {
+        Runnable show = () -> {
+            HostFileUtil.HostWriteException.Reason reason = e.getReason();
+            if (SystemUtil.isMacOs() && (reason == HostFileUtil.HostWriteException.Reason.USER_CANCELED
+                    || reason == HostFileUtil.HostWriteException.Reason.PERMISSION_DENIED
+                    || reason == HostFileUtil.HostWriteException.Reason.TIMEOUT)) {
+                CommonTipsDialog dialog = new CommonTipsDialog();
+                dialog.setTitle(I18n.get("host.adminRequiredTitle"));
+                dialog.setHtmlText(e.getMessage());
+                dialog.pack();
+                dialog.setVisible(true);
+                return;
+            }
+            if (SystemUtil.isLinuxOs() && reason == HostFileUtil.HostWriteException.Reason.PERMISSION_DENIED) {
+                showError(hostForm, e.getMessage(), I18n.get("host.switchFailed"));
+                openHostDir(LINUX_HOST_DIR_PATH);
+                return;
+            }
+            if (reason == HostFileUtil.HostWriteException.Reason.NOT_SUPPORTED) {
+                showError(hostForm, e.getMessage(), I18n.get("host.sorry"));
+                return;
+            }
+            showError(hostForm, e.getMessage(), I18n.get("host.switchFailed"));
+        };
+        if (SwingUtilities.isEventDispatchThread()) {
+            show.run();
+        } else {
+            SwingUtilities.invokeLater(show);
+        }
+    }
+
+    private static void showError(HostForm hostForm, String message, String title) {
+        Runnable show = () -> JOptionPane.showMessageDialog(hostForm.getHostPanel(), message, title, JOptionPane.ERROR_MESSAGE);
+        if (SwingUtilities.isEventDispatchThread()) {
+            show.run();
+        } else {
+            SwingUtilities.invokeLater(show);
+        }
+    }
+
+    private static void openHostDir(String dirPath) {
+        try {
+            Desktop.getDesktop().open(new File(dirPath));
+        } catch (Exception e) {
+            log.error(ExceptionUtils.getStackTrace(e));
+        }
+    }
+
+    public static HostForm getInstance() {
+        if (hostForm == null) {
+            hostForm = new HostForm();
+        }
+        return hostForm;
+    }
+
+    public static void init() {
+        createViewShell();
+        initList();
+        startPageServices();
+    }
+
+    public static JPanel createViewShell() {
+        EdtGuard.assertEdt();
+        hostForm = getInstance();
+        if (viewShellInitialized) {
+            return hostForm.getHostPanel();
+        }
+        initUi();
+        HostListener.addListeners();
+        hostForm.applyI18n();
+        if (!i18nRegistered) {
+            I18nUiUtil.register(HostForm::applyI18nStatic);
+            i18nRegistered = true;
+        }
+        viewShellInitialized = true;
+        return hostForm.getHostPanel();
+    }
+
+    public static void bindLoadedData(HostLoadData data) {
+        EdtGuard.assertEdt();
+        if (data == null) {
+            initList();
+            return;
+        }
+        applyHostListData(data.getFilteredHosts(), data.getAllHosts());
+    }
+
+    public static void startPageServices() {
+        Init.initTray();
+    }
+
+    public static void applyHostListData(List<THost> filteredHosts, List<THost> allHosts) {
+        EdtGuard.assertEdt();
+        Init.initTray();
+        DefaultListModel<THost> model = new DefaultListModel<>();
+        JList<THost> noteList = hostForm.getNoteList();
+        noteList.setModel(model);
+        noteList.setCellRenderer(new DefaultListCellRenderer() {
+            @Override
+            public Component getListCellRendererComponent(JList<?> list, Object value, int index,
+                                                          boolean isSelected, boolean cellHasFocus) {
+                String label = value instanceof THost ? ((THost) value).getName() : String.valueOf(value);
+                return super.getListCellRendererComponent(list, label, index, isSelected, cellHasFocus);
+            }
+        });
+
+        List<THost> hostList = filteredHosts == null ? List.of() : filteredHosts;
+        for (THost tHost : hostList) {
+            model.addElement(tHost);
+        }
+
+        if (!hostList.isEmpty()) {
+            HostListener.ignoreQuickSave = true;
+            try {
+                HostListener.selectedNameHost = hostList.get(0).getName();
+                hostForm.getTextArea().setText(hostList.get(0).getContent());
+                noteList.setSelectedIndex(0);
+            } catch (Exception e1) {
+                log.error(e1.getMessage());
+            } finally {
+                HostListener.ignoreQuickSave = false;
+            }
+        }
+
+        if (model.getSize() > 0) {
+            noteList.setSelectedIndex(0);
+        }
+
+        rebuildTrayHostMenu(allHosts != null ? allHosts : hostList);
+    }
+
+    private static void rebuildTrayHostMenu(List<THost> hostList) {
+        if (SystemUtil.isLinuxOs() || App.popupMenu == null) {
+            return;
+        }
+        App.popupMenu.removeAll();
+        JMenuItem openItem = new JMenuItem("MooTool");
+        JMenuItem colorPickerItem = new JMenuItem(I18n.get("tray.colorPicker"));
+        JMenuItem translateItem = new JMenuItem(I18n.get("tray.translation"));
+        JMenuItem exitItem = new JMenuItem(I18n.get("common.quit"));
+
+        openItem.addActionListener(e -> Init.showMainFrame());
+        colorPickerItem.addActionListener(e -> {
+            GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
+            GraphicsDevice gd = ge.getDefaultScreenDevice();
+            if (gd.isWindowTranslucencySupported(TRANSLUCENT)) {
+                App.mainFrame.setVisible(false);
+                ColorPickerFrame.showPicker();
+            }
+        });
+        translateItem.addActionListener(e -> {
+            TranslationDialog translationDialog = new TranslationDialog();
+            translationDialog.pack();
+            translationDialog.setVisible(true);
+        });
+        exitItem.addActionListener(e -> Init.shutdown());
+
+        App.popupMenu.add(openItem);
+        App.popupMenu.addSeparator();
+        App.popupMenu.add(colorPickerItem);
+        App.popupMenu.add(translateItem);
+        App.popupMenu.addSeparator();
+
+        for (THost tHost : hostList) {
+            JMenuItem menuItem = new JMenuItem(tHost.getName());
+            menuItem.addActionListener(e -> {
+                THost tHost1 = hostMapper.selectByName(tHost.getName());
+                String hostName = tHost1.getName();
+                setHost(hostName, tHost1.getContent());
+            });
+            App.popupMenu.add(menuItem);
+        }
+        App.popupMenu.addSeparator();
+        App.popupMenu.add(exitItem);
+
+        highlightHostMenu(App.config.getCurrentHostName());
+    }
+
+    public static void initList() {
+        String titleFilterKeyWord = hostForm.getSearchTextField().getText();
+        titleFilterKeyWord = "%" + titleFilterKeyWord + "%";
+        List<THost> filtered = hostMapper.selectByFilter(titleFilterKeyWord);
+        List<THost> all = SystemUtil.isLinuxOs() ? filtered : hostMapper.selectAll();
+        applyHostListData(filtered, all);
+    }
+
+    private void applyI18n() {
+        I18nUiUtil.setPlaceholder(searchTextField, "common.search");
+        I18nUiUtil.setToolTip(currentHostButton, "host.tooltip.currentHost");
+        I18nUiUtil.setToolTip(addButton, "quickNote.tooltip.new");
+        I18nUiUtil.setToolTip(findButton, "quickNote.tooltip.find");
+        I18nUiUtil.setToolTip(saveButton, "quickNote.tooltip.save");
+        I18nUiUtil.setToolTip(deleteButton, "quickNote.tooltip.delete");
+        I18nUiUtil.setToolTip(exportButton, "quickNote.tooltip.export");
+        I18nUiUtil.setToolTip(switchButton, "host.tooltip.switchHost");
+    }
+
+    private static void applyI18nStatic() {
+        if (hostForm != null) {
+            hostForm.applyI18n();
+        }
+    }
+
+    private static GridConstraints toolbarRowConstraints(int row) {
+        return new GridConstraints(row, 0, 1, 1, GridConstraints.ANCHOR_NORTH, GridConstraints.FILL_HORIZONTAL,
+                GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW,
+                GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false);
+    }
+
+    private static GridConstraints findReplaceRowConstraints(int row) {
+        return new GridConstraints(row, 0, 1, 1, GridConstraints.ANCHOR_NORTH, GridConstraints.FILL_HORIZONTAL,
+                GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW,
+                GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false);
+    }
+
+    private static GridConstraints editorRowConstraints(int row) {
+        return new GridConstraints(row, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH,
+                GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW,
+                GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW,
+                null, null, null, 0, false);
+    }
+
+    private static void initUi() {
+
+        hostForm.getRightPanel().removeAll();
+        hostForm.getRightPanel().setLayout(new GridLayoutManager(3, 1, new Insets(0, 0, 0, 0), -1, -1));
+        if (App.config.isMenuBarOnTop()) {
+            hostForm.getRightPanel().add(hostForm.getControlPanel(), toolbarRowConstraints(0));
+            hostForm.getRightPanel().add(hostForm.getFindReplacePanel(), findReplaceRowConstraints(1));
+            hostForm.getRightPanel().add(hostForm.getScrollPane(), editorRowConstraints(2));
+        } else if (App.config.isMenuBarOnBottom()) {
+            hostForm.getRightPanel().add(hostForm.getScrollPane(), editorRowConstraints(0));
+            hostForm.getRightPanel().add(hostForm.getFindReplacePanel(), findReplaceRowConstraints(1));
+            hostForm.getRightPanel().add(hostForm.getControlPanel(), toolbarRowConstraints(2));
+        }
+
+        SearchFieldUiUtil.configure(hostForm.getSearchTextField());
+        hostForm.getSearchTextField().putClientProperty(FlatClientProperties.PLACEHOLDER_TEXT, I18n.get("common.search"));
+
+        hostForm.getAddButton().setIcon(new FlatSVGIcon("icon/add.svg"));
+        hostForm.getFindButton().setIcon(new FlatSVGIcon("icon/find.svg"));
+        hostForm.getSaveButton().setIcon(new FlatSVGIcon("icon/save.svg"));
+        hostForm.getCurrentHostButton().setIcon(new FlatSVGIcon("icon/host.svg"));
+        hostForm.getSwitchButton().setIcon(new FlatSVGIcon("icon/check.svg"));
+        hostForm.getDeleteButton().setIcon(new FlatSVGIcon("icon/remove.svg"));
+        hostForm.getExportButton().setIcon(new FlatSVGIcon("icon/export.svg"));
+
+        hostForm.getFindReplacePanel().setVisible(false);
+
+        hostForm.getSplitPane().setDividerLocation(App.mainFrame.getWidth() / 5);
+        hostForm.getNoteList().setFixedCellHeight(UiConsts.TABLE_ROW_HEIGHT);
+        hostForm.getNoteList().setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
+        hostForm.getNoteList().putClientProperty(FlatClientProperties.STYLE,
+                "selectionArc: 6; selectionInsets: 0,1,0,1");
+
+        hostForm.getTextArea().grabFocus();
+
+        hostForm.getHostPanel().updateUI();
+    }
+
+    private static void highlightHostMenu(String hostName) {
+//        if (!SystemUtil.isLinuxOs()) {
+        Font fontBold = new Font(App.config.getFont(), Font.BOLD, App.config.getFontSize());
+        Font fontPlain = new Font(App.config.getFont(), Font.PLAIN, App.config.getFontSize());
+        for (int i = 2; i < App.popupMenu.getComponentCount(); i++) {
+            if (App.popupMenu.getComponent(i) instanceof JMenuItem) {
+                JMenuItem item = (JMenuItem) App.popupMenu.getComponent(i);
+                if (hostName.equals(item.getLabel())) {
+                    item.setFont(fontBold);
+                    item.setIcon(new FlatSVGIcon("icon/check.svg"));
+                } else {
+                    item.setFont(fontPlain);
+                    item.setIcon(null);
+                }
+            }
+        }
+        App.config.setCurrentHostName(hostName);
+        App.config.save();
+//            HostListener.refreshHostContentInTextArea();
+//        }
+    }
+
+    {
+// GUI initializer generated by IntelliJ IDEA GUI Designer
+// >>> IMPORTANT!! <<<
+// DO NOT EDIT OR ADD ANY CODE HERE!
+        $$$setupUI$$$();
+    }
+
+    /**
+     * Method generated by IntelliJ IDEA GUI Designer
+     * >>> IMPORTANT!! <<<
+     * DO NOT edit this method OR call it in your code!
+     *
+     * @noinspection ALL
+     */
+    private void $$$setupUI$$$() {
+        hostPanel = new JPanel();
+        hostPanel.setLayout(new GridLayoutManager(1, 1, new Insets(10, 10, 10, 10), -1, -1));
+        splitPane = new JSplitPane();
+        splitPane.setContinuousLayout(true);
+        splitPane.setDividerLocation(175);
+        splitPane.setDividerSize(10);
+        hostPanel.add(splitPane, new GridConstraints(0, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, null, new Dimension(200, 200), null, 0, false));
+        final JPanel panel1 = new JPanel();
+        panel1.setLayout(new GridLayoutManager(2, 1, new Insets(0, 0, 0, 0), -1, -1));
+        panel1.setMinimumSize(new Dimension(0, 64));
+        splitPane.setLeftComponent(panel1);
+        final JScrollPane scrollPane1 = new JScrollPane();
+        panel1.add(scrollPane1, new GridConstraints(1, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
+        noteList = new JList();
+        scrollPane1.setViewportView(noteList);
+        searchTextField = new JTextField();
+        panel1.add(searchTextField, new GridConstraints(0, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_FIXED, null, new Dimension(150, -1), null, 0, false));
+        rightPanel = new JPanel();
+        rightPanel.setLayout(new GridLayoutManager(2, 1, new Insets(0, 0, 0, 0), -1, -1));
+        splitPane.setRightComponent(rightPanel);
+        controlPanel = new JPanel();
+        controlPanel.setLayout(new GridLayoutManager(1, 2, new Insets(0, 0, 0, 0), -1, -1));
+        rightPanel.add(controlPanel, new GridConstraints(0, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        final Spacer spacer1 = new Spacer();
+        controlPanel.add(spacer1, new GridConstraints(0, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW, 1, null, null, null, 0, false));
+        actionToolBarPanel = new JPanel();
+        actionToolBarPanel.setLayout(new BorderLayout(0, 0));
+        controlPanel.add(actionToolBarPanel, new GridConstraints(0, 1, 1, 1, GridConstraints.ANCHOR_EAST, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        findReplacePanel = new JPanel();
+        findReplacePanel.setLayout(new BorderLayout(0, 0));
+        findReplacePanel.setVisible(true);
+        rightPanel.add(findReplacePanel, new GridConstraints(1, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+    }
+
+    /**
+     * @noinspection ALL
+     */
+    public JComponent $$$getRootComponent$$$() {
+        return hostPanel;
+    }
+
+}

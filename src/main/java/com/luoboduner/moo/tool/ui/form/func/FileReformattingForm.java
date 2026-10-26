@@ -1,0 +1,278 @@
+package com.luoboduner.moo.tool.ui.form.func;
+
+import com.intellij.uiDesigner.core.GridConstraints;
+import com.intellij.uiDesigner.core.GridLayoutManager;
+import com.intellij.uiDesigner.core.Spacer;
+import com.luoboduner.moo.tool.domain.TFuncHistory;
+import com.luoboduner.moo.tool.ui.FuncConsts;
+import com.luoboduner.moo.tool.ui.component.FuncHistoryPanel;
+import com.luoboduner.moo.tool.ui.component.textviewer.RegexRSyntaxTextViewer;
+import com.luoboduner.moo.tool.ui.component.textviewer.RegexRTextScrollPane;
+import com.luoboduner.moo.tool.ui.listener.func.FileReformatListener;
+import com.luoboduner.moo.tool.util.FuncHistorySupport;
+import com.luoboduner.moo.tool.util.FuncHistoryUtil;
+import com.luoboduner.moo.tool.util.I18n;
+import com.luoboduner.moo.tool.util.I18nUiUtil;
+import com.luoboduner.moo.tool.util.UndoUtil;
+import org.apache.commons.lang3.StringUtils;
+import com.luoboduner.moo.tool.util.codeformatter.CodeFormatterFactory;
+import lombok.Getter;
+import org.fife.ui.rsyntaxtextarea.SyntaxConstants;
+
+import javax.swing.*;
+import java.awt.*;
+import java.util.Map;
+
+@Getter
+public class FileReformattingForm {
+    private JPanel reformattingPanel;
+    private JComboBox fileType;
+    private JComboBox spaceNum;
+    private JTextArea resultArea;
+    private JButton uploadFile;
+    private JButton reformat;
+    private JLabel selectFileName;
+    private JTabbedPane tabbedPane1;
+    private JButton formatButton;
+    private JPanel contentPanel;
+    private JPanel controlPanel;
+    private JComboBox stringTypeComboBox;
+
+    private RegexRSyntaxTextViewer textArea;
+    private RegexRTextScrollPane scrollPane;
+
+    private static FileReformattingForm fileReformattingForm;
+
+    private static boolean i18nRegistered;
+
+    private static FuncHistoryPanel historyPanel;
+
+    public static FileReformattingForm getInstance() {
+        if (null == fileReformattingForm) {
+            fileReformattingForm = new FileReformattingForm();
+        }
+        return fileReformattingForm;
+    }
+
+    private FileReformattingForm() {
+        textArea = new RegexRSyntaxTextViewer();
+        scrollPane = new RegexRTextScrollPane(textArea);
+
+        stringTypeComboBox.addItem("Nginx配置");
+        stringTypeComboBox.addItem("Java");
+        stringTypeComboBox.addItem("XML");
+        stringTypeComboBox.addItem("HTML");
+
+        UndoUtil.register(this);
+    }
+
+    public static void init() {
+        fileReformattingForm = getInstance();
+        fileReformattingForm.getContentPanel().add(fileReformattingForm.getScrollPane());
+        changeStringType();
+        FileReformatListener.ParameterBuilder.builder()
+                .buildFileType(fileReformattingForm.getFileType())
+                .buildSpaceNum(fileReformattingForm.getSpaceNum())
+                .buildResultPanel(fileReformattingForm.getResultArea())
+                .buildUploadBtn(fileReformattingForm.getUploadFile())
+                .buildReformatBtn(fileReformattingForm.getReformat())
+                .buildSelectFileLabel(fileReformattingForm.getSelectFileName())
+                .start();
+
+        historyPanel = FuncHistorySupport.attachTab(
+                fileReformattingForm.getTabbedPane1(), FuncConsts.FILE_REFORMAT, FileReformattingForm::applyHistory);
+
+        FileReformatListener.addListeners();
+
+        fileReformattingForm.applyI18n();
+        if (!i18nRegistered) {
+            I18nUiUtil.register(FileReformattingForm::applyI18nStatic);
+            i18nRegistered = true;
+        }
+    }
+
+    private void applyI18n() {
+        I18nUiUtil.setTabTitle(tabbedPane1, 0, "reformat.tab.string");
+        I18nUiUtil.setTabTitle(tabbedPane1, 1, "reformat.tab.file");
+        I18nUiUtil.setText(formatButton, "common.format");
+        I18nUiUtil.setText(reformat, "common.format");
+        I18nUiUtil.setText(uploadFile, "reformat.selectFile");
+        I18nUiUtil.localizeTree(controlPanel, Map.of(
+                "文本类型", "reformat.textType"
+        ));
+        if (tabbedPane1.getTabCount() > 1 && tabbedPane1.getComponentAt(1) instanceof Container fileTab) {
+            I18nUiUtil.localizeTree(fileTab, Map.of(
+                    "文件类型", "reformat.fileType",
+                    "空格数量", "reformat.spaceCount"
+            ));
+        }
+        stringTypeComboBox.setRenderer(new DefaultListCellRenderer() {
+            @Override
+            public Component getListCellRendererComponent(JList<?> list, Object value, int index,
+                                                          boolean isSelected, boolean cellHasFocus) {
+                super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
+                if (index == 0) {
+                    setText(I18n.get("reformat.type.nginx"));
+                }
+                return this;
+            }
+        });
+    }
+
+    private static void applyI18nStatic() {
+        if (fileReformattingForm != null) {
+            fileReformattingForm.applyI18n();
+        }
+    }
+
+    public static FuncHistoryPanel getHistoryPanel() {
+        return historyPanel;
+    }
+
+    public static void applyHistory(TFuncHistory history) {
+        if (history == null || StringUtils.isBlank(history.getExtraData())) {
+            return;
+        }
+        fileReformattingForm.getStringTypeComboBox().setSelectedItem(history.getExtraData());
+        changeStringType();
+        fileReformattingForm.getTextArea().setText(history.getInputText());
+    }
+
+    public static void changeStringType() {
+        fileReformattingForm = getInstance();
+
+        String selectedItem = (String) fileReformattingForm.getStringTypeComboBox().getSelectedItem();
+        if ("Nginx配置".equals(selectedItem)) {
+            fileReformattingForm.getTextArea().setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_INI);
+        } else if ("Java".equals(selectedItem)) {
+            fileReformattingForm.getTextArea().setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_JAVA);
+        } else if ("XML".equals(selectedItem)) {
+            fileReformattingForm.getTextArea().setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_XML);
+        } else if ("HTML".equals(selectedItem)) {
+            fileReformattingForm.getTextArea().setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_HTML);
+        }
+    }
+
+    public static void format() {
+        fileReformattingForm = getInstance();
+        String original = fileReformattingForm.getTextArea().getText();
+        String text = original;
+        String stringType = (String) fileReformattingForm.getStringTypeComboBox().getSelectedItem();
+
+        if ("Nginx配置".equals(stringType)) {
+            text = CodeFormatterFactory.getFormatter(CodeFormatterFactory.FormatterType.NGINX).format(text);
+        } else if ("Java".equals(stringType)) {
+            text = CodeFormatterFactory.getFormatter(CodeFormatterFactory.FormatterType.JAVA).format(text);
+        } else if ("XML".equals(stringType)) {
+            text = CodeFormatterFactory.getFormatter(CodeFormatterFactory.FormatterType.XML).format(text);
+        } else if ("HTML".equals(stringType)) {
+            text = CodeFormatterFactory.getFormatter(CodeFormatterFactory.FormatterType.HTML).format(text);
+        }
+
+        fileReformattingForm.getTextArea().setText(text);
+        fileReformattingForm.getTextArea().setCaretPosition(0);
+
+        if (StringUtils.isNotBlank(original)) {
+            FuncHistoryUtil.save(FuncConsts.FILE_REFORMAT, stringType + " 格式化", original, text, stringType);
+            if (historyPanel != null) {
+                historyPanel.refreshListIfVisible();
+            }
+        }
+    }
+
+    {
+// GUI initializer generated by IntelliJ IDEA GUI Designer
+// >>> IMPORTANT!! <<<
+// DO NOT EDIT OR ADD ANY CODE HERE!
+        $$$setupUI$$$();
+    }
+
+    /**
+     * Method generated by IntelliJ IDEA GUI Designer
+     * >>> IMPORTANT!! <<<
+     * DO NOT edit this method OR call it in your code!
+     *
+     * @noinspection ALL
+     */
+    private void $$$setupUI$$$() {
+        reformattingPanel = new JPanel();
+        reformattingPanel.setLayout(new GridLayoutManager(1, 1, new Insets(10, 0, 0, 0), -1, -1));
+        tabbedPane1 = new JTabbedPane();
+        reformattingPanel.add(tabbedPane1, new GridConstraints(0, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, null, new Dimension(200, 200), null, 0, false));
+        final JPanel panel1 = new JPanel();
+        panel1.setLayout(new GridLayoutManager(2, 1, new Insets(10, 10, 10, 10), -1, -1));
+        tabbedPane1.addTab("字符串", panel1);
+        contentPanel = new JPanel();
+        contentPanel.setLayout(new BorderLayout(0, 0));
+        panel1.add(contentPanel, new GridConstraints(1, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
+        controlPanel = new JPanel();
+        controlPanel.setLayout(new GridLayoutManager(1, 4, new Insets(0, 0, 0, 0), -1, -1));
+        panel1.add(controlPanel, new GridConstraints(0, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, 1, null, null, null, 0, false));
+        formatButton = new JButton();
+        formatButton.setText("格式化");
+        controlPanel.add(formatButton, new GridConstraints(0, 3, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        final Spacer spacer1 = new Spacer();
+        controlPanel.add(spacer1, new GridConstraints(0, 2, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW, 1, null, null, null, 0, false));
+        final JLabel label1 = new JLabel();
+        label1.setText("文本类型");
+        controlPanel.add(label1, new GridConstraints(0, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        stringTypeComboBox = new JComboBox();
+        controlPanel.add(stringTypeComboBox, new GridConstraints(0, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        final JPanel panel2 = new JPanel();
+        panel2.setLayout(new GridLayoutManager(1, 1, new Insets(0, 0, 0, 0), -1, -1));
+        tabbedPane1.addTab("文件", panel2);
+        final JPanel panel3 = new JPanel();
+        panel3.setLayout(new GridLayoutManager(2, 1, new Insets(10, 10, 10, 10), -1, -1));
+        panel2.add(panel3, new GridConstraints(0, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, null, null, null, 0, false));
+        final JPanel panel4 = new JPanel();
+        panel4.setLayout(new GridLayoutManager(2, 8, new Insets(0, 0, 0, 0), -1, -1));
+        panel3.add(panel4, new GridConstraints(0, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, null, null, null, 0, false));
+        final JLabel label2 = new JLabel();
+        label2.setText("文件类型");
+        panel4.add(label2, new GridConstraints(0, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        final Spacer spacer2 = new Spacer();
+        panel4.add(spacer2, new GridConstraints(1, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_VERTICAL, 1, GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
+        fileType = new JComboBox();
+        final DefaultComboBoxModel defaultComboBoxModel1 = new DefaultComboBoxModel();
+        defaultComboBoxModel1.addElement("XML");
+        defaultComboBoxModel1.addElement("HTML");
+        defaultComboBoxModel1.addElement("JAVA");
+        fileType.setModel(defaultComboBoxModel1);
+        panel4.add(fileType, new GridConstraints(0, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        final JLabel label3 = new JLabel();
+        label3.setText("空格数量");
+        panel4.add(label3, new GridConstraints(0, 2, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        spaceNum = new JComboBox();
+        final DefaultComboBoxModel defaultComboBoxModel2 = new DefaultComboBoxModel();
+        defaultComboBoxModel2.addElement("2");
+        defaultComboBoxModel2.addElement("3");
+        defaultComboBoxModel2.addElement("4");
+        defaultComboBoxModel2.addElement("5");
+        defaultComboBoxModel2.addElement("6");
+        spaceNum.setModel(defaultComboBoxModel2);
+        panel4.add(spaceNum, new GridConstraints(0, 3, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        uploadFile = new JButton();
+        uploadFile.setText("选择文件");
+        panel4.add(uploadFile, new GridConstraints(0, 4, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        reformat = new JButton();
+        reformat.setText("格式化");
+        panel4.add(reformat, new GridConstraints(0, 7, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        selectFileName = new JLabel();
+        selectFileName.setText("");
+        panel4.add(selectFileName, new GridConstraints(0, 5, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        final Spacer spacer3 = new Spacer();
+        panel4.add(spacer3, new GridConstraints(0, 6, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW, 1, null, null, null, 0, false));
+        final JScrollPane scrollPane1 = new JScrollPane();
+        panel3.add(scrollPane1, new GridConstraints(1, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
+        resultArea = new JTextArea();
+        scrollPane1.setViewportView(resultArea);
+    }
+
+    /**
+     * @noinspection ALL
+     */
+    public JComponent $$$getRootComponent$$$() {
+        return reformattingPanel;
+    }
+
+}

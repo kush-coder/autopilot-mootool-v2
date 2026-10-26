@@ -1,0 +1,90 @@
+package com.rememberber.mootool.next.compose.domain
+
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertTrue
+
+class NetWiringPresentationTest {
+    @Test
+    fun shouldToastNetworkErrorSkipsAborted() {
+        assertFalse(NetWiringPresentation.shouldToastNetworkError(NetworkErrorCode.ABORTED))
+        assertTrue(NetWiringPresentation.shouldToastNetworkError(NetworkErrorCode.INVALID_TARGET))
+        assertFalse(NetWiringPresentation.shouldToastNetworkError(null))
+    }
+
+    @Test
+    fun shouldToastLocalFailure() {
+        assertTrue(NetWiringPresentation.shouldToastLocalFailure())
+    }
+
+    @Test
+    fun portScanStartTrimsAndValidates() {
+        val ready = NetWiringPresentation.portScanStart(" 127.0.0.1 ", " 22,80 ")
+        assertTrue(ready is NetWiringPresentation.PortScanStart.Ready)
+        ready as NetWiringPresentation.PortScanStart.Ready
+        assertEquals("127.0.0.1", ready.target)
+        assertEquals("22,80", ready.portSpec)
+    }
+
+    @Test
+    fun pingStartTrimsAndValidatesHost() {
+        val ready = NetWiringPresentation.pingStart(" example.com ")
+        assertTrue(ready is NetWiringPresentation.HostCommandStart.Ready)
+        ready as NetWiringPresentation.HostCommandStart.Ready
+        assertEquals("example.com", ready.target)
+        assertTrue(NetWiringPresentation.pingStart("") is NetWiringPresentation.HostCommandStart.Blocked)
+    }
+
+    @Test
+    fun portScanStartRejectsEmptyAndInvalid() {
+        assertTrue(
+            NetWiringPresentation.portScanStart("", "22") is NetWiringPresentation.PortScanStart.Blocked,
+        )
+        assertTrue(
+            NetWiringPresentation.portScanStart("127.0.0.1", "") is NetWiringPresentation.PortScanStart.Blocked,
+        )
+        assertTrue(
+            NetWiringPresentation.portScanStart("127.0.0.1", "99999")
+                is NetWiringPresentation.PortScanStart.Blocked,
+        )
+    }
+
+    @Test
+    fun outputAndRunGuards() {
+        assertTrue(NetWiringPresentation.stopEnabled(running = true))
+        assertFalse(NetWiringPresentation.outputActionsEnabled(outputNotBlank = false))
+        assertTrue(
+            NetWiringPresentation.runCommandEnabled(
+                idle = true,
+                startReady = NetWiringPresentation.pingStart("127.0.0.1")
+                    is NetWiringPresentation.HostCommandStart.Ready,
+            ),
+        )
+        assertFalse(NetWiringPresentation.runCommandEnabled(idle = false, startReady = true))
+    }
+
+    @Test
+    fun runLocalAddressesReturnsSnapshot() {
+        val snapshot = NetWiringPresentation.runLocalAddresses()
+        assertTrue(snapshot.ipv4.isNotEmpty() || snapshot.ipv6.isNotEmpty())
+    }
+
+    @Test
+    fun idleUtilityActionEnabled() {
+        assertTrue(NetWiringPresentation.flushDnsActionEnabled(running = false))
+        assertFalse(NetWiringPresentation.flushDnsActionEnabled(running = true))
+        assertTrue(NetWiringPresentation.refreshLocalAddressesActionEnabled(running = false))
+        assertFalse(NetWiringPresentation.refreshLocalAddressesActionEnabled(running = true))
+    }
+
+    @Test
+    fun ipv4LongConvertActionEnabled() {
+        assertTrue(NetWiringPresentation.ipv4ToLongActionEnabled("127.0.0.1"))
+        assertFalse(NetWiringPresentation.ipv4ToLongActionEnabled(""))
+        assertFalse(NetWiringPresentation.ipv4ToLongActionEnabled("256.0.0.1"))
+        assertTrue(NetWiringPresentation.longToIpv4ActionEnabled("2130706433"))
+        assertFalse(NetWiringPresentation.longToIpv4ActionEnabled(""))
+        assertFalse(NetWiringPresentation.longToIpv4ActionEnabled("4294967296"))
+    }
+}

@@ -1,0 +1,618 @@
+import {
+  Boxes,
+  ChevronDown,
+  Command,
+  FolderCog,
+  History,
+  Languages,
+  PanelLeftClose,
+  Search,
+  Star,
+  Settings
+} from 'lucide-react'
+import { useEffect, useMemo, useRef, useState, type ComponentType } from 'react'
+import brandLogo from '../assets/brand/mootool-logo.png'
+import { CalculatorHost } from '../features/calculator/CalculatorHost'
+import { ColorHost } from '../features/color/ColorHost'
+import { CryptoHost } from '../features/crypto/CryptoHost'
+import { ConfigHost } from '../features/config/ConfigHost'
+import { CronHost } from '../features/cron/CronHost'
+import { EncodeHost } from '../features/encode/EncodeHost'
+import { EditorLabHost } from '../features/editorLab/EditorLabHost'
+import { HomePage } from '../features/home/HomePage'
+import { HostHost } from '../features/host/HostHost'
+import { CustomGroupDialog } from '../features/groups/CustomGroupDialog'
+import { HttpHost } from '../features/http/HttpHost'
+import { ImageHost } from '../features/image/ImageHost'
+import { JsonHost } from '../features/json/JsonHost'
+import { MessageBoardHost } from '../features/messageBoard/MessageBoardHost'
+import { NetworkHost } from '../features/network/NetworkHost'
+import { PdfHost } from '../features/pdf/PdfHost'
+import { ProtobufHost } from '../features/protobuf/ProtobufHost'
+import { QrcodeHost } from '../features/qrcode/QrcodeHost'
+import { QuickNoteHost } from '../features/quickNote/QuickNoteHost'
+import { ReformatHost } from '../features/reformat/ReformatHost'
+import { RegexHost } from '../features/regex/RegexHost'
+import { RuntimeHost } from '../features/runtime/RuntimeHost'
+import { useSettings } from '../features/settings/SettingsProvider'
+import { TextDiffHost } from '../features/textDiff/TextDiffHost'
+import { TimestampHost } from '../features/timestamp/TimestampHost'
+import { TranslationHost } from '../features/translation/TranslationHost'
+import { UaHost } from '../features/ua/UaHost'
+import { VariablesHost } from '../features/variables/VariablesHost'
+import { SystemHost } from '../features/system/SystemHost'
+import { CommandPalette } from '../features/search/CommandPalette'
+import { HistoryPanel } from '../features/history/HistoryPanel'
+import { WebviewLab } from '../features/webviewLab/WebviewLab'
+import { runtimeApi } from '../platform/api/runtimeApi'
+import { historyApi } from '../platform/api/historyApi'
+import { desktopApi } from '../platform/api/desktopApi'
+import { productUpdateApi } from '../platform/api/updateApi'
+import type { DesktopCloseDecision, DesktopCloseRequest } from '../platform/contracts/desktop'
+import type { OperationHistory } from '../platform/contracts/history'
+import { queueOperationRestore } from '../features/history/operationRestore'
+import type { RuntimeInfo } from '../platform/contracts/runtime'
+import type { AppLanguage } from '../platform/contracts/settings'
+import { errorMessage, reportProductError, toProductError } from '../shared/errors'
+import { useI18n } from './i18n'
+import {
+  homeTool,
+  navigationToolCatalog,
+  productToolCatalog,
+  toolCatalog,
+  toolGroups,
+  type ToolId
+} from './toolCatalog'
+
+const toolHosts: Array<{ id: Exclude<ToolId, 'home'>; Host: ComponentType<{ active: boolean }> }> = [
+  { id: 'calculator', Host: CalculatorHost },
+  { id: 'color', Host: ColorHost },
+  { id: 'json', Host: JsonHost },
+  { id: 'quick-note', Host: QuickNoteHost },
+  { id: 'protobuf', Host: ProtobufHost },
+  { id: 'runtime', Host: RuntimeHost },
+  { id: 'http', Host: HttpHost },
+  { id: 'host', Host: HostHost },
+  { id: 'text-diff', Host: TextDiffHost },
+  { id: 'reformat', Host: ReformatHost },
+  { id: 'encode', Host: EncodeHost },
+  { id: 'crypto', Host: CryptoHost },
+  { id: 'qrcode', Host: QrcodeHost },
+  { id: 'regex', Host: RegexHost },
+  { id: 'config', Host: ConfigHost },
+  { id: 'cron', Host: CronHost },
+  { id: 'timestamp', Host: TimestampHost },
+  { id: 'message-board', Host: MessageBoardHost },
+  { id: 'translation', Host: TranslationHost },
+  { id: 'image', Host: ImageHost },
+  { id: 'pdf', Host: PdfHost },
+  { id: 'network', Host: NetworkHost },
+  { id: 'ua', Host: UaHost },
+  { id: 'variables', Host: VariablesHost },
+  { id: 'system', Host: SystemHost },
+  { id: 'editor-lab', Host: EditorLabHost },
+  { id: 'webview-lab', Host: WebviewLab }
+]
+
+export function App() {
+  const { settings, ready: settingsReady, error: settingsError, save, openWindow } = useSettings()
+  const { t, toolTitle, groupTitle } = useI18n()
+  const [activeTool, setActiveTool] = useState<ToolId>('home')
+  const [visitedTools, setVisitedTools] = useState<ReadonlySet<ToolId>>(() => new Set(['home']))
+  const [query, setQuery] = useState('')
+  const [runtimeInfo, setRuntimeInfo] = useState<RuntimeInfo>()
+  const [notice, setNotice] = useState('')
+  const [customGroupsOpen, setCustomGroupsOpen] = useState(false)
+  const [commandPaletteOpen, setCommandPaletteOpen] = useState(false)
+  const [historyOpen, setHistoryOpen] = useState(false)
+  const [closeRequest, setCloseRequest] = useState<DesktopCloseRequest>()
+  const [rememberCloseChoice, setRememberCloseChoice] = useState(false)
+  const automaticUpdateActive = useRef(false)
+
+  useEffect(() => {
+    if (!notice) return
+    const timer = window.setTimeout(() => setNotice(''), 5_000)
+    return () => window.clearTimeout(timer)
+  }, [notice])
+  const sidebarCompact = settings.layout.sidebarCompact
+  const hiddenTools = new Set(settings.layout.hiddenTools)
+  const recent = settings.layout.showRecent
+    ? settings.tools.recent.filter(isToolId).filter((toolId) => !hiddenTools.has(toolId))
+    : []
+  const favorites = settings.tools.favorites
+    .filter(isToolId)
+    .map((toolId) => toolCatalog.find((tool) => tool.id === toolId))
+    .filter((tool): tool is NonNullable<typeof tool> => Boolean(tool && !tool.engineeringOnly && !hiddenTools.has(tool.id)))
+
+  useEffect(() => {
+    void runtimeApi.getInfo().then(setRuntimeInfo).catch((error: unknown) => {
+      setNotice(error instanceof Error ? error.message : t('shell.readRuntimeError'))
+    })
+  }, [t])
+
+  useEffect(() => {
+    if (!settingsReady || !settings.general.autoCheckUpdates || !window.__TAURI_INTERNALS__) return
+    let cancelled = false
+    const check = async () => {
+      try {
+        const result = await productUpdateApi.check()
+        if (!cancelled && result.status === 'available') {
+          if (settings.general.autoDownloadUpdates && !automaticUpdateActive.current) {
+            automaticUpdateActive.current = true
+            setNotice(t('settings.updateDownloadingBackground', { version: result.latestVersion ?? '' }))
+            try {
+              await productUpdateApi.install(() => undefined)
+              if (!cancelled) setNotice(t('settings.updateReadyRestart', { version: result.latestVersion ?? '' }))
+            } finally {
+              automaticUpdateActive.current = false
+            }
+          } else {
+            setNotice(t('settings.updateAvailable', { version: result.latestVersion ?? '' }))
+          }
+        }
+      } catch (cause) {
+        await reportProductError(toProductError(cause), 'application.update.scheduled-check')
+      }
+    }
+    const startupTimer = window.setTimeout(() => void check(), 10_000)
+    const interval = window.setInterval(() => void check(), 60 * 60 * 1_000)
+    return () => {
+      cancelled = true
+      window.clearTimeout(startupTimer)
+      window.clearInterval(interval)
+    }
+  }, [settings.general.autoCheckUpdates, settings.general.autoDownloadUpdates, settingsReady, t])
+
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (matchesShortcut(event, settings.shortcuts.globalSearch)) {
+        event.preventDefault()
+        setCommandPaletteOpen(true)
+      } else if (matchesShortcut(event, settings.shortcuts.settings)) {
+        event.preventDefault()
+        void openWindow().catch((cause: unknown) => setNotice(errorMessage(cause)))
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [openWindow, settings.shortcuts.globalSearch, settings.shortcuts.settings])
+
+  useEffect(() => {
+    if (!window.__TAURI_INTERNALS__) return
+    let dispose: (() => void) | undefined
+    let cancelled = false
+    void import('@tauri-apps/api/event').then(({ listen }) => listen('mootool://open-command-palette', () => {
+      setCommandPaletteOpen(true)
+    })).then((unlisten) => {
+      if (cancelled) unlisten()
+      else dispose = unlisten
+    }).catch((cause: unknown) => setNotice(errorMessage(cause)))
+    return () => { cancelled = true; dispose?.() }
+  }, [])
+
+  useEffect(() => {
+    let unlisten: (() => void) | undefined
+    let cancelled = false
+    void desktopApi.subscribeCloseRequested((request) => {
+      if (!cancelled) {
+        setRememberCloseChoice(false)
+        setCloseRequest(request)
+      }
+    }).then((dispose) => {
+      if (cancelled) dispose()
+      else unlisten = dispose
+    }).catch((cause: unknown) => setNotice(errorMessage(cause)))
+    return () => {
+      cancelled = true
+      unlisten?.()
+    }
+  }, [])
+
+  useEffect(() => {
+    if (!window.__TAURI_INTERNALS__) return
+    let unlisten: (() => void) | undefined
+    let cancelled = false
+    void import('@tauri-apps/api/window')
+      .then(({ getCurrentWindow }) => getCurrentWindow().onCloseRequested((event) => {
+        // Rust owns the close policy and resolves it through the custom dialog.
+        // Keep Tauri's built-in listener from destroying the WebviewWindow first.
+        event.preventDefault()
+      }))
+      .then((dispose) => {
+        if (cancelled) dispose()
+        else unlisten = dispose
+      })
+      .catch((cause: unknown) => setNotice(errorMessage(cause)))
+    return () => {
+      cancelled = true
+      unlisten?.()
+    }
+  }, [])
+
+  async function resolveClose(decision: DesktopCloseDecision): Promise<void> {
+    try {
+      if (rememberCloseChoice && decision !== 'cancel') {
+        await save((current) => ({
+          ...current,
+          general: {
+            ...current.general,
+            closeBehavior: decision === 'quit' ? 'quit' : 'minimizeToTray'
+          }
+        }))
+      }
+      await desktopApi.resolveCloseRequest(decision)
+      setCloseRequest(undefined)
+    } catch (cause) {
+      setNotice(errorMessage(cause))
+    }
+  }
+
+  const visibleGroups = useMemo(() => toolGroups.map((group) => ({
+    group,
+    tools: navigationToolCatalog.filter((tool) => !hiddenTools.has(tool.id) && tool.group === group && (
+      !query.trim()
+      || `${tool.title} ${toolTitle(tool)} ${tool.keywords.join(' ')}`
+        .toLowerCase()
+        .includes(query.trim().toLowerCase())
+    ))
+  })).filter(({ tools }) => tools.length > 0), [query, settings.layout.hiddenTools, toolTitle])
+  const visibleCustomGroups = useMemo(() => settings.layout.customGroups.map((group) => ({
+    ...group,
+    tools: group.toolIds
+      .map((toolId) => productToolCatalog.find((tool) => tool.id === toolId))
+      .filter((tool): tool is NonNullable<typeof tool> => Boolean(tool))
+      .filter((tool) => !hiddenTools.has(tool.id))
+      .filter((tool) => !query.trim() || `${tool.title} ${toolTitle(tool)} ${tool.keywords.join(' ')}`
+        .toLowerCase().includes(query.trim().toLowerCase()))
+  })).filter((group) => group.tools.length > 0), [query, settings.layout.customGroups, settings.layout.hiddenTools, toolTitle])
+
+  function openTool(toolId: ToolId): void {
+    const tool = toolCatalog.find((item) => item.id === toolId)
+    if (tool && !tool.ready) {
+      setNotice(t('shell.queued', { tool: toolTitle(tool) }))
+      return
+    }
+    setActiveTool(toolId)
+    setVisitedTools((current) => current.has(toolId) ? current : new Set([...current, toolId]))
+    setNotice('')
+    if (toolId !== 'home' && settingsReady) {
+      void historyApi.record({
+        id: crypto.randomUUID(),
+        toolId,
+        action: t('history.action.openTool'),
+        summary: t('history.summary.openTool', { tool: tool ? toolTitle(tool) : toolId }),
+        status: 'info',
+        inputText: '',
+        outputText: '',
+        metadataJson: '{}',
+        createdAt: Date.now()
+      }, settings.data.historyLimit).catch((cause: unknown) => setNotice(errorMessage(cause)))
+      void save((current) => ({
+        ...current,
+        tools: {
+          ...current.tools,
+          recent: [toolId, ...current.tools.recent.filter((item) => item !== toolId)].slice(0, 5)
+        }
+      })).catch((cause: unknown) => setNotice(errorMessage(cause)))
+    }
+  }
+
+  function restoreOperation(entry: OperationHistory): void {
+    if (!isToolId(entry.toolId) || entry.toolId === 'home') return
+    const toolId = entry.toolId
+    queueOperationRestore(entry)
+    setActiveTool(toolId)
+    setVisitedTools((current) => current.has(toolId) ? current : new Set([...current, toolId]))
+    setHistoryOpen(false)
+    setNotice(t('history.summary.restored', { tool: resolveToolName(toolId) }))
+  }
+
+  function resolveToolName(toolId: ToolId): string {
+    const tool = toolCatalog.find((item) => item.id === toolId)
+    return tool ? toolTitle(tool) : toolId
+  }
+
+  function toggleSidebar(): void {
+    if (!settingsReady) return
+    void save((current) => ({
+      ...current,
+      layout: { ...current.layout, sidebarCompact: !current.layout.sidebarCompact }
+    })).catch((cause: unknown) => setNotice(errorMessage(cause)))
+  }
+
+  function toggleFavorite(toolId: ToolId): void {
+    if (!settingsReady || toolId === 'home') return
+    void save((current) => {
+      const selected = current.tools.favorites.includes(toolId)
+      return {
+        ...current,
+        tools: {
+          ...current.tools,
+          favorites: selected
+            ? current.tools.favorites.filter((item) => item !== toolId)
+            : [toolId, ...current.tools.favorites].slice(0, 50)
+        }
+      }
+    }).catch((cause: unknown) => setNotice(errorMessage(cause)))
+  }
+
+  function cycleLanguage(): void {
+    const languages: AppLanguage[] = ['zh-CN', 'en-US', 'ja-JP']
+    const next = languages[(languages.indexOf(settings.general.language) + 1) % languages.length]
+    void save((current) => ({
+      ...current,
+      general: { ...current.general, language: next }
+    })).catch((cause: unknown) => setNotice(errorMessage(cause)))
+  }
+
+  const shellClassName = [
+    'app-shell',
+    sidebarCompact ? 'app-shell--compact' : '',
+    settings.layout.compactNavigation ? 'app-shell--compact-nav' : '',
+    settings.layout.showSeparators ? 'app-shell--nav-separators' : '',
+    activeTool !== 'home' ? 'app-shell--immersive-tool' : '',
+    `app-shell--nav-${settings.layout.navigationStyle}`
+  ].filter(Boolean).join(' ')
+
+  return (
+    <main className={shellClassName}>
+      <div className="window-drag-region" data-tauri-drag-region />
+      <aside className="sidebar">
+        <div className="sidebar-toolbar">
+          <button
+            className="icon-button"
+            type="button"
+            aria-label={sidebarCompact ? t('shell.expand') : t('shell.collapse')}
+            onClick={toggleSidebar}
+          >
+            <PanelLeftClose />
+          </button>
+          <button
+            className="icon-button compact-search-button"
+            type="button"
+            aria-label={t('shell.search')}
+            onClick={() => setCommandPaletteOpen(true)}
+          >
+            <Search />
+          </button>
+          <label className="search-control">
+            <Search />
+            <input
+              id="tool-search"
+              value={query}
+              placeholder={t('shell.search')}
+              onChange={(event) => setQuery(event.target.value)}
+            />
+            <kbd><Command />K</kbd>
+          </label>
+        </div>
+
+        <nav className="tool-nav" aria-label={t('shell.navigation')}>
+          <NavButton
+            icon={homeTool.icon}
+            label="MooTool"
+            active={activeTool === 'home'}
+            compact={sidebarCompact}
+            onClick={() => openTool('home')}
+          />
+          <NavButton
+            icon={History}
+            label={t('shell.history')}
+            active={historyOpen}
+            compact={sidebarCompact}
+            onClick={() => setHistoryOpen(true)}
+          />
+          {favorites.length > 0 && (
+            <section className="nav-group nav-group--favorites">
+              {settings.layout.showGroupTitles && <h2><Star />{t('shell.favorites')}</h2>}
+              {favorites.map((tool) => (
+                <NavButton
+                  key={`favorite-${tool.id}`}
+                  icon={tool.icon}
+                  label={toolTitle(tool)}
+                  active={activeTool === tool.id}
+                  compact={sidebarCompact}
+                  favorite
+                  onToggleFavorite={() => toggleFavorite(tool.id)}
+                  onClick={() => openTool(tool.id)}
+                />
+              ))}
+            </section>
+          )}
+          {visibleCustomGroups.map((group) => (
+            <section className="nav-group nav-group--custom" key={group.id}>
+              {settings.layout.showGroupTitles && <h2><FolderCog />{group.name}</h2>}
+              {group.tools.map((tool) => (
+                <NavButton
+                  key={`${group.id}-${tool.id}`}
+                  icon={tool.icon}
+                  label={toolTitle(tool)}
+                  active={activeTool === tool.id}
+                  compact={sidebarCompact}
+                  favorite={settings.tools.favorites.includes(tool.id)}
+                  onToggleFavorite={() => toggleFavorite(tool.id)}
+                  onClick={() => openTool(tool.id)}
+                />
+              ))}
+            </section>
+          ))}
+          {visibleGroups.map(({ group, tools }) => (
+            <section className="nav-group" key={group}>
+              {settings.layout.showGroupTitles && <h2>{groupTitle(group)}</h2>}
+              {tools.map((tool) => (
+                <NavButton
+                  key={tool.id}
+                  icon={tool.icon}
+                  label={toolTitle(tool)}
+                  active={activeTool === tool.id}
+                  compact={sidebarCompact}
+                  planned={!tool.ready}
+                  favorite={settings.tools.favorites.includes(tool.id)}
+                  onToggleFavorite={() => toggleFavorite(tool.id)}
+                  onClick={() => openTool(tool.id)}
+                />
+              ))}
+            </section>
+          ))}
+
+          {!query && recent.length > 0 && (
+            <section className="recent-group">
+              <h2>{t('shell.recent')} <ChevronDown /></h2>
+              {recent.map((toolId) => {
+                const tool = toolCatalog.find((item) => item.id === toolId)
+                return tool && (
+                  <button type="button" key={toolId} onClick={() => openTool(toolId)}>
+                    {toolTitle(tool)}
+                  </button>
+                )
+              })}
+            </section>
+          )}
+        </nav>
+
+        <footer className="sidebar-footer">
+          <div className="brand-lockup">
+            <img className="brand-symbol" src={brandLogo} alt="" aria-hidden="true" draggable={false} />
+            <span>MooTool <small>Tauri</small></span>
+          </div>
+          <div className="footer-actions">
+            <button className="icon-button" type="button" aria-label={t('shell.groups')} onClick={() => setCustomGroupsOpen(true)}>
+              <FolderCog />
+            </button>
+            <button className="icon-button" type="button" aria-label={t('shell.language')} onClick={cycleLanguage}>
+              <Languages />
+            </button>
+            <button
+              className="icon-button"
+              type="button"
+              aria-label={t('shell.settings')}
+              onClick={() => void openWindow().catch((cause: unknown) => setNotice(errorMessage(cause)))}
+            >
+              <Settings />
+            </button>
+          </div>
+        </footer>
+      </aside>
+
+      <section className="workspace">
+        <div className={activeTool === 'home' ? 'view-layer' : 'view-layer view-layer--hidden'}>
+          <HomePage runtimeInfo={runtimeInfo} onOpenJson={() => openTool('json')} />
+        </div>
+        {toolHosts.map(({ id, Host }) => visitedTools.has(id) && (
+          <div className={activeTool === id ? 'view-layer' : 'view-layer view-layer--hidden'} key={id}>
+            <Host active={activeTool === id} />
+          </div>
+        ))}
+        {(notice || settingsError) && (
+          <button className="notice-toast" type="button" role={settingsError ? 'alert' : 'status'} aria-live={settingsError ? 'assertive' : 'polite'} onClick={() => setNotice('')}>
+            {notice || settingsError}
+          </button>
+        )}
+        <CustomGroupDialog open={customGroupsOpen} onClose={() => setCustomGroupsOpen(false)} />
+        <CommandPalette
+          open={commandPaletteOpen}
+          onClose={() => setCommandPaletteOpen(false)}
+          onOpenTool={openTool}
+        />
+        {historyOpen && <HistoryPanel limit={settings.data.historyLimit} onClose={() => setHistoryOpen(false)} onRestore={restoreOperation} />}
+        {closeRequest && (
+          <div className="desktop-dialog-backdrop" role="presentation">
+            <section className="desktop-dialog" role="dialog" aria-modal="true" aria-labelledby="close-dialog-title">
+              <span className="eyebrow">MOOTOOL NEXT TAURI</span>
+              <h2 id="close-dialog-title">{t('closeDialog.title')}</h2>
+              <p>{t('closeDialog.body')}</p>
+              <label className="desktop-dialog-remember">
+                <input
+                  type="checkbox"
+                  checked={rememberCloseChoice}
+                  onChange={(event) => setRememberCloseChoice(event.target.checked)}
+                />
+                {t('closeDialog.remember')}
+              </label>
+              <footer>
+                <button className="secondary-button" type="button" onClick={() => void resolveClose('cancel')}>
+                  {t('closeDialog.cancel')}
+                </button>
+                {closeRequest.canMinimizeToTray && (
+                  <button className="secondary-button" type="button" onClick={() => void resolveClose('minimizeToTray')}>
+                    {t('closeDialog.tray')}
+                  </button>
+                )}
+                <button className="primary-button" type="button" onClick={() => void resolveClose('quit')}>
+                  {t('closeDialog.quit')}
+                </button>
+              </footer>
+            </section>
+          </div>
+        )}
+      </section>
+    </main>
+  )
+}
+
+function isToolId(value: string): value is ToolId {
+  return value === 'home' || toolCatalog.some((tool) => tool.id === value)
+}
+
+function matchesShortcut(event: KeyboardEvent, shortcut: string): boolean {
+  const parts = shortcut.toLowerCase().split('+').map((part) => part.trim())
+  const expectedKey = parts.at(-1)
+  if (!expectedKey || event.key.toLowerCase() !== expectedKey) return false
+  const commandOrControl = parts.includes('commandorcontrol')
+  const expectsMeta = parts.includes('command') || parts.includes('meta')
+  const expectsControl = parts.includes('control') || parts.includes('ctrl')
+  const expectsShift = parts.includes('shift')
+  const expectsAlt = parts.includes('alt') || parts.includes('option')
+  if (commandOrControl ? !(event.metaKey || event.ctrlKey) : event.metaKey !== expectsMeta || event.ctrlKey !== expectsControl) return false
+  return event.shiftKey === expectsShift && event.altKey === expectsAlt
+}
+
+
+function NavButton({
+  icon: Icon,
+  label,
+  active,
+  compact,
+  planned = false,
+  favorite = false,
+  onToggleFavorite,
+  onClick
+}: {
+  icon: typeof Boxes
+  label: string
+  active: boolean
+  compact: boolean
+  planned?: boolean
+  favorite?: boolean
+  onToggleFavorite?(): void
+  onClick(): void
+}) {
+  const { t } = useI18n()
+  return (
+    <div className={onToggleFavorite && !compact ? 'nav-button-row nav-button-row--favoritable' : 'nav-button-row'}>
+      <button
+        className={`nav-button ${active ? 'nav-button--active' : ''}`}
+        type="button"
+        aria-label={label}
+        aria-current={active ? 'page' : undefined}
+        title={compact ? label : undefined}
+        onClick={onClick}
+      >
+        <Icon />
+        <span>{label}</span>
+        {planned && <i aria-label={t('shell.planned')} />}
+      </button>
+      {onToggleFavorite && !compact && (
+        <button
+          className={favorite ? 'nav-favorite nav-favorite--active' : 'nav-favorite'}
+          type="button"
+          aria-label={t(favorite ? 'shell.unfavoriteTool' : 'shell.favoriteTool', { tool: label })}
+          title={t(favorite ? 'shell.unfavorite' : 'shell.favorite')}
+          onClick={onToggleFavorite}
+        >
+          <Star />
+        </button>
+      )}
+    </div>
+  )
+}

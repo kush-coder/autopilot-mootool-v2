@@ -1,0 +1,748 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>com.luoboduner.moo.tool</groupId>
+    <artifactId>MooTool</artifactId>
+    <version>1.8.7</version>
+    <packaging>jar</packaging>
+
+    <name>MooTool</name>
+    <url>http://www.luoboduner.com</url>
+
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+        <maven.compiler.release>25</maven.compiler.release>
+
+        <java.version>25</java.version>
+        <logback.version>1.6.0</logback.version>
+        <emoji-java.version>5.1.1</emoji-java.version>
+        <hutool-all.version>5.8.47</hutool-all.version>
+        <forms_rt.version>7.0.3</forms_rt.version>
+        <fastjson.version>2.0.62</fastjson.version>
+        <lombok.version>1.18.46</lombok.version>
+        <mybatis.version>3.5.19</mybatis.version>
+        <sqlite-jdbc.version>3.53.2.1</sqlite-jdbc.version>
+        <junit.version>6.1.2</junit.version>
+        <commons-lang3.version>3.20.0</commons-lang3.version>
+        <guava.version>33.6.0-jre</guava.version>
+        <okhttp.version>5.4.0</okhttp.version>
+        <google.zxing.core.version>3.5.4</google.zxing.core.version>
+        <flatlaf.version>3.7.2</flatlaf.version>
+        <flatlaf-extras.version>3.7.2</flatlaf-extras.version>
+        <flatlaf-intellij-themes.version>3.7.2</flatlaf-intellij-themes.version>
+        <flatlaf-fonts-jetbrains-mono.version>2.304</flatlaf-fonts-jetbrains-mono.version>
+        <flatlaf-fonts-inter.version>4.1</flatlaf-fonts-inter.version>
+        <rsyntaxtextarea.version>4.0.1</rsyntaxtextarea.version>
+        <sql-formatter.version>2.0.5</sql-formatter.version>
+        <javaparser-core.version>3.28.2</javaparser-core.version>
+        <!--        <jSystemThemeDetector.version>3.8</jSystemThemeDetector.version>-->
+        <cron-utils.version>9.2.1</cron-utils.version>
+        <jna.version>5.19.1</jna.version>
+        <oshi-core.version>7.4.2</oshi-core.version>
+        <jfa.version>1.2.0</jfa.version>
+        <versioncompare.version>1.5.0</versioncompare.version>
+        <groovy.version>5.0.7</groovy.version>
+        <jsoup.version>1.22.2</jsoup.version>
+        <jalopy.version>1.5rc3</jalopy.version>
+        <itextpdf.version>5.5.13.6</itextpdf.version>
+        <snakeyaml.version>2.6</snakeyaml.version>
+        <javafaker.version>1.0.2</javafaker.version>
+        <bcprov.version>1.85</bcprov.version>
+        <tika.version>3.3.2</tika.version>
+        <jackson-databind.version>2.22.1</jackson-databind.version>
+        <tess4j.version>5.20.0</tess4j.version>
+        <java-diff.version>4.17</java-diff.version>
+        <flexmark.version>0.64.8</flexmark.version>
+        <protobuf.version>4.35.1</protobuf.version>
+        <json-path.version>3.0.0</json-path.version>
+        <packaging.outputDirectory>${project.build.directory}</packaging.outputDirectory>
+        <packaging.jdkPath>${java.home}</packaging.jdkPath>
+        <packaging.javaBinary>${java.home}/bin/java</packaging.javaBinary>
+        <packaging.requireRepoJdk>false</packaging.requireRepoJdk>
+        <packaging.targetId>mac-universal</packaging.targetId>
+        <packaging.mac.startup>UNIVERSAL</packaging.mac.startup>
+    </properties>
+
+    <profiles>
+        <profile>
+            <id>mac-universal</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
+            <properties>
+                <packaging.outputDirectory>${project.build.directory}</packaging.outputDirectory>
+                <packaging.jdkPath>${java.home}</packaging.jdkPath>
+                <packaging.javaBinary>${java.home}/bin/java</packaging.javaBinary>
+                <packaging.requireRepoJdk>false</packaging.requireRepoJdk>
+                <packaging.targetId>mac-universal</packaging.targetId>
+                <packaging.mac.startup>UNIVERSAL</packaging.mac.startup>
+            </properties>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>io.github.fvarrui</groupId>
+                        <artifactId>javapackager</artifactId>
+                        <executions>
+                            <execution>
+                                <id>bundling-for-mac-universal</id>
+                                <phase>package</phase>
+                                <goals>
+                                    <goal>package</goal>
+                                </goals>
+                                <configuration>
+                                    <platform>mac</platform>
+                                    <createTarball>true</createTarball>
+                                    <macConfig>
+                                        <macStartup>${packaging.mac.startup}</macStartup>
+                                    </macConfig>
+                                    <additionalModules>jdk.crypto.ec,jdk.charsets</additionalModules>
+                                    <additionalResources>
+                                        <additionalResource>${project.name}.l4j.ini</additionalResource>
+                                    </additionalResources>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+        <profile>
+            <id>mac-intel</id>
+            <properties>
+                <packaging.outputDirectory>${project.build.directory}/mac-intel</packaging.outputDirectory>
+                <packaging.mac.startup>X86_64</packaging.mac.startup>
+                <packaging.jdkPath>${project.basedir}/jdks/mac/x64/home</packaging.jdkPath>
+                <packaging.javaBinary>${project.basedir}/jdks/mac/x64/home/bin/java</packaging.javaBinary>
+                <packaging.requireRepoJdk>true</packaging.requireRepoJdk>
+                <packaging.targetId>mac-intel</packaging.targetId>
+            </properties>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>io.github.fvarrui</groupId>
+                        <artifactId>javapackager</artifactId>
+                        <executions>
+                            <execution>
+                                <id>bundling-for-mac-intel</id>
+                                <phase>package</phase>
+                                <goals>
+                                    <goal>package</goal>
+                                </goals>
+                                <configuration>
+                                    <platform>mac</platform>
+                                    <createTarball>true</createTarball>
+                                    <macConfig>
+                                        <macStartup>${packaging.mac.startup}</macStartup>
+                                    </macConfig>
+                                    <additionalModules>jdk.crypto.ec,jdk.charsets</additionalModules>
+                                    <additionalResources>
+                                        <additionalResource>${project.name}.l4j.ini</additionalResource>
+                                    </additionalResources>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+        <profile>
+            <id>mac-apple-silicon</id>
+            <properties>
+                <packaging.outputDirectory>${project.build.directory}/mac-apple-silicon</packaging.outputDirectory>
+                <packaging.mac.startup>ARM64</packaging.mac.startup>
+                <packaging.jdkPath>${project.basedir}/jdks/mac/arm64/home</packaging.jdkPath>
+                <packaging.javaBinary>${project.basedir}/jdks/mac/arm64/home/bin/java</packaging.javaBinary>
+                <packaging.requireRepoJdk>true</packaging.requireRepoJdk>
+                <packaging.targetId>mac-apple-silicon</packaging.targetId>
+            </properties>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>io.github.fvarrui</groupId>
+                        <artifactId>javapackager</artifactId>
+                        <executions>
+                            <execution>
+                                <id>bundling-for-mac-apple-silicon</id>
+                                <phase>package</phase>
+                                <goals>
+                                    <goal>package</goal>
+                                </goals>
+                                <configuration>
+                                    <platform>mac</platform>
+                                    <createTarball>true</createTarball>
+                                    <macConfig>
+                                        <macStartup>${packaging.mac.startup}</macStartup>
+                                    </macConfig>
+                                    <additionalModules>jdk.crypto.ec,jdk.charsets</additionalModules>
+                                    <additionalResources>
+                                        <additionalResource>${project.name}.l4j.ini</additionalResource>
+                                    </additionalResources>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+        <profile>
+            <id>windows-x64</id>
+            <properties>
+                <packaging.outputDirectory>${project.build.directory}/windows-x64</packaging.outputDirectory>
+                <packaging.jdkPath>${project.basedir}/jdks/windows/x64/home</packaging.jdkPath>
+                <packaging.javaBinary>${project.basedir}/jdks/windows/x64/home/bin/java.exe</packaging.javaBinary>
+                <packaging.requireRepoJdk>true</packaging.requireRepoJdk>
+                <packaging.targetId>windows-x64</packaging.targetId>
+            </properties>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>io.github.fvarrui</groupId>
+                        <artifactId>javapackager</artifactId>
+                        <executions>
+                            <execution>
+                                <id>bundling-for-windows-x64</id>
+                                <phase>package</phase>
+                                <goals>
+                                    <goal>package</goal>
+                                </goals>
+                                <configuration>
+                                    <platform>windows</platform>
+                                    <createZipball>true</createZipball>
+                                    <additionalModules>jdk.crypto.ec,jdk.charsets</additionalModules>
+                                    <additionalResources>
+                                        <additionalResource>${project.name}.l4j.ini</additionalResource>
+                                    </additionalResources>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+        <profile>
+            <id>linux-x64</id>
+            <properties>
+                <packaging.outputDirectory>${project.build.directory}/linux-x64</packaging.outputDirectory>
+                <packaging.jdkPath>${project.basedir}/jdks/linux/x64/home</packaging.jdkPath>
+                <packaging.javaBinary>${project.basedir}/jdks/linux/x64/home/bin/java</packaging.javaBinary>
+                <packaging.requireRepoJdk>true</packaging.requireRepoJdk>
+                <packaging.targetId>linux-x64</packaging.targetId>
+            </properties>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>io.github.fvarrui</groupId>
+                        <artifactId>javapackager</artifactId>
+                        <executions>
+                            <execution>
+                                <id>bundling-for-linux-x64</id>
+                                <phase>package</phase>
+                                <goals>
+                                    <goal>package</goal>
+                                </goals>
+                                <configuration>
+                                    <platform>linux</platform>
+                                    <createTarball>true</createTarball>
+                                    <additionalModules>jdk.crypto.ec,jdk.charsets</additionalModules>
+                                    <additionalResources>
+                                        <additionalResource>${project.name}.l4j.ini</additionalResource>
+                                    </additionalResources>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
+
+    <dependencies>
+
+        <!-- 行级 diff（Myers）+ 生成 unified diff -->
+        <dependency>
+            <groupId>io.github.java-diff-utils</groupId>
+            <artifactId>java-diff-utils</artifactId>
+            <version>${java-diff.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <version>${junit.version}</version>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.junit.vintage</groupId>
+            <artifactId>junit-vintage-engine</artifactId>
+            <version>${junit.version}</version>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>ch.qos.logback</groupId>
+            <artifactId>logback-classic</artifactId>
+            <version>${logback.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.vdurmont</groupId>
+            <artifactId>emoji-java</artifactId>
+            <version>${emoji-java.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>cn.hutool</groupId>
+            <artifactId>hutool-all</artifactId>
+            <version>${hutool-all.version}</version>
+            <exclusions>
+                <exclusion>
+                    <artifactId>junit-vintage-engine</artifactId>
+                    <groupId>org.junit.vintage</groupId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+
+        <!--GUI Designer -> binary class files-->
+        <dependency>
+            <groupId>com.intellij</groupId>
+            <artifactId>forms_rt</artifactId>
+            <version>${forms_rt.version}</version>
+            <exclusions>
+                <!-- jdom 1.0 has default-package classes; breaks jdeps/module-path packaging -->
+                <exclusion>
+                    <groupId>jdom</groupId>
+                    <artifactId>jdom</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+
+        <dependency>
+            <groupId>com.alibaba</groupId>
+            <artifactId>fastjson</artifactId>
+            <version>${fastjson.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <version>${lombok.version}</version>
+            <scope>compile</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.mybatis</groupId>
+            <artifactId>mybatis</artifactId>
+            <version>${mybatis.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.xerial</groupId>
+            <artifactId>sqlite-jdbc</artifactId>
+            <version>${sqlite-jdbc.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-lang3</artifactId>
+            <version>${commons-lang3.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
+            <version>${guava.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.squareup.okhttp3</groupId>
+            <artifactId>okhttp-jvm</artifactId>
+            <version>${okhttp.version}</version>
+            <exclusions>
+                <exclusion>
+                    <artifactId>kotlin-stdlib-common</artifactId>
+                    <groupId>org.jetbrains.kotlin</groupId>
+                </exclusion>
+<!--                <exclusion>-->
+<!--                    <artifactId>annotations</artifactId>-->
+<!--                    <groupId>org.jetbrains</groupId>-->
+<!--                </exclusion>-->
+            </exclusions>
+        </dependency>
+
+        <dependency>
+            <groupId>com.google.zxing</groupId>
+            <artifactId>core</artifactId>
+            <version>${google.zxing.core.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.formdev</groupId>
+            <artifactId>flatlaf</artifactId>
+            <version>${flatlaf.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.formdev</groupId>
+            <artifactId>flatlaf-extras</artifactId>
+            <version>${flatlaf-extras.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.formdev</groupId>
+            <artifactId>flatlaf-intellij-themes</artifactId>
+            <version>${flatlaf-intellij-themes.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.formdev</groupId>
+            <artifactId>flatlaf-fonts-jetbrains-mono</artifactId>
+            <version>${flatlaf-fonts-jetbrains-mono.version}</version>
+            <exclusions>
+                <exclusion>
+                    <artifactId>flatlaf</artifactId>
+                    <groupId>com.formdev</groupId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+
+<!--        <dependency>-->
+<!--            <groupId>com.formdev</groupId>-->
+<!--            <artifactId>flatlaf-fonts-inter</artifactId>-->
+<!--            <version>${flatlaf-fonts-inter.version}</version>-->
+<!--            <exclusions>-->
+<!--                <exclusion>-->
+<!--                    <artifactId>flatlaf</artifactId>-->
+<!--                    <groupId>com.formdev</groupId>-->
+<!--                </exclusion>-->
+<!--            </exclusions>-->
+<!--        </dependency>-->
+
+        <!-- https://mvnrepository.com/artifact/com.fifesoft/rsyntaxtextarea -->
+        <dependency>
+            <groupId>com.fifesoft</groupId>
+            <artifactId>rsyntaxtextarea</artifactId>
+            <version>${rsyntaxtextarea.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.github.vertical-blank</groupId>
+            <artifactId>sql-formatter</artifactId>
+            <version>${sql-formatter.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.jayway.jsonpath</groupId>
+            <artifactId>json-path</artifactId>
+            <version>${json-path.version}</version>
+            <exclusions>
+                <exclusion>
+                    <artifactId>slf4j-api</artifactId>
+                    <groupId>org.slf4j</groupId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+
+        <!--        <dependency>-->
+        <!--            <groupId>com.github.Dansoftowner</groupId>-->
+        <!--            <artifactId>jSystemThemeDetector</artifactId>-->
+        <!--            <version>${jSystemThemeDetector.version}</version>-->
+        <!--        </dependency>-->
+
+        <dependency>
+            <groupId>net.java.dev.jna</groupId>
+            <artifactId>jna</artifactId>
+            <version>${jna.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>net.java.dev.jna</groupId>
+            <artifactId>jna-platform</artifactId>
+            <version>${jna.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.cronutils</groupId>
+            <artifactId>cron-utils</artifactId>
+            <version>${cron-utils.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.github.oshi</groupId>
+            <artifactId>oshi-core</artifactId>
+            <version>${oshi-core.version}</version>
+            <exclusions>
+                <exclusion>
+                    <artifactId>slf4j-api</artifactId>
+                    <groupId>org.slf4j</groupId>
+                </exclusion>
+                <!-- Prefer classic JNA already declared above; avoid duplicate JPMS artifacts -->
+                <exclusion>
+                    <groupId>net.java.dev.jna</groupId>
+                    <artifactId>jna-jpms</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>net.java.dev.jna</groupId>
+                    <artifactId>jna-platform-jpms</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+
+        <dependency>
+            <groupId>de.jangassen</groupId>
+            <artifactId>jfa</artifactId>
+            <version>${jfa.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>net.java.dev.jna</groupId>
+                    <artifactId>jna</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+
+        <dependency>
+            <groupId>io.github.g00fy2</groupId>
+            <artifactId>versioncompare</artifactId>
+            <version>${versioncompare.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.groovy</groupId>
+            <artifactId>groovy</artifactId>
+            <version>${groovy.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.jsoup</groupId>
+            <artifactId>jsoup</artifactId>
+            <version>${jsoup.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.vladsch.flexmark</groupId>
+            <artifactId>flexmark</artifactId>
+            <version>${flexmark.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.vladsch.flexmark</groupId>
+            <artifactId>flexmark-ext-tables</artifactId>
+            <version>${flexmark.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.vladsch.flexmark</groupId>
+            <artifactId>flexmark-ext-gfm-strikethrough</artifactId>
+            <version>${flexmark.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.vladsch.flexmark</groupId>
+            <artifactId>flexmark-ext-autolink</artifactId>
+            <version>${flexmark.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>jalopy</groupId>
+            <artifactId>jalopy</artifactId>
+            <version>${jalopy.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.itextpdf</groupId>
+            <artifactId>itextpdf</artifactId>
+            <version>${itextpdf.version}</version>
+            <type>jar</type>
+        </dependency>
+
+        <dependency>
+            <groupId>org.yaml</groupId>
+            <artifactId>snakeyaml</artifactId>
+            <version>${snakeyaml.version}</version>
+        </dependency>
+
+        <!--<dependency>
+            <groupId>com.google.inject</groupId>
+            <artifactId>guice</artifactId>
+            <version>5.1.0</version>
+        </dependency>-->
+
+        <dependency>
+            <groupId>com.github.javaparser</groupId>
+            <artifactId>javaparser-core</artifactId>
+            <version>${javaparser-core.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.github.javafaker</groupId>
+            <artifactId>javafaker</artifactId>
+            <version>${javafaker.version}</version>
+            <exclusions>
+                <exclusion>
+                    <artifactId>commons-lang3</artifactId>
+                    <groupId>org.apache.commons</groupId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+
+        <dependency>
+            <groupId>org.bouncycastle</groupId>
+            <artifactId>bcprov-jdk18on</artifactId>
+            <version>${bcprov.version}</version>
+        </dependency>
+
+<!--        <dependency>-->
+<!--            <groupId>org.apache.tika</groupId>-->
+<!--            <artifactId>tika-core</artifactId>-->
+<!--            <version>${tika.version}</version>-->
+<!--            <exclusions>-->
+<!--                <exclusion>-->
+<!--                    <artifactId>slf4j-api</artifactId>-->
+<!--                    <groupId>org.slf4j</groupId>-->
+<!--                </exclusion>-->
+<!--            </exclusions>-->
+<!--        </dependency>-->
+
+<!--        <dependency>-->
+<!--            <groupId>org.apache.tika</groupId>-->
+<!--            <artifactId>tika-langdetect-optimaize</artifactId>-->
+<!--            <version>${tika.version}</version>-->
+<!--            <exclusions>-->
+<!--                <exclusion>-->
+<!--                    <artifactId>guava</artifactId>-->
+<!--                    <groupId>com.google.guava</groupId>-->
+<!--                </exclusion>-->
+<!--                <exclusion>-->
+<!--                    <artifactId>slf4j-api</artifactId>-->
+<!--                    <groupId>org.slf4j</groupId>-->
+<!--                </exclusion>-->
+<!--            </exclusions>-->
+<!--        </dependency>-->
+
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+            <version>${jackson-databind.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.google.protobuf</groupId>
+            <artifactId>protobuf-java</artifactId>
+            <version>${protobuf.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.google.protobuf</groupId>
+            <artifactId>protobuf-java-util</artifactId>
+            <version>${protobuf.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>net.sourceforge.tess4j</groupId>
+            <artifactId>tess4j</artifactId>
+            <version>${tess4j.version}</version>
+        </dependency>
+
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.15.0</version>
+                <configuration>
+                    <release>${java.version}</release>
+                    <annotationProcessorPaths>
+                        <path>
+                            <groupId>org.projectlombok</groupId>
+                            <artifactId>lombok</artifactId>
+                            <version>${lombok.version}</version>
+                        </path>
+                    </annotationProcessorPaths>
+                </configuration>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>3.5.6</version>
+            </plugin>
+
+            <plugin>
+                <groupId>org.mybatis.generator</groupId>
+                <artifactId>mybatis-generator-maven-plugin</artifactId>
+                <version>2.0.0</version>
+                <configuration>
+                    <verbose>true</verbose>
+                    <overwrite>true</overwrite>
+                </configuration>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-antrun-plugin</artifactId>
+                <version>3.2.0</version>
+                <executions>
+                    <execution>
+                        <id>verify-packaging-jdk</id>
+                        <phase>validate</phase>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                        <configuration>
+                            <target>
+                                <condition property="packaging.jdk.ready">
+                                    <or>
+                                        <not>
+                                            <istrue value="${packaging.requireRepoJdk}"/>
+                                        </not>
+                                        <available file="${packaging.javaBinary}"/>
+                                    </or>
+                                </condition>
+                                <fail unless="packaging.jdk.ready"
+                                      message="Missing repository-local JDK for profile '${packaging.targetId}'. Expected executable: ${packaging.javaBinary}. Run 'python3 scripts/prepare_jdks.py --targets ${packaging.targetId}' before packaging."/>
+                            </target>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <plugin>
+                <groupId>io.github.fvarrui</groupId>
+                <artifactId>javapackager</artifactId>
+                <version>1.7.6</version>
+                <configuration>
+                    <outputDirectory>${packaging.outputDirectory}</outputDirectory>
+                    <displayName>${project.name}</displayName>
+                    <bundleJre>true</bundleJre>
+                    <jdkPath>${packaging.jdkPath}</jdkPath>
+                    <mainClass>com.luoboduner.moo.tool.App</mainClass>
+                    <generateInstaller>true</generateInstaller>
+                    <!-- Explicit modules skip jdeps over dependency jars (jdom/oshi JPMS issues). -->
+                    <modules>
+                        <module>java.base</module>
+                        <module>java.desktop</module>
+                        <module>java.instrument</module>
+                        <module>java.management</module>
+                        <module>java.naming</module>
+                        <module>java.net.http</module>
+                        <module>java.prefs</module>
+                        <module>java.rmi</module>
+                        <module>java.scripting</module>
+                        <module>java.sql</module>
+                        <module>java.xml.crypto</module>
+                        <module>jdk.attach</module>
+                        <module>jdk.compiler</module>
+                        <module>jdk.httpserver</module>
+                        <module>jdk.jdi</module>
+                        <module>jdk.unsupported</module>
+                    </modules>
+                    <!-- 这行不能被格式化为多行，否则会出错-->
+                    <vmArgs>-Dswing.aatext=true -XX:+UseZGC -XX:-ZUncommit -Xms128m -Xmx512m --add-exports jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.parser=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED</vmArgs>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+</project>

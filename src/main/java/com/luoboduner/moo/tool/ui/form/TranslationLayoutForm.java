@@ -1,0 +1,363 @@
+package com.luoboduner.moo.tool.ui.form;
+
+import cn.hutool.core.swing.clipboard.ClipboardUtil;
+import com.formdev.flatlaf.extras.FlatSVGIcon;
+import com.intellij.uiDesigner.core.GridConstraints;
+import com.intellij.uiDesigner.core.GridLayoutManager;
+import com.intellij.uiDesigner.core.Spacer;
+import com.luoboduner.moo.tool.ui.component.ToolbarUiUtil;
+import com.luoboduner.moo.tool.util.AlertUtil;
+import com.luoboduner.moo.tool.util.ConfigUtil;
+import com.luoboduner.moo.tool.util.I18n;
+import com.luoboduner.moo.tool.util.I18nUiUtil;
+import com.luoboduner.moo.tool.ui.listener.func.TranslationListener;
+import com.luoboduner.moo.tool.util.TranslationHistoryUtil;
+import com.luoboduner.moo.tool.util.UndoUtil;
+import com.luoboduner.moo.tool.util.translator.Translator;
+import com.luoboduner.moo.tool.util.translator.TranslatorFactory;
+import com.luoboduner.moo.tool.util.translator.TranslatorLangUtil;
+import lombok.Getter;
+import org.apache.commons.lang3.StringUtils;
+
+import javax.swing.*;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
+import java.awt.*;
+import java.awt.event.ItemEvent;
+import java.util.concurrent.atomic.AtomicInteger;
+
+@Getter
+public class TranslationLayoutForm {
+    private JTextArea textArea1;
+    private JTextArea textArea2;
+    private JPanel mainLayoutPanel;
+    private JSplitPane splitPane;
+    private JPanel leftMenuPanel;
+
+    private JToolBar leftMenuToolBar;
+    private JComboBox<String> comboBox1;
+    private JButton exchangeButton;
+    private JComboBox<String> comboBox2;
+    private JComboBox<String> translatorComboBox;
+    private JButton copyButton;
+    private JButton clearButton;
+    private JButton saveToWordBookButton;
+    private JLabel translatorSourceLabel;
+
+    private static final AtomicInteger changeCount = new AtomicInteger(0);
+
+    private final AtomicInteger suppressAutoTranslate = new AtomicInteger(0);
+
+    private static final String TRANSLATOR_GOOGLE_KEY = "translation.translator.google";
+    private static final String TRANSLATOR_BING_KEY = "translation.translator.bing";
+
+    public TranslationLayoutForm() {
+        exchangeButton = new JButton();
+        exchangeButton.setIcon(new FlatSVGIcon("icon/exchange.svg"));
+        exchangeButton.setToolTipText("交换语言与文本"); // updated in applyI18n
+
+        comboBox1 = new JComboBox<>(Translator.getSourceLanguageNames());
+        comboBox2 = new JComboBox<>(Translator.getTargetLanguageNames());
+
+        String savedSource = ConfigUtil.getInstance().getTranslationSourceLanguage();
+        TranslatorLangUtil.selectComboByCode(comboBox1,
+                TranslatorLangUtil.resolveCode(savedSource, TranslatorLangUtil.AUTO_DETECT_CODE));
+        String savedTarget = ConfigUtil.getInstance().getTranslationTargetLanguage();
+        TranslatorLangUtil.selectComboByCode(comboBox2,
+                TranslatorLangUtil.resolveCode(savedTarget, TranslatorLangUtil.DEFAULT_TARGET_CODE));
+
+        translatorComboBox = new JComboBox<>();
+        final DefaultComboBoxModel<String> translatorComboBoxModel = new DefaultComboBoxModel<>();
+        translatorComboBoxModel.addElement(I18n.get(TRANSLATOR_GOOGLE_KEY));
+        translatorComboBoxModel.addElement(I18n.get(TRANSLATOR_BING_KEY));
+        translatorComboBox.setModel(translatorComboBoxModel);
+        translatorComboBox.setToolTipText("选择翻译源，失败时自动尝试备用翻译源"); // updated in applyI18n
+        String savedTranslator = ConfigUtil.getInstance().getTranslatorType();
+        if ("BING".equals(savedTranslator)) {
+            translatorComboBox.setSelectedIndex(1);
+        } else {
+            translatorComboBox.setSelectedIndex(0);
+        }
+
+        copyButton = new JButton(new FlatSVGIcon("icon/copy.svg"));
+        copyButton.setToolTipText("复制译文");
+        clearButton = new JButton(new FlatSVGIcon("icon/remove.svg"));
+        clearButton.setToolTipText("清空");
+        saveToWordBookButton = new JButton(new FlatSVGIcon("icon/favorite.svg"));
+        saveToWordBookButton.setToolTipText("收藏到单词本");
+
+        leftMenuToolBar = new JToolBar();
+        ToolbarUiUtil.configure(leftMenuToolBar);
+        ToolbarUiUtil.add(leftMenuToolBar, comboBox1);
+        leftMenuToolBar.add(exchangeButton);
+        ToolbarUiUtil.add(leftMenuToolBar, comboBox2);
+        ToolbarUiUtil.addGroupSeparator(leftMenuToolBar);
+        translatorSourceLabel = new JLabel("翻译源: ");
+        ToolbarUiUtil.add(leftMenuToolBar, translatorSourceLabel);
+        ToolbarUiUtil.add(leftMenuToolBar, translatorComboBox);
+        ToolbarUiUtil.addGroupSeparator(leftMenuToolBar);
+        leftMenuToolBar.add(copyButton);
+        leftMenuToolBar.add(clearButton);
+        leftMenuToolBar.add(saveToWordBookButton);
+
+        leftMenuPanel.add(leftMenuToolBar);
+
+        UndoUtil.register(this);
+
+        textArea1.setLineWrap(true);
+        textArea2.setLineWrap(true);
+        textArea2.setEditable(false);
+
+        addListeners();
+    }
+
+    public void addListeners() {
+        exchangeButton.addActionListener(e -> {
+            Object from = comboBox1.getSelectedItem();
+            Object to = comboBox2.getSelectedItem();
+            if (TranslatorLangUtil.isAutoDetectLabel(String.valueOf(from))) {
+                comboBox1.setSelectedItem(to);
+            } else {
+                comboBox1.setSelectedItem(to);
+                comboBox2.setSelectedItem(from);
+            }
+
+            String sourceText = textArea1.getText();
+            String targetText = textArea2.getText();
+            textArea1.setText(targetText);
+            textArea2.setText(sourceText);
+
+            saveLanguagePreferences();
+            translateControl();
+        });
+
+        comboBox1.addItemListener(e -> {
+            if (e.getStateChange() == ItemEvent.SELECTED) {
+                preventSameLanguageSelection();
+                saveLanguagePreferences();
+                translateControl();
+            }
+        });
+
+        comboBox2.addItemListener(e -> {
+            if (e.getStateChange() == ItemEvent.SELECTED) {
+                preventSameLanguageSelection();
+                saveLanguagePreferences();
+                translateControl();
+            }
+        });
+
+        translatorComboBox.addItemListener(e -> {
+            if (e.getStateChange() == ItemEvent.SELECTED) {
+                String translatorType = translatorComboBox.getSelectedIndex() == 1 ? "BING" : "GOOGLE";
+                ConfigUtil.getInstance().setTranslatorType(translatorType);
+                if (!StringUtils.isEmpty(textArea1.getText())) {
+                    translateControl();
+                }
+            }
+        });
+
+        copyButton.addActionListener(e -> {
+            String result = textArea2.getText();
+            if (StringUtils.isNotBlank(result)) {
+                ClipboardUtil.setStr(result);
+                AlertUtil.buttonInfo(copyButton, "", I18n.get("common.copied"), 1500);
+            }
+        });
+
+        clearButton.addActionListener(e -> {
+            textArea1.setText("");
+            textArea2.setText("");
+        });
+
+        textArea1.getDocument().addDocumentListener(new DocumentListener() {
+            @Override
+            public void insertUpdate(DocumentEvent e) {
+                if (suppressAutoTranslate.get() == 0) {
+                    translateControl();
+                }
+            }
+
+            @Override
+            public void removeUpdate(DocumentEvent e) {
+                if (suppressAutoTranslate.get() == 0) {
+                    translateControl();
+                }
+            }
+
+            @Override
+            public void changedUpdate(DocumentEvent e) {
+            }
+        });
+    }
+
+    /**
+     * 从历史记录回填翻译内容，不触发自动重新翻译。
+     */
+    public void applyFromHistory(String sourceText,
+                                 String targetText,
+                                 String sourceLang,
+                                 String targetLang) {
+        suppressAutoTranslate.incrementAndGet();
+        try {
+            TranslatorLangUtil.selectComboByCode(comboBox1,
+                    TranslatorLangUtil.resolveCode(sourceLang, TranslatorLangUtil.AUTO_DETECT_CODE));
+            TranslatorLangUtil.selectComboByCode(comboBox2,
+                    TranslatorLangUtil.resolveCode(targetLang, TranslatorLangUtil.DEFAULT_TARGET_CODE));
+            textArea1.setText(StringUtils.defaultString(sourceText));
+            textArea2.setText(StringUtils.defaultString(targetText));
+            saveLanguagePreferences();
+        } finally {
+            suppressAutoTranslate.decrementAndGet();
+        }
+    }
+
+    private void preventSameLanguageSelection() {
+        String sourceCode = TranslatorLangUtil.resolveCode(String.valueOf(comboBox1.getSelectedItem()),
+                TranslatorLangUtil.AUTO_DETECT_CODE);
+        String targetCode = TranslatorLangUtil.resolveCode(String.valueOf(comboBox2.getSelectedItem()),
+                TranslatorLangUtil.DEFAULT_TARGET_CODE);
+        if (!TranslatorLangUtil.AUTO_DETECT_CODE.equals(sourceCode) && sourceCode.equals(targetCode)) {
+            String fallbackCode = TranslatorLangUtil.DEFAULT_TARGET_CODE.equals(targetCode) ? "en" : "zh-CN";
+            TranslatorLangUtil.selectComboByCode(comboBox2, fallbackCode);
+        }
+    }
+
+    private void saveLanguagePreferences() {
+        ConfigUtil.getInstance().setTranslationSourceLanguage(String.valueOf(comboBox1.getSelectedItem()));
+        ConfigUtil.getInstance().setTranslationTargetLanguage(String.valueOf(comboBox2.getSelectedItem()));
+    }
+
+    public void translateControl() {
+        changeCount.incrementAndGet();
+        SwingUtilities.invokeLater(() -> {
+            if (!StringUtils.isEmpty(textArea1.getText())) {
+                textArea2.setText(I18n.get("translation.translating"));
+            }
+        });
+
+        Thread thread = new Thread(() -> {
+            try {
+                Thread.sleep(500);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                return;
+            }
+            changeCount.decrementAndGet();
+            if (changeCount.get() == 0) {
+                translate();
+            }
+        });
+        thread.setDaemon(true);
+        thread.start();
+    }
+
+    public void applyI18n() {
+        I18nUiUtil.setToolTip(exchangeButton, "translation.tooltip.exchange");
+        I18nUiUtil.setToolTip(translatorComboBox, "translation.tooltip.selectTranslator");
+        I18nUiUtil.setToolTip(copyButton, "translation.tooltip.copyTranslation");
+        I18nUiUtil.setToolTip(clearButton, "common.clear");
+        I18nUiUtil.setToolTip(saveToWordBookButton, "translation.tooltip.saveToWordBook");
+        I18nUiUtil.setText(translatorSourceLabel, "translation.translatorSource");
+        int selectedIndex = translatorComboBox.getSelectedIndex();
+        DefaultComboBoxModel<String> model = (DefaultComboBoxModel<String>) translatorComboBox.getModel();
+        model.removeAllElements();
+        model.addElement(I18n.get(TRANSLATOR_GOOGLE_KEY));
+        model.addElement(I18n.get(TRANSLATOR_BING_KEY));
+        if (selectedIndex >= 0 && selectedIndex < model.getSize()) {
+            translatorComboBox.setSelectedIndex(selectedIndex);
+        }
+        refreshLanguageCombos();
+    }
+
+    private void refreshLanguageCombos() {
+        String sourceCode = TranslatorLangUtil.resolveCode(String.valueOf(comboBox1.getSelectedItem()),
+                TranslatorLangUtil.AUTO_DETECT_CODE);
+        String targetCode = TranslatorLangUtil.resolveCode(String.valueOf(comboBox2.getSelectedItem()),
+                TranslatorLangUtil.DEFAULT_TARGET_CODE);
+        comboBox1.setModel(new DefaultComboBoxModel<>(Translator.getSourceLanguageNames()));
+        comboBox2.setModel(new DefaultComboBoxModel<>(Translator.getTargetLanguageNames()));
+        TranslatorLangUtil.selectComboByCode(comboBox1, sourceCode);
+        TranslatorLangUtil.selectComboByCode(comboBox2, targetCode);
+    }
+
+    private void translate() {
+        String sourceLanguage = String.valueOf(comboBox1.getSelectedItem());
+        String targetLanguage = String.valueOf(comboBox2.getSelectedItem());
+        String text = textArea1.getText();
+
+        if (StringUtils.isEmpty(text)) {
+            SwingUtilities.invokeLater(() -> textArea2.setText(""));
+            return;
+        }
+
+        TranslatorFactory.TranslatorType translatorType = TranslatorFactory.parseType(
+                ConfigUtil.getInstance().getTranslatorType());
+
+        String sourceLangCode = Translator.resolveLanguageCode(sourceLanguage, "auto");
+        String targetLangCode = Translator.resolveLanguageCode(targetLanguage, "zh-CN");
+
+        String result = TranslatorFactory.translate(text, sourceLangCode, targetLangCode, translatorType);
+
+        SwingUtilities.invokeLater(() -> {
+            textArea2.setText(result);
+            if (TranslationHistoryUtil.isSuccessfulTranslation(result)) {
+                TranslationHistoryUtil.save(text, result, sourceLanguage, targetLanguage, translatorType);
+                TranslationListener.refreshHistoryListIfVisible();
+            }
+        });
+    }
+
+    {
+// GUI initializer generated by IntelliJ IDEA GUI Designer
+// >>> IMPORTANT!! <<<
+// DO NOT EDIT OR ADD ANY CODE HERE!
+        $$$setupUI$$$();
+    }
+
+    /**
+     * Method generated by IntelliJ IDEA GUI Designer
+     * >>> IMPORTANT!! <<<
+     * DO NOT edit this method OR call it in your code!
+     *
+     * @noinspection ALL
+     */
+    private void $$$setupUI$$$() {
+        mainLayoutPanel = new JPanel();
+        mainLayoutPanel.setLayout(new GridLayoutManager(2, 1, new Insets(0, 0, 0, 0), -1, -1));
+        final JPanel panel1 = new JPanel();
+        panel1.setLayout(new GridLayoutManager(1, 2, new Insets(0, 0, 0, 0), -1, -1));
+        mainLayoutPanel.add(panel1, new GridConstraints(0, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, null, null, null, 0, false));
+        final Spacer spacer1 = new Spacer();
+        panel1.add(spacer1, new GridConstraints(0, 1, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW, 1, null, null, null, 0, false));
+        leftMenuPanel = new JPanel();
+        leftMenuPanel.setLayout(new FlowLayout(FlowLayout.LEFT, 0, 0));
+        panel1.add(leftMenuPanel, new GridConstraints(0, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, null, null, null, 0, false));
+        splitPane = new JSplitPane();
+        splitPane.setContinuousLayout(true);
+        splitPane.setDividerLocation(224);
+        mainLayoutPanel.add(splitPane, new GridConstraints(1, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, null, new Dimension(200, 200), null, 0, false));
+        final JPanel panel2 = new JPanel();
+        panel2.setLayout(new GridLayoutManager(1, 1, new Insets(0, 0, 0, 0), -1, -1));
+        splitPane.setLeftComponent(panel2);
+        final JScrollPane scrollPane1 = new JScrollPane();
+        panel2.add(scrollPane1, new GridConstraints(0, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
+        textArea1 = new JTextArea();
+        scrollPane1.setViewportView(textArea1);
+        final JPanel panel3 = new JPanel();
+        panel3.setLayout(new GridLayoutManager(1, 1, new Insets(0, 0, 0, 0), -1, -1));
+        splitPane.setRightComponent(panel3);
+        final JScrollPane scrollPane2 = new JScrollPane();
+        panel3.add(scrollPane2, new GridConstraints(0, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
+        textArea2 = new JTextArea();
+        scrollPane2.setViewportView(textArea2);
+    }
+
+    /**
+     * @noinspection ALL
+     */
+    public JComponent $$$getRootComponent$$$() {
+        return mainLayoutPanel;
+    }
+
+}

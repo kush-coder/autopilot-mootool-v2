@@ -1,0 +1,240 @@
+/// <reference types="vite/client" />
+import type { WindowMaterialStatus } from './src/shared/contracts/windowMaterial'
+import type { GlobalShortcutStatus } from './src/shared/contracts/shortcuts'
+import type { RenameFile, RenameOptions, RenamePreview, RenameResult, RenameStatus } from './src/shared/contracts/batchRename'
+import type { ClipboardTextSnapshot, CommandResultImport, ImportCommandResultInput, CommandActionId, CommandPaletteOperation, CommandPaletteState } from './src/shared/contracts/commandPalette'
+import type { OcrStatus, OcrRequest, OcrResult } from './src/shared/contracts/ocr'
+import type { ComponentState } from './src/shared/contracts/optionalComponent'
+import type { RegexInput, RegexResult } from './src/shared/contracts/regex'
+
+import type { AppNavigationEvent, AppPaths, ExternalPageId, RuntimeStatus, ToolId, ToolWindowSnapshot, ToolWindowStatus, ToolWorkspaceBounds, WorkspaceState } from './src/shared/contracts/app'
+import type { AppSettings, SecretKey, SecretStatus, SettingsPatch } from './src/shared/contracts/settings'
+import type { FuncHistoryRecord, HistoryQuery, SaveFuncHistoryInput } from './src/shared/contracts/history'
+import type { SaveTextFileInput, TextFileKind, TextFileResult } from './src/shared/contracts/files'
+import type { ImageAsset, ImageAssetSummary, ImageVectorizeOptions, ImageVectorizeResult, RenameImageAssetInput, SaveImageAssetInput, ScreenCapture, ScreenCaptureOverlayData, ScreenCaptureRect, ScreenCaptureResult } from './src/shared/contracts/images'
+import type { DigestAlgorithmId, DigestFileResult, ImageFilePayload, SaveBinaryFileInput } from './src/shared/contracts/nativeFiles'
+import type { PdfFileInfo, PdfMergeSource, PdfOperationResult, PdfSplitTask, PdfProgress } from './src/shared/contracts/pdf'
+import type { JsonVaultFile, JsonVaultListInput, JsonVaultNode, MoveJsonVaultEntryInput, RenameJsonVaultEntryInput, SaveJsonVaultFileInput } from './src/shared/contracts/jsonVault'
+import type { RememberVaultFileInput, VaultWorkspace } from './src/shared/contracts/vaultWorkspace'
+import type { CreateQuickNoteInput, MoveQuickNoteEntryInput, QuickNoteAttachment, QuickNoteFile, QuickNoteListInput, QuickNoteNode, RenameQuickNoteEntryInput, SaveQuickNoteInput } from './src/shared/contracts/quickNote'
+import type { VaultGitActionInput, VaultGitActionResult, VaultGitCommit, VaultGitDiffInput, VaultGitDiffResult, VaultGitStatus } from './src/shared/contracts/vaultGit'
+import type { FavoriteFolderRecord, FavoriteKind, FavoriteRecord, RenameFavoriteFolderInput, SaveFavoriteFolderInput, SaveFavoriteInput } from './src/shared/contracts/favorites'
+import type { HttpRequestDraft, HttpRequestHistory, HttpResponseResult, HttpSendInput, SaveTranslationHistoryInput, SaveTranslationWordInput, SavedHttpRequest, TranslationHistory, TranslationInput, TranslationResult, TranslationWord } from './src/shared/contracts/network'
+import type { DeleteEnvironmentVariableInput, EnvironmentSnapshot, EnvironmentVariableInput, HostProfile, HostProfileListInput, LocalAddressSnapshot, NetworkCommandInput, NetworkCommandResult, SaveHostProfileInput, SystemHostsFile, SystemInfoSnapshot } from './src/shared/contracts/system'
+import type { RuntimeExecutionInput, RuntimeExecutionResult, RuntimeOutputEvent } from './src/shared/contracts/runtime'
+import type { BackupExportResult, BackupInfo, BackupKind, BackupLocation } from './src/shared/contracts/backup'
+import type { LegacyMigrationInput, LegacyMigrationPreview, LegacyMigrationResult } from './src/shared/contracts/migration'
+import type { UpdateCheckEvent, UpdateCheckResult, UpdateDownloadState } from './src/shared/contracts/update'
+import type { AiClient, AiConnectionResult, AiDataAccess, AiDataAccessRequest, AiInstallPreview, AiInstallRequest, AiInstallResult, AiIntegrationStatus } from './src/shared/contracts/aiIntegration'
+
+declare global {
+  interface Window {
+    mootool: {
+      getAiIntegrationStatus: (client: AiClient) => Promise<AiIntegrationStatus>
+      getAiDataAccess: () => Promise<AiDataAccess>
+      setAiDataAccess: (input: AiDataAccessRequest) => Promise<AiDataAccess>
+      previewAiIntegration: (input: AiInstallRequest) => Promise<AiInstallPreview>
+      installAiIntegration: (id: string) => Promise<AiInstallResult>
+      testAiIntegration: () => Promise<AiConnectionResult>
+      platform: string
+      toolWindowsEnabled: boolean
+      getAppVersion: () => Promise<string>
+      getAppPaths: () => Promise<AppPaths>
+      getWindowMaterialStatus: () => Promise<WindowMaterialStatus | null>
+      getWindowFullscreen: () => Promise<boolean>
+      onWindowFullscreenChange: (callback: (fullscreen: boolean) => void) => () => void
+      getWindowMaterial: () => Promise<'solid' | 'vibrancy' | 'liquid-glass'>
+      setMaterialAccessibility: (solid: boolean) => Promise<void>
+      onWindowMaterialChange: (callback: (material: 'solid' | 'vibrancy' | 'liquid-glass') => void) => () => void
+      getSystemTheme: () => Promise<'light' | 'dark'>
+      setPreventDisplaySleep: (enabled: boolean) => Promise<boolean>
+      getSettings: () => Promise<AppSettings>
+      selectRenameFiles: () => Promise<RenameFile[] | null>
+      previewBatchRename: (ids: string[], options: RenameOptions) => Promise<RenamePreview>
+      executeBatchRename: (token: string) => Promise<RenameResult>
+      undoBatchRename: () => Promise<RenameResult>
+      getBatchRenameStatus: () => Promise<RenameStatus>
+      onBatchRenameStatusChange: (callback: (status: RenameStatus) => void) => () => void
+      getGlobalShortcutStatus: () => Promise<GlobalShortcutStatus>
+      retryGlobalShortcut: () => Promise<GlobalShortcutStatus>
+      onGlobalShortcutStatusChange: (callback: (status: GlobalShortcutStatus) => void) => () => void
+      updateSettings: (patch: SettingsPatch) => Promise<AppSettings>
+      openSettings: (category?: string) => Promise<void>
+      dismissWindow: () => Promise<void>
+      getSecretStatus: (key: SecretKey) => Promise<SecretStatus>
+      setSecret: (key: SecretKey, value: string) => Promise<SecretStatus>
+      clearSecret: (key: SecretKey) => Promise<SecretStatus>
+      getWorkspaceState: () => Promise<WorkspaceState>
+      getCommandPaletteState: () => Promise<CommandPaletteState>
+      importCommandResult: (input: ImportCommandResultInput) => Promise<CommandResultImport>
+      onCommandResultImport: (callback: (result: CommandResultImport) => void) => () => void
+      readCommandClipboard: () => Promise<ClipboardTextSnapshot>
+      updateCommandPalette: (operation: CommandPaletteOperation) => Promise<CommandPaletteState>
+      openCommandAction: (actionId: CommandActionId) => Promise<void>
+      onCommandPaletteStateChange: (callback: (state: CommandPaletteState) => void) => () => void
+      setWorkspaceState: (state: WorkspaceState) => Promise<WorkspaceState>
+      getToolWindowSnapshot: () => Promise<ToolWindowSnapshot>
+      activateToolView: (toolId: ToolId) => Promise<ToolWindowSnapshot>
+      setToolWorkspaceBounds: (bounds: ToolWorkspaceBounds) => Promise<ToolWindowSnapshot>
+      getToolWindowState: (toolId: Exclude<ToolId, 'mootool'>) => Promise<ToolWindowStatus>
+      detachToolWindow: (toolId: Exclude<ToolId, 'mootool'>) => Promise<ToolWindowStatus>
+      dockToolWindow: (toolId: Exclude<ToolId, 'mootool'>) => Promise<ToolWindowStatus>
+      focusToolWindow: (toolId: Exclude<ToolId, 'mootool'>) => Promise<boolean>
+      setToolWindowTitle: (toolId: Exclude<ToolId, 'mootool'>, title: string) => Promise<void>
+      getToolDraft: (kind: 'regex' | 'calculator') => Promise<string | null>
+      saveToolDraft: (kind: 'regex' | 'calculator', value: string) => Promise<void>
+      listHistory: (query: HistoryQuery) => Promise<FuncHistoryRecord[]>
+      saveHistory: (input: SaveFuncHistoryInput) => Promise<void>
+      deleteHistory: (id: number) => Promise<void>
+      clearHistory: (funcType: string) => Promise<void>
+      matchJavaRegex: (input: RegexInput) => Promise<RegexResult>
+      cancelJavaRegex: () => Promise<void>
+      listFavorites: (kind: FavoriteKind, folderId?: number) => Promise<FavoriteRecord[]>
+      saveFavorite: (input: SaveFavoriteInput) => Promise<FavoriteRecord>
+      moveFavorite: (id: number, direction: -1 | 1) => Promise<void>
+      deleteFavorite: (id: number) => Promise<void>
+      listFavoriteFolders: (kind: FavoriteKind) => Promise<FavoriteFolderRecord[]>
+      createFavoriteFolder: (input: SaveFavoriteFolderInput) => Promise<FavoriteFolderRecord>
+      renameFavoriteFolder: (input: RenameFavoriteFolderInput) => Promise<FavoriteFolderRecord>
+      deleteFavoriteFolder: (id: number) => Promise<void>
+      listHttpRequests: (keyword?: string) => Promise<SavedHttpRequest[]>
+      saveHttpRequest: (request: HttpRequestDraft, response?: HttpResponseResult) => Promise<SavedHttpRequest>
+      deleteHttpRequest: (id: number) => Promise<void>
+      listHttpHistory: (keyword?: string) => Promise<HttpRequestHistory[]>
+      deleteHttpHistory: (id: number) => Promise<void>
+      clearHttpHistory: () => Promise<void>
+      openHttpResponseWindow: (response: HttpResponseResult) => Promise<void>
+      getHttpResponseSnapshot: () => Promise<HttpResponseResult | null>
+      sendHttpRequest: (input: HttpSendInput) => Promise<HttpResponseResult>
+      cancelNetworkRequest: (requestId: string) => Promise<boolean>
+      translate: (input: TranslationInput) => Promise<TranslationResult>
+      listTranslationWords: (keyword?: string) => Promise<TranslationWord[]>
+      saveTranslationWord: (input: SaveTranslationWordInput) => Promise<TranslationWord>
+      deleteTranslationWord: (id: number) => Promise<void>
+      listTranslationHistory: (keyword?: string) => Promise<TranslationHistory[]>
+      saveTranslationHistory: (input: SaveTranslationHistoryInput) => Promise<TranslationHistory>
+      deleteTranslationHistory: (id: number) => Promise<void>
+      clearTranslationHistory: () => Promise<void>
+      listHostProfiles: (input?: HostProfileListInput) => Promise<HostProfile[]>
+      saveHostProfile: (input: SaveHostProfileInput) => Promise<HostProfile>
+      deleteHostProfile: (id: number) => Promise<void>
+      readSystemHosts: () => Promise<SystemHostsFile>
+      writeSystemHosts: (content: string, activeHostId?: number) => Promise<SystemHostsFile>
+      runNetworkCommand: (input: NetworkCommandInput) => Promise<NetworkCommandResult>
+      cancelSystemCommand: (requestId: string) => Promise<boolean>
+      getEnvironmentSnapshot: () => Promise<EnvironmentSnapshot>
+      setEnvironmentVariable: (input: EnvironmentVariableInput) => Promise<void>
+      deleteEnvironmentVariable: (input: DeleteEnvironmentVariableInput) => Promise<void>
+      getLocalAddresses: () => Promise<LocalAddressSnapshot>
+      getSystemInfo: () => Promise<SystemInfoSnapshot>
+      chooseDirectory: (initialPath?: string) => Promise<string | null>
+      openTextFile: (kind: TextFileKind) => Promise<TextFileResult | null>
+      saveTextFile: (input: SaveTextFileInput) => Promise<string | null>
+      digestFile: (algorithm: DigestAlgorithmId) => Promise<DigestFileResult | null>
+      chooseImageFile: () => Promise<ImageFilePayload | null>
+      saveBinaryFile: (input: SaveBinaryFileInput) => Promise<string | null>
+      readClipboardImage: () => Promise<string | null>
+      getOcrStatus: () => Promise<OcrStatus>
+      downloadOcrComponent: () => Promise<ComponentState>
+      restartForOcrComponent: () => Promise<boolean>
+      recognizeImageText: (input: OcrRequest) => Promise<OcrResult>
+      cancelImageTextRecognition: (requestId: string) => Promise<boolean>
+      writeClipboardImage: (dataUrl: string) => Promise<void>
+      captureScreens: () => Promise<ScreenCapture[]>
+      captureScreenRegion: () => Promise<ScreenCaptureResult | null>
+      getScreenCaptureOverlay: () => Promise<ScreenCaptureOverlayData | null>
+      confirmScreenCapture: (rect: ScreenCaptureRect) => Promise<void>
+      cancelScreenCapture: () => Promise<void>
+      pickScreenColor: () => Promise<string | null>
+      getScreenColorOverlay: () => Promise<ScreenCaptureOverlayData | null>
+      confirmScreenColor: (color: string) => Promise<void>
+      cancelScreenColor: () => Promise<void>
+      consumePendingScreenColor: () => Promise<string | null>
+      listImageAssets: () => Promise<ImageAssetSummary[]>
+      readImageAsset: (name: string) => Promise<ImageAsset>
+      importImageAssets: () => Promise<ImageAssetSummary[]>
+      saveImageAsset: (input: SaveImageAssetInput) => Promise<ImageAssetSummary>
+      renameImageAsset: (input: RenameImageAssetInput) => Promise<ImageAssetSummary>
+      deleteImageAssets: (names: string[]) => Promise<void>
+      exportImageAssets: (names: string[]) => Promise<string | null>
+      openImageAsset: (name: string) => Promise<void>
+      cancelImageBatch: () => Promise<void>
+      onImageBatchProgress: (callback: (value: import('./src/shared/imageBatch').ImageBatchProgress & { jobId?: string }) => void) => () => void
+      vectorizeImageAssets: (names: string[], options: ImageVectorizeOptions, jobId?: string) => Promise<ImageVectorizeResult | null>
+      actOnPdfOutput: (path: string, action: 'open' | 'reveal') => Promise<void>
+      cancelPdfJob: (jobId: string) => Promise<boolean>
+      onPdfProgress: (callback: (progress: PdfProgress) => void) => () => void
+      choosePdfFiles: (jobId?: string) => Promise<PdfFileInfo[]>
+      mergePdfFiles: (sources: PdfMergeSource[], jobId?: string) => Promise<PdfOperationResult | null>
+      splitPdfFiles: (tasks: PdfSplitTask[], jobId?: string) => Promise<PdfOperationResult>
+      listJsonVault: (input?: JsonVaultListInput) => Promise<JsonVaultNode[]>
+      readJsonVaultFile: (relativePath: string) => Promise<JsonVaultFile>
+      openJsonVaultWorkspace: () => Promise<VaultWorkspace<JsonVaultFile>>
+      rememberVaultFile: (input: RememberVaultFileInput) => Promise<void>
+      saveJsonVaultFile: (input: SaveJsonVaultFileInput) => Promise<JsonVaultFile>
+      createJsonVaultFolder: (relativePath: string) => Promise<string>
+      renameJsonVaultEntry: (input: RenameJsonVaultEntryInput) => Promise<string>
+      moveJsonVaultEntry: (input: MoveJsonVaultEntryInput) => Promise<string>
+      exportVaultFiles: (kind: 'json' | 'quickNote', paths: string[]) => Promise<number | null>
+      duplicateJsonVaultFile: (relativePath: string) => Promise<JsonVaultFile>
+      deleteJsonVaultFile: (relativePath: string) => Promise<void>
+      openJsonVault: () => Promise<void>
+      revealJsonVaultEntry: (relativePath: string) => Promise<void>
+      setJsonVaultEditorDirty: (dirty: boolean) => Promise<void>
+      getVaultGitStatus: () => Promise<VaultGitStatus>
+      listVaultGitHistory: () => Promise<VaultGitCommit[]>
+      getVaultGitDiff: (input: VaultGitDiffInput) => Promise<VaultGitDiffResult>
+      runVaultGitAction: (input: VaultGitActionInput) => Promise<VaultGitActionResult>
+      listQuickNotes: (input?: QuickNoteListInput) => Promise<QuickNoteNode[]>
+      readQuickNote: (relativePath: string) => Promise<QuickNoteFile>
+      openQuickNoteWorkspace: () => Promise<VaultWorkspace<QuickNoteFile>>
+      createQuickNote: (input: CreateQuickNoteInput) => Promise<QuickNoteFile>
+      saveQuickNote: (input: SaveQuickNoteInput) => Promise<QuickNoteFile>
+      createQuickNoteFolder: (relativePath: string) => Promise<string>
+      renameQuickNoteEntry: (input: RenameQuickNoteEntryInput) => Promise<string>
+      moveQuickNoteEntry: (input: MoveQuickNoteEntryInput) => Promise<string>
+      duplicateQuickNote: (relativePath: string) => Promise<QuickNoteFile>
+      deleteQuickNoteEntry: (relativePath: string) => Promise<void>
+      importQuickNoteAttachment: () => Promise<QuickNoteAttachment | null>
+      importQuickNoteClipboardAttachment: (dataUrl?: string) => Promise<QuickNoteAttachment | null>
+      readQuickNoteAttachment: (relativePath: string) => Promise<string>
+      openQuickNoteVault: () => Promise<void>
+      revealQuickNoteEntry: (relativePath: string) => Promise<void>
+      setQuickNoteEditorDirty: (dirty: boolean) => Promise<void>
+      getQuickNoteGitStatus: () => Promise<VaultGitStatus>
+      listQuickNoteGitHistory: () => Promise<VaultGitCommit[]>
+      getQuickNoteGitDiff: (input: VaultGitDiffInput) => Promise<VaultGitDiffResult>
+      runQuickNoteGitAction: (input: VaultGitActionInput) => Promise<VaultGitActionResult>
+      getBackupInfo: () => Promise<BackupInfo>
+      exportBackup: (kind: BackupKind) => Promise<BackupExportResult | null>
+      openBackupLocation: (location: BackupLocation) => Promise<void>
+      getDefaultLegacySource: () => Promise<string>
+      previewLegacyMigration: (input: LegacyMigrationInput) => Promise<LegacyMigrationPreview>
+      runLegacyMigration: (input: LegacyMigrationInput) => Promise<LegacyMigrationResult>
+      checkForUpdates: () => Promise<UpdateCheckResult>
+      getUpdateState: () => Promise<UpdateDownloadState>
+      downloadUpdate: () => Promise<UpdateDownloadState>
+      installUpdate: () => Promise<void>
+      openReleasePage: () => Promise<void>
+      openProjectPage: () => Promise<void>
+      openExternalPage: (pageId: ExternalPageId) => Promise<void>
+      detectRuntimes: () => Promise<RuntimeStatus[]>
+      runCode: (input: RuntimeExecutionInput) => Promise<RuntimeExecutionResult>
+      cancelCodeRun: (requestId: string) => Promise<boolean>
+      onSystemThemeChange: (callback: (theme: 'light' | 'dark') => void) => () => void
+      onSettingsChange: (callback: (settings: AppSettings) => void) => () => void
+      onNavigate: (callback: (event: AppNavigationEvent) => void) => () => void
+      onScreenColorPicked: (callback: (color: string) => void) => () => void
+      onToolWindowSnapshotChange: (callback: (snapshot: ToolWindowSnapshot) => void) => () => void
+      onToolWindowStateChange: (callback: (state: ToolWindowStatus) => void) => () => void
+      onToolWindowActivityChange: (callback: (active: boolean) => void) => () => void
+      onJsonVaultChange: (callback: (relativePath: string) => void) => () => void
+      onQuickNoteVaultChange: (callback: (relativePath: string) => void) => () => void
+      onRuntimeOutput: (callback: (event: RuntimeOutputEvent) => void) => () => void
+      onUpdateCheck: (callback: (event: UpdateCheckEvent) => void) => () => void
+      onUpdateStateChange: (callback: (state: UpdateDownloadState) => void) => () => void
+    }
+  }
+}
+
+export {}

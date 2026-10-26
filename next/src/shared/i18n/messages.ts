@@ -1,0 +1,4759 @@
+import type { AppLanguage } from '@/shared/contracts/settings'
+
+export const languages = ['zh-CN', 'en-US', 'ja-JP'] as const satisfies readonly AppLanguage[]
+
+export type Language = AppLanguage
+
+export type MessageKey = keyof typeof messages['zh-CN']
+
+export const languageLabels: Record<Language, string> = {
+  'zh-CN': '中',
+  'en-US': 'EN',
+  'ja-JP': '日'
+}
+
+export const messages = {
+  'zh-CN': {
+    'common.toast.copyError': '复制错误信息',
+    'settings.escapeHidesWindow': '按 Esc 隐藏窗口',
+    'settings.escapeHidesWindowHint': '默认开启。独立工具窗口会收回，HTTP 响应窗口会关闭；弹窗、菜单和查找仍优先处理 Esc。',
+    'json.empty.title': '从一个 JSON 片段开始',
+    'json.empty.description': '选择左侧的片段，或新建、导入一个片段开始编辑。导入不会修改原文件。',
+    'json.empty.import': '导入文件',
+    'json.empty.example': '用示例新建',
+    'pdf.status.cancelled': '已取消',
+    'pdf.cancelling': '正在取消…',
+    'pdf.openOutput': '打开文件',
+    'pdf.revealOutput': '在文件夹中显示',
+    'pdf.copyOutput': '复制路径',
+    'app.nav.filePreview': '文件快速预览',
+    'filePreview.choose': '选择文件',
+    'filePreview.previous': '上一个文件',
+    'filePreview.next': '下一个文件',
+    'filePreview.batch': '同批文件',
+    'filePreview.empty': '拖入文件，立即预览',
+    'filePreview.hint': '文本、JSON、图片或 PDF · 可同时选择多个文件',
+    'filePreview.footer': '只读预览 · 左右键切换文件 · 每次选择或拖入替换当前批次',
+    'filePreview.drop': '松开以预览这批文件',
+    'filePreview.batchLimit': '每批最多 100 个文件，请减少后重试。当前批次已保留。',
+    'filePreview.tooLarge': '文件超过此类型的预览上限（{limit}），请选用较小文件。',
+    'filePreview.unsupported': '暂不支持此文件类型的内容预览，可继续切换其他文件。',
+    'filePreview.kind.text': '文本',
+    'filePreview.kind.json': 'JSON',
+    'filePreview.kind.image': '图片',
+    'filePreview.kind.pdf': 'PDF',
+    'filePreview.kind.unsupported': '其他文件',
+    'filePreview.encoding': '编码',
+    'filePreview.autoEncoding': '自动（UTF-8 / UTF-16 BOM）',
+    'filePreview.wrap': '自动换行',
+    'filePreview.findShortcut': '查找文件内容（⌘F / Ctrl+F）',
+    'filePreview.formatJson': '格式化 JSON',
+    'filePreview.invalidJson': 'JSON 格式无效，显示原文',
+    'filePreview.readOnly': '只读',
+    'filePreview.text': '文件内容预览',
+    'filePreview.fit': '适应宽度',
+    'filePreview.fitImage': '适应窗口',
+    'filePreview.zoomOut': '缩小',
+    'filePreview.zoomIn': '放大',
+    'filePreview.previousPage': '上一页',
+    'filePreview.nextPage': '下一页',
+    'filePreview.page': '页码',
+    'filePreview.pdfPage': 'PDF 第 {page} 页',
+    'filePreview.error.binary': '此文件包含二进制内容，无法作为文本预览。',
+    'filePreview.error.encoding': '无法按当前编码解码，请切换编码；中文旧格式可尝试 GB18030。',
+    'filePreview.error.tooLarge': '文件超过预览上限。',
+    'filePreview.error.unreadable': '无法读取文件，请重新选择。',
+    'filePreview.error.image': '无法解码此图片，请检查格式或文件是否损坏。',
+    'filePreview.error.pdf': '无法显示 PDF，请检查文件是否损坏。',
+    'filePreview.error.password': '此 PDF 需要密码，暂不支持预览加密文档。',
+    'app.nav.batchRename': '批量重命名',
+    'batchRename.selectFiles': '选择文件',
+    'batchRename.conflicts': '存在名称或文件冲突，本批不会执行。请修改规则或取消选择冲突文件，再重新预览。',
+    'batchRename.find': '查找文本',
+    'batchRename.replacement': '替换为',
+    'batchRename.prefix': '前缀',
+    'batchRename.suffix': '后缀',
+    'batchRename.caseSensitive': '区分大小写',
+    'batchRename.preserveExtension': '保留扩展名',
+    'batchRename.numbering': '连续编号',
+    'batchRename.start': '起始编号',
+    'batchRename.width': '编号位数',
+    'batchRename.separator': '编号分隔符',
+    'batchRename.preview': '预览重命名',
+    'batchRename.execute': '执行重命名',
+    'batchRename.undo': '撤销最近一批',
+    'batchRename.recover': '恢复未完成操作',
+    'batchRename.oldName': '原文件名',
+    'batchRename.newName': '新文件名',
+    'batchRename.status': '状态',
+    'batchRename.selectAll': '全选文件',
+    'batchRename.empty': '选择文件后设置规则，预览新名称及冲突。',
+    'batchRename.counts': '已选 {selected} 个 · 待改名 {changed} 个',
+    'batchRename.complete': '已重命名 {count} 个文件，可撤销最近一批。',
+    'batchRename.restored': '已恢复 {count} 个文件的名称。',
+    'batchRename.recoveryHint': '上次操作未完整完成，请点击“恢复未完成操作”重试。恢复记录：',
+    'batchRename.help': '最多 500 个普通文件 · 普通文本替换 · 不递归目录 · 修改规则后需重新预览 · 撤销记录保留至下一批成功执行',
+    'batchRename.status.ready': '待改名',
+    'batchRename.status.unchanged': '无变化',
+    'batchRename.status.conflict': '冲突',
+    'batchRename.issue.invalidName': '无效文件名',
+    'batchRename.issue.duplicate': '新名称重复',
+    'batchRename.issue.occupied': '已有同名文件',
+    'batchRename.issue.changed': '文件已移动或被替换',
+    'batchRename.issue.sameFile': '多个名称指向同一文件',
+    'batchRename.error.options': '规则无效：文本不超过 120 字符，编号 0–1000000，位数 1–8。',
+    'batchRename.error.busy': '正在执行文件操作，请稍后重试。',
+    'batchRename.error.limit': '每批最多选择 500 个文件。',
+    'batchRename.error.file': '请选择现有的普通文件；不支持目录或符号链接。',
+    'batchRename.error.selection': '文件选择无效，请重新选择文件。',
+    'batchRename.error.recovery': '恢复尚未完成。文件映射已保留，请处理名称冲突后重试恢复。',
+    'batchRename.error.preview': '预览已失效，请重新预览。',
+    'batchRename.error.undo': '没有可撤销的重命名操作。',
+    'batchRename.error.changed': '文件已移动或被替换，操作已停止，请重新选择并预览。',
+    'batchRename.error.occupied': '目标名称已被占用，操作已停止，不会覆盖该文件。',
+    'batchRename.error.unsupported': '文件系统不支持硬链接或没有写入权限，本批文件已恢复原名。',
+    'batchRename.error.journal': '无法读取恢复记录，请保留应用数据目录中的 file-operations/batch-rename-journal.json 以便检查。',
+    'app.command.section.pinned': '常用动作',
+    'app.command.section.recent': '最近执行',
+    'app.command.section.all': '全部动作',
+    'app.command.section.tools': '工具',
+    'app.command.pin': '设为常用',
+    'app.command.unpin': '取消常用',
+    'app.command.pinned': '常用',
+    'app.command.clearRecent': '清空最近执行',
+    'app.command.preferencesFailed': '命令面板偏好保存或读取失败，请重试。',
+    'settings.globalShortcut.title': '全局命令面板',
+    'settings.globalShortcut.enable': '启用全局命令面板快捷键',
+    'settings.globalShortcut.description': 'MooTool 在后台运行时，可从其他应用呼出命令面板。修改组合后点击保存，即时生效。',
+    'settings.globalShortcut.combination': '全局快捷键组合',
+    'settings.globalShortcut.example': '例如 Ctrl+Alt+Space；macOS 可用 Cmd+Shift+Space。默认组合为 macOS ⌘⇧Space、Windows/Linux Ctrl+Shift+Space。',
+    'settings.globalShortcut.reset': '恢复默认组合',
+    'settings.globalShortcut.retry': '重试注册',
+    'settings.globalShortcut.disabled': '全局快捷键未启用；仍可使用应用内搜索或托盘入口。',
+    'settings.globalShortcut.registered': '全局快捷键已启用：{shortcut}',
+    'settings.globalShortcut.invalid': '请输入修饰键与按键组合，例如 Ctrl+Alt+Space。仅 Shift 或单独按键不受支持。',
+    'settings.globalShortcut.conflict': '此组合与 MooTool 的搜索、设置或编辑快捷键冲突，请选择其他组合。',
+    'settings.globalShortcut.unavailable': '全局快捷键注册失败，可能被系统或其他应用占用。请修改组合或重试。',
+    'app.command.uuid': '生成 UUID',
+    'app.command.timestamp': '时间戳转日期',
+    'app.command.jsonFormat': '格式化 JSON',
+    'app.command.jsonMinify': '压缩 JSON',
+    'app.command.base64Encode': 'Base64 编码',
+    'app.command.base64Decode': 'Base64 解码',
+    'app.command.urlEncode': 'URL 编码',
+    'app.command.urlDecode': 'URL 解码',
+    'app.command.deduplicate': '按行去重',
+    'app.command.clipboardText': "剪贴板纯文本",
+    'app.command.clipboardHtml': "剪贴板 HTML 源码",
+    'app.command.htmlMarkdown': "富文本转 Markdown",
+    'app.command.tableJson': "表格转 JSON",
+    'app.command.richClipboard': "读取剪贴板富文本并预览",
+    'app.command.fileFormat': "保存文件格式",
+    'app.command.save': "保存为文件",
+    'app.command.importJson': '导入 JSON 工作台',
+    'app.command.importNote': '导入随手记',
+    'app.command.importFailed': '导入失败，请重试。',
+    'app.command.saved': "已保存文件",
+    'app.command.saveFailed': "保存失败，请重试或复制结果后手动保存。",
+    'app.command.invalidJsonSave': "当前预览不是有效 JSON。请选择其他文件格式，或先执行 JSON 转换。",
+    'app.command.noHtml': "剪贴板没有 HTML 内容，请先复制富文本。",
+    'app.command.invalidTable': "表格需要首行列名和至少一行数据，每行列数必须一致，引号必须配对。",
+    'app.command.tableHeaders': "表格列名不能为空或重复，请修改首行后重试。",
+    'app.command.tableLimit': "表格最多支持 200 列和 5000 行数据。",
+    'app.command.unsupportedTable': "暂不支持合并单元格或嵌套表格，请先展开为普通表格。",
+    'app.command.complexHtml': "HTML 结构过于复杂，请缩小复制范围后重试。",
+    'app.command.action': '执行动作',
+    'app.command.tool': '打开工具',
+    'app.command.clipboard': '读取剪贴板并预览',
+    'app.command.inline': '处理输入并预览',
+    'app.command.noInput': '生成并预览',
+    'app.command.preview': '结果预览',
+    'app.command.copy': '复制结果',
+    'app.command.copied': '已复制结果',
+    'app.command.back': '返回搜索',
+    'app.command.hint': '↑ ↓ 选择 · Enter 执行 · Esc 关闭；输入 uuid 或 时间戳 1728000000',
+    'app.command.previewHint': 'Enter 复制结果 · Esc 返回搜索',
+    'app.command.invalidBase64': '请输入有效的 UTF-8 Base64 文本。',
+    'app.command.invalidUrl': 'URL 中包含无效的百分号编码。',
+    'app.command.tooLarge': '输入不能超过 100,000 个字符。',
+    'app.command.emptyInput': '没有可处理的文本，请复制内容或在命令后输入文本。',
+    'app.command.clipboardFailed': '无法读取剪贴板，请在命令后直接输入文本。',
+    'app.command.copyFailed': '复制失败，请重试或手动复制结果。',
+    'common.toast.dismiss': '关闭通知',
+    'common.resizePane': '调整分栏宽度',
+    'common.loading': '正在加载…',
+    'common.close': '关闭',
+    'common.cancel': '取消',
+    'common.confirm': '确认操作',
+    'findReplace.find': '查找',
+    'findReplace.findPlaceholder': '查找',
+    'findReplace.replacePlaceholder': '替换为',
+    'findReplace.replace': '替换',
+    'findReplace.replaceAll': '替换全部',
+    'findReplace.regex': '使用正则',
+    'findReplace.matchCase': '区分大小写',
+    'findReplace.wholeWord': '全词匹配',
+    'findReplace.foundPrefix': '共找到:',
+    'findReplace.replacedPrefix': '已替换:',
+    'findReplace.previous': '上一处',
+    'findReplace.next': '下一处',
+    'findReplace.noMatches': '未找到匹配内容',
+    'findReplace.wrappedToStart': '已到最后一个匹配项，继续从第一处查找',
+    'findReplace.wrappedToEnd': '已到第一个匹配项，继续从最后一处查找',
+    'app.nav.tools': '工具导航',
+    'app.nav.home': 'MooTool',
+    'app.nav.quickNote': '随手记',
+    'app.nav.textDiff': '文本对比',
+    'app.nav.reformat': '格式化',
+    'app.nav.json': 'JSON',
+    'app.nav.java': '代码运行',
+    'app.nav.ymlProperties': '配置文件转换',
+    'app.nav.protobuf': 'Protobuf',
+    'app.nav.variables': '环境变量',
+    'app.nav.host': 'Host',
+    'app.nav.net': '网络/IP',
+    'app.nav.uaParse': 'UA 分析',
+    'app.nav.timeConvert': '时间转换',
+    'app.nav.translation': '翻译',
+    'app.nav.calculator': '计算器',
+    'app.nav.hardware': '系统信息',
+    'app.nav.encode': '编码解码',
+    'app.nav.crypto': '加解密/随机',
+    'app.nav.qrCode': '二维码',
+    'app.nav.http': 'HTTP 请求',
+    'app.nav.diff': '文本 Diff',
+    'app.nav.regex': '正则',
+    'app.nav.colorBoard': '调色板',
+    'app.nav.image': '图片助手',
+    'app.nav.pdf': 'PDF',
+    'app.nav.cron': 'Cron',
+    'app.group.text': '笔记与文本',
+    'app.group.dev': '开发与格式',
+    'app.group.network': '网络与请求',
+    'app.group.encode': '编码与加密',
+    'app.group.daily': '实用工具',
+    'app.group.system': '系统信息',
+    'app.nav.recent': '最近',
+    'app.nav.settings': '设置',
+    'app.nav.search': '搜索',
+    'app.nav.collapse': '收起导航栏',
+    'app.nav.expand': '展开导航栏',
+    'app.nav.manageGroups': '管理分组',
+    'app.group.all': '全部工具',
+    'app.group.manage.title': '管理功能分组',
+    'app.group.manage.new': '新建分组',
+    'app.group.manage.defaultName': '新分组 {number}',
+    'app.group.manage.empty': '暂无自定义分组，点击“新建分组”开始创建。',
+    'app.group.manage.name': '分组名称',
+    'app.group.manage.tools': '选择工具',
+    'app.group.manage.delete': '删除分组',
+    'app.group.manage.deleteConfirm': '确定删除分组“{name}”吗？',
+    'app.group.manage.nameRequired': '请输入分组名称。',
+    'app.group.manage.toolRequired': '请至少选择一个工具。',
+    'app.group.manage.saveFailed': '分组保存失败',
+    'app.recent.empty': '暂无最近使用',
+    'app.search.title': '命令面板',
+    'app.search.placeholder': '搜索工具或动作，或输入命令…',
+    'app.search.empty': '未找到匹配的功能',
+    'app.search.close': '关闭搜索',
+    'app.home.website': '打开 MooTool 主页',
+    'app.home.tagline': '给开发者准备的桌面小工具',
+    'app.home.author': 'Proudly by RememBerBer 周波',
+    'app.home.about.title': '关于',
+    'app.home.about.line1': '你好！感谢使用 MooTool。「Moo」是我女儿的小名。',
+    'app.home.about.lineDaily': '我持续构建和改进 MooTool，来支撑自己的日常开发工作。',
+    'app.home.about.line2': '现在用 Swing 做项目的 Java 开发者越来越少了，但我依然热爱它。',
+    'app.home.about.line2Note': '虽然你现在使用的已经不是 Swing 版了 😛',
+    'app.home.about.line3': '所以每当有一点空闲时间，我都会投入到开发中。',
+    'app.home.about.line4': '最终做出了一些成果，尽管网上已有很多类似工具。',
+    'app.home.about.line5': '希望你使用它的愉快程度，不亚于我开发它时的投入。',
+    'app.home.source.title': '源码',
+    'app.home.help.title': '帮助我们做得更好',
+    'app.home.help.issue': '提交问题或建议',
+    'app.home.thanks.title': '致谢',
+    'app.home.otherWorks.title': '其他作品',
+    'app.home.wePush.desc': '专注批量推送的小而美的工具',
+    'app.home.mooInfo.desc': 'OSHI 的可视化实现，查看系统与硬件信息',
+    'app.home.sponsor.title': '赞助',
+    'app.home.sponsor.prompt': '帮我续Tokens',
+    'app.home.sponsor.tip': '感谢您的鼓励和支持',
+    'app.home.contributors.title': '贡献者',
+    'app.home.contributors.thanks': '感谢每一位参与 MooTool 的贡献者。',
+    'app.placeholder': '这个工具页会按 JSON 工作台的结构继续迁移。',
+    'toolWindow.detach': '在独立窗口中打开',
+    'toolWindow.dock': '收回到功能区',
+    'toolWindow.detachTool': '在独立窗口中打开“{tool}”',
+    'toolWindow.dockTool': '将“{tool}”收回到功能区',
+    'toolWindow.focus': '定位窗口',
+    'toolWindow.detachedTitle': '{tool} 已在独立窗口中打开',
+    'toolWindow.detachedDescription': '关闭独立窗口后，此功能会自动回到这里。',
+    'toolWindow.updateNotesTitle': '正在查看本次更新',
+    'toolWindow.updateNotesDescription': '移开鼠标即可返回「{tool}」，你的内容会原样保留。',
+    'pdf.phase.reading': '读取 PDF',
+    'pdf.phase.processing': '处理 PDF',
+    'pdf.phase.saving': '保存 PDF',
+    'toolWindow.crashed': '工具页面意外退出',
+    'toolWindow.recoveryDetail': '自动恢复未成功。可以重新加载；已保存的草稿会按原有机制恢复，崩溃前未保存的内容可能丢失。',
+    'toolWindow.reload': '重新加载',
+    'toolWindow.invalid': '无法打开这个工具窗口。',
+    'settings.title': '设置',
+    'settings.close': '关闭设置',
+    'settings.back': '返回工作区',
+    'settings.saveFailed': '设置保存失败',
+    'settings.language': '语言',
+    'settings.category.general': '常规',
+    'settings.category.appearance': '外观',
+    'settings.category.layout': '布局与习惯',
+    'settings.category.editor': '编辑器',
+    'settings.category.network': '网络',
+    'settings.category.data': '数据与备份',
+    'settings.category.vault': 'Vault',
+    'settings.category.runtime': '运行环境',
+    'settings.ai.delete': "删除",
+    'settings.ai.repair': "一键修复 / 更新",
+    'settings.ai.uninstall': "卸载所选接入",
+    'settings.ai.removed': "已卸载所选接入，请重新加载客户端。",
+    'settings.ai.uninstallHint': "卸载只移除所选客户端和方式中由 MooTool 管理的内容；保留其他配置、文档及用户修改。",
+    'settings.ai.state.not-installed': "未安装",
+    'settings.ai.state.installed': "已安装",
+    'settings.ai.state.needs-repair': "需要修复 / 更新",
+    'settings.ai.state.conflict': "存在用户修改或配置冲突",
+    'settings.ai.dataTitle': "核心数据只读访问",
+    'settings.ai.dataHint': "默认关闭。开启后，已接入的 AI 可搜索和读取对应文档库。关闭后下一次调用即失效；更换文档库位置会撤销授权。",
+    'settings.ai.access.notes': "允许读取随手记",
+    'settings.ai.access.json': "允许读取 JSON 文档",
+    'settings.category.ai': "AI 接入",
+    'settings.ai.title': "让 AI 使用 MooTool",
+    'settings.ai.description': "一键为 Codex、Claude Code 或 Cursor 安装 MooTool 的本地工具能力。",
+    'settings.ai.scope': "提供 JSON、编码、时间、文本差异、摘要、UUID，以及经授权的随手记和 JSON 文档只读访问。",
+    'settings.ai.client': "AI 客户端",
+    'settings.ai.mode': "接入方式",
+    'settings.ai.skillHint': "Skill 可独立调用应用自带的工具，无需额外安装 Node.js。",
+    'settings.ai.mcpHint': "MCP 由客户端自动启动，无需保持 MooTool 窗口打开。安装前自动测试，修改配置时保留原内容并创建备份。",
+    'settings.ai.install': "一键安装",
+    'settings.ai.installed': "已安装",
+    'settings.ai.test': "测试连接",
+    'settings.ai.refresh': "刷新预览",
+    'settings.ai.restart': "安装完成。请重启 AI 客户端或重新加载 MCP / Skill；客户端可能还需要你启用这些工具。",
+    'settings.ai.backups': "原配置备份",
+    'settings.ai.connected': "连接正常，已验证调用，可用工具 {count} 个。",
+    'settings.ai.preview': "安装位置与新增内容",
+    'settings.ai.create': "新建",
+    'settings.ai.update': "合并",
+    'settings.ai.unchanged': "已存在",
+    'settings.ai.copy': "复制 MCP 配置（其他客户端）",
+    'settings.ai.copied': "MCP 配置已复制",
+    'settings.category.tools': '工具默认值',
+    'settings.category.shortcuts': '快捷键',
+    'settings.category.about': '关于与更新',
+    'settings.group.application': '应用行为',
+    'settings.group.theme': '主题与字体',
+    'settings.group.navigation': '功能导航',
+    'settings.group.editor': '编辑体验',
+    'settings.group.proxy': 'HTTP 代理',
+    'settings.group.timeouts': '超时与取消',
+    'settings.group.storage': '数据目录',
+    'settings.group.backup': '本地备份',
+    'settings.backup.all': '完整备份',
+    'settings.backup.database': '数据文件',
+    'settings.backup.settings': '配置文件',
+    'settings.backup.images': '图片目录',
+    'settings.backup.export': '导出',
+    'settings.backup.open': '打开目录',
+    'settings.backup.success': '备份已导出',
+    'settings.group.migration': '旧版数据迁移',
+    'settings.migration.source': 'Java 版数据目录',
+    'settings.migration.scan': '扫描',
+    'settings.migration.ready': '发现 {count} 项可迁移数据',
+    'settings.migration.databaseFound': '数据库已找到',
+    'settings.migration.databaseMissing': '未找到旧数据库',
+    'settings.migration.configFound': '配置已找到',
+    'settings.migration.configMissing': '未找到旧配置',
+    'settings.migration.import': '开始迁移',
+    'settings.migration.importing': '正在迁移…',
+    'settings.migration.confirmTitle': '迁移 Java 版数据',
+    'settings.migration.confirmBody': '将迁移 {count} 项数据。MooTool Next 会先创建完整备份，不会修改 Java 版源文件。',
+    'settings.migration.success': '已迁移 {count} 项数据',
+    'settings.migration.alreadyMigrated': '该来源已经迁移完成',
+    'settings.migration.warning.remotes': '两个旧 Vault 使用不同远程仓库，远程地址不会自动合并。',
+    'settings.migration.warning.secrets': '旧配置中的代理密码和 Git Token 已跳过，请在设置中重新安全保存。',
+    'app.migrationHint.title': '迁移 Java 版数据',
+    'app.migrationHint.body': '若你之前使用过 Java 版 MooTool，可在「设置 → 数据与备份」中迁移历史数据。迁移不会修改或删除 Java 版原始数据。',
+    'app.migrationHint.openSettings': '打开设置',
+    'app.migrationHint.dismiss': '知道了',
+    'settings.group.vaultPaths': 'Vault 路径',
+    'settings.group.git': 'Git 同步',
+    'settings.group.runtimes': '本机运行时',
+    'settings.group.toolDefaults': '默认参数',
+    'settings.group.shortcuts': '应用快捷键',
+    'settings.autoCheckUpdates': '启动时检查更新',
+    'settings.autoDownloadUpdates': '自动静默下载新版',
+    'settings.startMaximized': '启动时最大化',
+    'settings.trayEnabled': '启用系统托盘',
+    'settings.closeBehavior': '关闭主窗口时',
+    'settings.close.ask': '每次询问',
+    'settings.close.hide': '隐藏',
+    'settings.close.quit': '退出',
+    'settings.interfaceStyle': '界面风格',
+    'settings.interfaceStyle.modern': '现代主题',
+    'settings.interfaceStyle.quiet': '安静主题',
+    'settings.interfaceStyle.hero': 'Hero（NextUI）',
+    'settings.interfaceStyle.smartisan': 'Smartisan OS',
+    'settings.interfaceStyle.miuiV5': 'MIUI V5',
+    'settings.interfaceStyle.claude': 'Claude',
+    'settings.theme': '颜色模式',
+    'settings.theme.system': '跟随系统',
+    'settings.windowMaterial': '窗口材质',
+    'settings.windowMaterial.current': '当前实际材质',
+    'settings.windowMaterial.pending': '更改已保存，重启应用后生效',
+    'settings.windowMaterial.reason.accessibility': '系统辅助功能偏好要求实色',
+    'settings.windowMaterial.reason.platform': '当前系统使用实色',
+    'settings.windowMaterial.reason.system-version': '当前 macOS 版本使用毛玻璃',
+    'settings.windowMaterial.reason.extension': '原生玻璃扩展不可用，已回退',
+    'settings.windowMaterial.reason.native-failure': '原生材质不可用，已使用实色',
+    'settings.windowMaterial.reason.initializing': '正在检测窗口材质',
+    'settings.windowMaterial.auto': '自动',
+    'settings.windowMaterial.solid': '实色',
+    'settings.windowMaterial.vibrancy': '毛玻璃',
+    'settings.windowMaterial.hint': '下次启动生效。Liquid Glass 需要 macOS 26+；不可用时回退为毛玻璃，其他系统使用实色。减少透明度或高对比度优先使用实色。',
+    'settings.theme.light': '浅色',
+    'settings.theme.dark': '深色',
+    'settings.accentColor': '强调色',
+    'settings.fontSize': '全局字号',
+    'settings.unifiedBackground': '统一工作区背景',
+    'settings.navigationStyle': '导航样式',
+    'settings.navigation.classic': '经典',
+    'settings.navigation.card': '卡片',
+    'settings.navigation.grouped': '分组',
+    'settings.navigation.toolsTitle': '左侧工具列表',
+    'settings.navigation.toolsDescription': '选择在“全部工具”区域显示的项目。MooTool、搜索、最近使用和自定义分组不受影响。',
+    'settings.navigation.showAll': '全部显示',
+    'settings.navigation.hideAll': '全部隐藏',
+    'settings.showRecent': '显示最近使用',
+    'settings.compactNavigation': '紧凑导航',
+    'settings.showSeparators': '显示分割线',
+    'settings.hideNavigationTitles': '隐藏导航标题',
+    'settings.sqlDialect': 'SQL 方言',
+    'settings.jsonFontSize': 'JSON 字号',
+    'settings.quickNoteFontSize': '随手记字号',
+    'settings.softWrap': '编辑器自动换行',
+    'settings.proxyEnabled': '使用 HTTP 代理',
+    'settings.proxyHost': 'Host',
+    'settings.proxyPort': '端口',
+    'settings.proxyUsername': '用户名',
+    'settings.proxyPassword': '密码',
+    'settings.requestTimeout': 'HTTP 请求超时（毫秒）',
+    'settings.translationTimeout': '翻译超时（毫秒）',
+    'settings.dataDirectory': '数据存储位置',
+    'settings.quickNoteVault': '随手记 Vault',
+    'settings.jsonVault': 'JSON Vault',
+    'settings.gitRemote': '远程仓库地址',
+    'settings.gitUsername': 'Git 用户名',
+    'settings.gitToken': 'Git 私人令牌',
+    'settings.autoCommit': '自动创建 Git 检查点',
+    'settings.autoCommitIdleSeconds': '编辑空闲提交（秒）',
+    'settings.autoCommitInactiveSeconds': '窗口失焦提交（秒）',
+    'settings.autoPullMinutes': '自动拉取间隔（分钟）',
+    'settings.hideGitignoredFiles': '隐藏 .gitignore 匹配文件',
+    'settings.runtime.detect': '重新检测',
+    'settings.runtime.notFound': '未检测到',
+    'settings.runtime.auto': '自动从系统环境查找',
+    'settings.runtime.path': '路径',
+    'settings.qrCodeSize': '二维码尺寸',
+    'settings.qrErrorCorrection': '二维码纠错级别',
+    'settings.randomStringLength': '随机字符串长度',
+    'settings.exportDirectory': '默认导出目录',
+    'settings.translationProvider': '默认翻译源',
+    'settings.translationSource': '默认源语言',
+    'settings.translationTarget': '默认目标语言',
+    'settings.shortcut.search': '搜索工具',
+    'settings.shortcut.settings': '打开设置',
+    'settings.chooseDirectory': '选择目录',
+    'settings.version': '版本 {version}',
+    'settings.update.check': '检查更新',
+    'settings.update.checking': '正在检查…',
+    'settings.update.latest': '当前已是最新版本',
+    'settings.update.available': '发现新版本 {version}',
+    'settings.update.failed': '检查更新失败，请稍后重试',
+    'settings.update.target': '{product} · {platform}/{architecture}',
+    'settings.update.download': '下载更新',
+    'settings.update.downloading': '后台下载中 {percent}%',
+    'settings.update.ready': '新版本 {version} 已就绪',
+    'settings.update.whatsNew': '更新内容',
+    'settings.update.installRestart': '安装并重启',
+    'settings.update.manualInstall': '更新已下载，打开 DMG 安装',
+    'settings.update.openDownloaded': '打开 DMG',
+    'settings.update.downloadFailed': '更新下载失败，请稍后重试',
+    'settings.update.installFailed': '无法启动更新安装，请稍后重试',
+    'settings.update.noDownload': '暂未找到适用于本机的安装包，请前往发布页查看',
+    'settings.update.openRelease': '打开发布页',
+    'settings.update.project': '项目主页',
+    'settings.secret.stored': '已安全保存',
+    'settings.secret.saved': '敏感信息已安全保存',
+    'settings.secret.save': '保存',
+    'settings.secret.clear': '清除',
+    'settings.secret.unavailable': '系统安全存储当前不可用',
+    'history.title': '历史记录',
+    'history.search': '搜索历史记录…',
+    'history.empty': '暂无历史记录',
+    'history.clearAll': '全部清空',
+    'history.confirmClear': '确定清空该工具的全部历史记录吗？',
+    'history.copyInput': '复制输入',
+    'history.copyOutput': '复制输出',
+    'history.delete': '删除记录',
+    'json.title': 'JSON 工作台',
+    'json.editor.label': 'JSON 编辑器',
+    'json.valid.idle': '等待输入 JSON',
+    'json.valid.ok': '有效 JSON · {type}',
+    'json.valid.error': 'JSON 解析失败',
+    'json.error.empty': '请输入 JSON 内容',
+    'json.error.notString': '当前内容不是 JSON 字符串',
+    'json.error.duplicateKeys': '发现重复 Key：{paths}',
+    'json.error.emptyXml': '请输入 XML 内容',
+    'json.error.emptyPath': '请输入 JSON Path',
+    'json.error.objectRequired': '该操作需要 JSON Object',
+    'json.error.emptyJavaBean': '请输入 JavaBean 类代码',
+    'json.error.noJavaFields': '未找到可转换的 Java 字段',
+    'json.action.format': '格式化',
+    'json.action.compress': '压缩',
+    'json.font': '字体',
+    'json.action.wrap': '开启自动换行',
+    'json.action.nowrap': '关闭自动换行',
+    'json.action.copy': '复制',
+    'json.action.copied': '已复制',
+    'json.action.clear': '清空',
+    'json.action.find': '查找',
+    'json.action.import': '导入',
+    'json.action.export': '导出',
+    'json.action.history': '历史',
+    'json.action.more': '更多工具',
+    'json.action.escape': 'JSON 字符串转义',
+    'json.action.unescape': 'JSON 字符串还原',
+    'json.action.escapeText': '字符串转义',
+    'json.action.unescapeText': '字符串反转义',
+    'json.action.jsonToXml': 'JSON 转 XML',
+    'json.action.xmlToJson': 'XML 转 JSON',
+    'json.action.beanToJson': 'JavaBean 转 JSON',
+    'json.action.jsonToBean': 'JSON 转 JavaBean',
+    'json.action.swap': 'Key / Value 互换',
+    'json.notice.formatted': '已格式化',
+    'json.notice.compressed': '已压缩',
+    'json.notice.copied': '已复制到剪贴板',
+    'json.notice.copyFailed': '复制失败',
+    'json.notice.failed': '处理失败',
+    'json.notice.escaped': '已转为 JSON 字符串',
+    'json.notice.unescaped': '已还原 JSON 字符串',
+    'json.notice.imported': '文件已导入',
+    'json.notice.exported': '文件已导出',
+    'json.notice.pathApplied': '已应用 JSON Path',
+    'json.notice.noMatches': '未找到匹配内容',
+    'json.panel.actions': '操作',
+    'json.panel.result': '结果',
+    'json.panel.format': '格式化选项',
+    'json.panel.convert': '转换',
+    'json.panel.jsonPath': 'JSON Path',
+    'json.format.indent': '缩进空格',
+    'json.format.sortKeys': '对 Object Key 排序',
+    'json.format.ignoreCase': '排序和重复检查忽略大小写',
+    'json.format.duplicateKeys': '格式化前检查重复 Key',
+    'json.format.apply': '应用自定义格式',
+    'json.find.placeholder': '在 JSON 中查找…',
+    'json.find.matches': '{count} 处匹配',
+    'json.find.next': '下一处',
+    'json.find.close': '关闭查找',
+    'json.path.placeholder': '例如 $.store.book[*].title',
+    'json.path.query': '查询',
+    'json.path.pick': '可视化选择',
+    'json.pathPicker.title': '选择 JSON Path',
+    'json.pathPicker.use': '使用此路径',
+    'json.pathPicker.path': '路径',
+    'json.pathPicker.preview': '值预览',
+    'json.dialog.input': '输入',
+    'json.dialog.output': '输出',
+    'json.dialog.run': '转换',
+    'json.dialog.className': '根类名',
+    'json.dialog.useOutput': '使用输出',
+    'json.vault.title': 'JSON Vault',
+    'json.vault.new': '新建片段',
+    'json.vault.save': '保存片段',
+    'json.vault.delete': '删除片段',
+    'json.vault.refresh': '刷新 Vault',
+    'json.vault.empty': '暂无 JSON 片段',
+    'json.vault.fileName': '文件名或相对路径',
+    'json.vault.fileNameHint': '例如 drafts/request.json',
+    'json.vault.create': '创建',
+    'json.vault.saved': '片段已保存',
+    'json.vault.created': '片段已创建',
+    'json.vault.deleted': '片段已删除',
+    'json.vault.confirmDelete': '确定删除“{name}”吗？',
+    'json.vault.confirmDiscard': '当前片段尚未保存，确定放弃修改吗？'
+    ,'json.vault.newFolder': '新建文件夹'
+    ,'json.vault.expandAll': '展开全部'
+    ,'json.vault.collapseAll': '折叠全部'
+    ,'json.vault.defaultFolder': '新文件夹'
+    ,'json.vault.folderName': '文件夹相对路径'
+    ,'json.vault.folderCreated': '文件夹已创建'
+    ,'json.vault.rename': '重命名'
+    ,'json.vault.renameName': '新名称'
+    ,'json.vault.renamed': '条目已重命名'
+    ,'json.vault.move': '移动'
+    ,'json.vault.moveTo': '目标文件夹'
+    ,'json.vault.moved': '条目已移动'
+    ,'json.vault.duplicate': '复制片段'
+    ,'json.vault.duplicated': '片段副本已创建'
+    ,'json.vault.openFolder': '在文件管理器中打开 Vault'
+    ,'json.vault.revealInFinder': '在 Finder 中打开'
+    ,'json.vault.locateCurrent': '定位当前文件'
+    ,'json.vault.sort': '排序方式'
+    ,'json.vault.sortName': '按名称'
+    ,'json.vault.sortModified': '按修改时间'
+    ,'json.vault.more': '更多 Vault 操作'
+    ,'json.vault.root': 'Vault 根目录'
+    ,'json.git.title': 'JSON Vault Git'
+    ,'json.git.open': '打开 Git 面板'
+    ,'json.git.unavailable': '未检测到 Git 命令'
+    ,'json.git.noRepo': '当前 Vault 尚未初始化 Git 仓库'
+    ,'json.git.init': '初始化 Git'
+    ,'json.git.refresh': '刷新'
+    ,'json.git.fetch': 'Fetch'
+    ,'json.git.pull': 'Pull'
+    ,'json.git.push': 'Push'
+    ,'json.git.branch': '分支 {branch}'
+    ,'json.git.sync': '↑{ahead} ↓{behind}'
+    ,'json.git.remote': '远程仓库'
+    ,'json.git.remotePlaceholder': 'https://... 或 git@host:repo.git'
+    ,'json.git.saveRemote': '保存远程地址'
+    ,'json.git.removeRemote': '删除远程地址'
+    ,'json.git.changes': '未提交变更'
+    ,'json.git.history': '提交历史'
+    ,'json.git.emptyChanges': '工作区很干净'
+    ,'json.git.emptyHistory': '暂无提交记录'
+    ,'json.git.diff': '变更详情'
+    ,'json.git.noDiff': '选择变更或提交查看 Diff'
+    ,'json.git.diffFile': '变更文件'
+    ,'json.git.diffBefore': '修改前'
+    ,'json.git.diffAfter': '修改后'
+    ,'json.git.diffBinary': '二进制文件不支持内容对比'
+    ,'json.git.diffTooLarge': '文件过大，无法预览内容对比'
+    ,'json.git.commitMessage': '提交说明'
+    ,'json.git.defaultMessage': 'MooTool JSON checkpoint'
+    ,'json.git.commit': '提交全部变更'
+    ,'json.git.conflict': '冲突'
+    ,'json.git.done': 'Git 操作已完成'
+    ,'json.git.discard': '丢弃变更'
+    ,'json.git.confirmDiscard': '确定丢弃“{path}”的本地变更吗？此操作无法撤销。'
+    ,'json.git.abortMerge': '中止合并 / Rebase'
+    ,'json.git.confirmAbort': '确定中止当前合并或 Rebase 并恢复操作前状态吗？'
+    ,'json.git.continueOperation': '继续合并 / Rebase'
+    ,'json.git.useOurs': '使用本地版本'
+    ,'json.git.useTheirs': '使用远程版本'
+    ,'time.title': '时间转换'
+    ,'time.current': '当前时间'
+    ,'time.timestamp': '时间戳 (Unix)'
+    ,'time.localTime': '本地时间'
+    ,'time.timezone': '时区'
+    ,'time.unit.second': '秒 (s)'
+    ,'time.unit.millisecond': '毫秒 (ms)'
+    ,'time.toLocal': '转为本地时间'
+    ,'time.toTimestamp': '转为时间戳'
+    ,'time.copy': '复制'
+    ,'time.clock': '大屏时钟'
+    ,'time.history': '历史'
+    ,'time.formatHint': '格式：yyyy-MM-dd HH:mm:ss'
+    ,'time.error.timestamp': '请输入有效的 Unix 时间戳'
+    ,'time.error.localTime': '请按 yyyy-MM-dd HH:mm:ss 输入有效时间'
+    ,'time.notice.toLocal': '已转换为 {zone} 时间'
+    ,'time.notice.toTimestamp': '已转换为 Unix 时间戳'
+    ,'time.notice.copied': '已复制'
+    ,'time.clock.close': '退出大屏时钟'
+    ,'common.action.copy': '复制'
+    ,'common.action.paste': '粘贴'
+    ,'common.action.clear': '清空'
+    ,'common.action.history': '历史'
+    ,'common.action.swap': '交换'
+    ,'common.action.apply': '应用'
+    ,'common.action.save': '保存'
+    ,'common.action.delete': '删除'
+    ,'common.input': '输入'
+    ,'common.output': '输出'
+    ,'common.result': '结果'
+    ,'common.name': '名称'
+    ,'common.description': '说明'
+    ,'common.yes': '是'
+    ,'common.no': '否'
+    ,'common.error.process': '处理失败：{message}'
+    ,'favorite.title': '收藏夹'
+    ,'favorite.add': '收藏当前内容'
+    ,'favorite.empty': '暂无收藏'
+    ,'favorite.namePlaceholder': '输入收藏名称'
+    ,'favorite.saved': '收藏已保存'
+    ,'favorite.deleted': '收藏已删除'
+    ,'favorite.folder': '收藏夹'
+    ,'favorite.folderName': '请输入收藏夹名称'
+    ,'favorite.newFolder': '新建收藏夹'
+    ,'favorite.renameFolder': '重命名收藏夹'
+    ,'favorite.deleteFolder': '删除收藏夹'
+    ,'favorite.deleteFolderConfirm': '确定删除收藏夹“{name}”及其中的所有颜色吗？'
+    ,'favorite.duplicateFolder': '收藏夹名称已存在'
+    ,'encode.title': '编码解码'
+    ,'encode.tab.unicode': 'Native / Unicode'
+    ,'encode.tab.url': 'URL 转码'
+    ,'encode.tab.hex': 'Native / 16 进制'
+    ,'encode.tab.ascii': 'Native / ASCII'
+    ,'encode.native': 'Native 文本'
+    ,'encode.unicode': 'Unicode 文本'
+    ,'encode.url': 'URL 原文'
+    ,'encode.encoded': '编码结果'
+    ,'encode.hex': '十六进制'
+    ,'encode.ascii': 'ASCII'
+    ,'encode.toUnicode': '转为 Unicode'
+    ,'encode.fromUnicode': '还原 Native'
+    ,'encode.urlEncode': 'URL 编码'
+    ,'encode.urlDecode': 'URL 解码'
+    ,'encode.toHex': '转为 Hex'
+    ,'encode.fromHex': '还原文本'
+    ,'encode.toAscii': '转为 ASCII'
+    ,'encode.fromAscii': '还原文本'
+    ,'encode.charset': '字符集'
+    ,'encode.asciiDecimal': '十进制'
+    ,'encode.asciiHex': '十六进制'
+    ,'ua.title': 'UA 分析'
+    ,'ua.input': 'User-Agent 输入'
+    ,'ua.preset': '选择预设 UA…'
+    ,'ua.parse': '解析'
+    ,'ua.browser': '浏览器'
+    ,'ua.browserVersion': '浏览器版本'
+    ,'ua.engine': '渲染引擎'
+    ,'ua.engineVersion': '引擎版本'
+    ,'ua.os': '操作系统'
+    ,'ua.osVersion': '系统版本'
+    ,'ua.deviceType': '设备类型'
+    ,'ua.deviceBrand': '设备品牌'
+    ,'ua.deviceModel': '设备型号'
+    ,'ua.mobile': '移动端'
+    ,'ua.bot': '爬虫 / Bot'
+    ,'ua.empty': '请输入 User-Agent'
+    ,'ua.unknown': '未知'
+    ,'calculator.title': '计算器'
+    ,'calculator.arithmetic': '四则运算'
+    ,'calculator.expression': '表达式'
+    ,'calculator.calculate': '计算'
+    ,'calculator.base': '进制转换'
+    ,'calculator.baseHint': '支持整数和小数，例如 A.F → 10.9375；可带 0x / 0b 前缀。仅转换目标进制中可有限表示的小数。'
+    ,'calculator.float': 'IEEE 754 浮点数：HEX → DEC'
+    ,'calculator.floatFormat': '浮点格式'
+    ,'calculator.float32': '32 位（单精度）'
+    ,'calculator.float64': '64 位（双精度）'
+    ,'calculator.byteOrder': '字节序'
+    ,'calculator.bigEndian': '大端（高位字节在前）'
+    ,'calculator.littleEndian': '小端（低位字节在前）'
+    ,'calculator.floatHint': '输入 {digits} 位十六进制编码，可带 0x 前缀或用空格分隔字节。例如：32 位大端 3F800000 → 1.0。'
+    ,'calculator.decimal': '十进制'
+    ,'calculator.hex': '十六进制'
+    ,'calculator.binary': '二进制'
+    ,'calculator.number': '数学运算'
+    ,'calculator.first': '数值 1'
+    ,'calculator.second': '数值 2'
+    ,'calculator.gcd': '最大公约数'
+    ,'calculator.lcm': '最小公倍数'
+    ,'calculator.calculateGcd': '计算最大公约数'
+    ,'calculator.calculateLcm': '计算最小公倍数'
+    ,'calculator.n': 'n'
+    ,'calculator.m': 'm'
+    ,'calculator.permutation': '排列 A(n,m)'
+    ,'calculator.combination': '组合 C(n,m)'
+    ,'calculator.history': '计算记录'
+    ,'regex.title': '正则表达式'
+    ,'regex.tab.test': '匹配测试'
+    ,'regex.tab.common': '常用正则'
+    ,'regex.expression': '正则表达式'
+    ,'regex.source': '待匹配文本'
+    ,'regex.matches': '{count} 个匹配'
+    ,'regex.noMatches': '没有匹配结果'
+    ,'regex.flag.global': '全局'
+    ,'regex.flag.ignoreCase': '忽略大小写'
+    ,'regex.flag.multiline': '多行'
+    ,'regex.flag.dotAll': '点号匹配换行'
+    ,'regex.invalid': '无效正则：{message}'
+    ,'regex.common.phone': '中国大陆手机号'
+    ,'regex.common.email': '电子邮箱'
+    ,'regex.common.domain': '域名'
+    ,'regex.common.chinese': '汉字'
+    ,'regex.common.integer': '整数'
+    ,'regex.common.color': '颜色代码'
+    ,'regex.common.ipv4': 'IPv4 地址'
+    ,'regex.common.account': '账号校验'
+    ,'regex.common.htmlId': 'HTML 标签 id 属性'
+    ,'regex.common.jpg': 'JPG 图片链接'
+    ,'regex.common.magnet': '磁力链接'
+    ,'regex.common.alnum': '英文和数字'
+    ,'regex.common.len3to20': '长度为 3-20 的所有字符'
+    ,'regex.common.letters26': '26 个英文字母'
+    ,'regex.common.wordUnderscore': '数字、字母或下划线'
+    ,'regex.common.cnEnNum': '中文、英文、数字和下划线'
+    ,'regex.common.noSpecial': '不含特殊字符'
+    ,'regex.common.positiveInt': '正整数'
+    ,'regex.common.negativeInt': '负整数'
+    ,'regex.common.nonNegativeInt': '非负整数'
+    ,'regex.common.float': '浮点数'
+    ,'cron.title': 'Cron 表达式'
+    ,'cron.expression': 'Cron 表达式'
+    ,'cron.builder': '表达式构建器'
+    ,'cron.second': '秒'
+    ,'cron.minute': '分钟'
+    ,'cron.hour': '小时'
+    ,'cron.day': '日'
+    ,'cron.month': '月'
+    ,'cron.week': '星期'
+    ,'cron.year': '年（可选）'
+    ,'cron.parse': '解析运行时间'
+    ,'cron.nextRuns': '最近 10 次运行时间'
+    ,'cron.humanReadable': '自然语言'
+    ,'cron.preset': '常用表达式'
+    ,'cron.everyMinute': '每分钟'
+    ,'cron.everyHour': '每小时'
+    ,'cron.everyDay': '每天午夜'
+    ,'cron.weekdays': '工作日上午 9 点'
+    ,'cron.invalid': '无法解析 Cron：{message}'
+    ,'diff.title': '文本对比'
+    ,'diff.sideBySide': '并排对比'
+    ,'diff.unified': '统一差异'
+    ,'diff.left': '原始文本'
+    ,'diff.right': '新文本'
+    ,'diff.compare': '对比'
+    ,'diff.ignoreWhitespace': '忽略空白差异'
+    ,'diff.realtime': '实时对比'
+    ,'diff.copy': '复制差异'
+    ,'diff.previous': '上一处'
+    ,'diff.next': '下一处'
+    ,'diff.summary': '新增 {added} · 删除 {removed} · 变更 {changed}'
+    ,'diff.identical': '两侧文本一致'
+    ,'diff.highlightMode': '高亮模式'
+    ,'diff.highlightBoth': '双层高亮'
+    ,'diff.highlightCharacters': '仅字符'
+    ,'diff.highlightLines': '仅整行'
+    ,'diff.displayMode': '显示模式'
+    ,'diff.unifiedPanel': '统一差异格式'
+    ,'diff.status.ready': '准备就绪'
+    ,'diff.status.enterText': '请输入要对比的文本'
+    ,'diff.status.characterComplete': '字符差异 {count} 处'
+    ,'diff.status.complete': '对比完成，共发现 {count} 处差异'
+    ,'diff.status.cleared': '已清空'
+    ,'diff.status.swapped': '已交换文本'
+    ,'diff.status.copied': '差异结果已复制到剪贴板'
+    ,'diff.status.noCopy': '没有差异结果可复制'
+    ,'diff.status.navigation': '跳至第 {current}/{total} 处差异'
+    ,'config.title': '配置文件转换'
+    ,'config.tab.convert': 'YAML / Properties'
+    ,'config.tab.validate': 'YAML 校验'
+    ,'config.properties': 'Properties'
+    ,'config.yaml': 'YAML'
+    ,'config.toYaml': '转为 YAML'
+    ,'config.toProperties': '转为 Properties'
+    ,'config.validate': '校验'
+    ,'config.format': '格式化'
+    ,'config.valid': 'YAML 格式有效'
+    ,'config.invalid': 'YAML 格式无效：{message}'
+    ,'common.action.format': '格式化'
+    ,'common.export': '导出'
+    ,'common.help': '帮助'
+    ,'common.import': '导入'
+    ,'common.processing': '处理中…'
+    ,'common.rename': '重命名'
+    ,'common.save': '保存'
+    ,'common.saved': '已保存'
+    ,'reformat.title': '格式化'
+    ,'reformat.tab.text': '文本'
+    ,'reformat.tab.file': '文件'
+    ,'reformat.type': '类型'
+    ,'reformat.indent': '缩进'
+    ,'reformat.input': '待格式化内容'
+    ,'reformat.chooseFile': '选择文件'
+    ,'reformat.noFile': '尚未选择文件'
+    ,'reformat.original': '原始内容'
+    ,'reformat.result': '格式化结果'
+    ,'reformat.formatted': '格式化完成'
+    ,'reformat.historySummary': '{type} 格式化'
+    ,'crypto.title': '加解密 / 随机'
+    ,'crypto.tab.symmetric': '对称加密'
+    ,'crypto.tab.asymmetric': '非对称加密'
+    ,'crypto.tab.digest': '摘要'
+    ,'crypto.tab.base': 'Base64 / Base32'
+    ,'crypto.tab.random': '随机生成'
+    ,'crypto.algorithm': '算法'
+    ,'crypto.key': '密钥'
+    ,'crypto.keyHint': '请输入符合算法长度要求的密钥'
+    ,'crypto.aesKeyHint': 'AES 密钥必须为 16、24 或 32 个 UTF-8 字节，不截断、不补零。'
+    ,'crypto.legacyAes': '旧 Electron 密钥处理（仅解密）'
+    ,'crypto.plainText': '明文'
+    ,'crypto.cipherText': '密文'
+    ,'crypto.cipherOrSignature': '密文 / 签名'
+    ,'crypto.encrypt': '加密'
+    ,'crypto.decrypt': '解密'
+    ,'crypto.generateKeyPair': '生成密钥对'
+    ,'crypto.keyGenerated': '密钥对已生成'
+    ,'crypto.publicKey': '公钥'
+    ,'crypto.privateKey': '私钥'
+    ,'crypto.publicEncrypt': '公钥加密'
+    ,'crypto.privateDecrypt': '私钥解密'
+    ,'crypto.privateEncrypt': '私钥加密'
+    ,'crypto.publicDecrypt': '公钥解密'
+    ,'crypto.rsaOnly': '该操作仅支持 RSA'
+    ,'crypto.sign': '签名'
+    ,'crypto.verify': '验签'
+    ,'crypto.verified': '签名验证通过'
+    ,'crypto.notVerified': '签名验证失败'
+    ,'crypto.digest': '计算摘要'
+    ,'crypto.fileDigest': '文件摘要'
+    ,'crypto.textDigest': '文本摘要'
+    ,'crypto.digestInput': '摘要输入'
+    ,'crypto.digestResult': '摘要结果'
+    ,'crypto.encode': '编码'
+    ,'crypto.decode': '解码'
+    ,'crypto.length': '长度'
+    ,'crypto.generate': '生成'
+    ,'crypto.random.uuid': 'UUID'
+    ,'crypto.random.digits': '随机数字'
+    ,'crypto.random.string': '随机字符串'
+    ,'crypto.random.password': '随机密码'
+    ,'color.title': '调色板'
+    ,'color.select': '选择颜色'
+    ,'color.inputColor': '输入颜色'
+    ,'color.picker': '屏幕取色'
+    ,'color.pickerOverlayHint': '移动鼠标预览颜色，单击选取'
+    ,'color.pickerOverlayKeys': 'Esc 或右键取消'
+    ,'color.freePick': '自由取色'
+    ,'color.eyeDropperUnavailable': '当前系统不支持屏幕取色'
+    ,'color.format': '格式'
+    ,'color.code': '颜色代码'
+    ,'color.current': '当前颜色'
+    ,'color.favorite': '收藏'
+    ,'color.favorites': '收藏夹'
+    ,'color.favoriteDialog': '颜色收藏'
+    ,'color.compare': '对比色'
+    ,'color.operation.invert': '反色'
+    ,'color.operation.intersect': '交集'
+    ,'color.operation.add': '相加'
+    ,'color.operation.difference': '差值'
+    ,'color.operation.average': '平均'
+    ,'color.operation.swap': '交换'
+    ,'color.themeColors': '主题色'
+    ,'color.theme': '主题'
+    ,'color.theme.default': '默认'
+    ,'color.theme.theme1': '主题1'
+    ,'color.theme.theme2': '主题2'
+    ,'color.theme.theme3': '主题3'
+    ,'color.theme.theme4': '主题4'
+    ,'color.theme.theme5': '主题5'
+    ,'color.theme.china': '中国色'
+    ,'color.standardColors': '标准色'
+    ,'color.shiftHint': '按住 Shift 选择对比色。'
+    ,'qrcode.title': '二维码'
+    ,'qrcode.tab.generate': '生成'
+    ,'qrcode.tab.recognize': '识别'
+    ,'qrcode.tab.history': '历史'
+    ,'qrcode.content': '二维码内容'
+    ,'qrcode.size': '尺寸'
+    ,'qrcode.correction': '纠错级别'
+    ,'qrcode.logo': '中心 Logo'
+    ,'qrcode.chooseLogo': '选择 Logo'
+    ,'qrcode.level.L': 'L · 约 7%'
+    ,'qrcode.level.M': 'M · 约 15%'
+    ,'qrcode.level.Q': 'Q · 约 25%'
+    ,'qrcode.level.H': 'H · 约 30%'
+    ,'qrcode.generate': '生成二维码'
+    ,'qrcode.generated': '二维码已生成'
+    ,'qrcode.preview': '二维码预览'
+    ,'qrcode.chooseImage': '选择二维码图片'
+    ,'qrcode.fromClipboard': '从剪贴板读取'
+    ,'qrcode.clipboard': '剪贴板图片'
+    ,'qrcode.clipboardEmpty': '剪贴板中没有图片'
+    ,'qrcode.recognize': '识别二维码'
+    ,'qrcode.recognized': '二维码识别完成'
+    ,'qrcode.sourceImage': '待识别图片'
+    ,'qrcode.result': '识别结果'
+    ,'qrcode.history.generate': '生成二维码'
+    ,'qrcode.history.recognize': '识别二维码'
+    ,'protobuf.title': 'Protobuf'
+    ,'protobuf.tab.json': 'JSON / Binary'
+    ,'protobuf.tab.wire': 'Wire 解析'
+    ,'protobuf.tab.convert': 'Hex / Base64'
+    ,'protobuf.definition': 'Proto 定义'
+    ,'protobuf.message': '消息类型'
+    ,'protobuf.binaryFormat': '二进制格式'
+    ,'protobuf.toBinary': '转为 Binary'
+    ,'protobuf.toJson': '转为 JSON'
+    ,'protobuf.binary': '二进制内容'
+    ,'protobuf.wireInput': 'Wire 数据'
+    ,'protobuf.decode': '解析'
+    ,'protobuf.wireOutput': 'Wire 字段'
+    ,'protobuf.hexToBase64': 'Hex 转 Base64'
+    ,'protobuf.base64ToHex': 'Base64 转 Hex'
+    ,'protobuf.history.jsonToBinary': 'JSON 转 Binary'
+    ,'protobuf.history.binaryToJson': 'Binary 转 JSON'
+    ,'protobuf.history.format': '格式化 Proto'
+    ,'protobuf.history.wire': '解析 Wire'
+    ,'protobuf.history.hexToBase64': 'Hex 转 Base64'
+    ,'protobuf.history.base64ToHex': 'Base64 转 Hex'
+    ,'pdf.title': 'PDF'
+    ,'pdf.tab.split': '拆分 PDF'
+    ,'pdf.tab.merge': '合并 PDF'
+    ,'pdf.addTask': '添加拆分任务'
+    ,'pdf.addFile': '添加 PDF'
+    ,'pdf.startSplit': '开始拆分'
+    ,'pdf.startMerge': '开始合并'
+    ,'pdf.selectTask': '请至少选择一个拆分任务'
+    ,'pdf.selectTwo': '请至少选择两个 PDF 文件'
+    ,'pdf.confirmSplit': '确认开始拆分选中的 PDF 吗？'
+    ,'pdf.splitComplete': '拆分完成，共输出 {count} 页'
+    ,'pdf.mergeComplete': '合并完成，共 {count} 页'
+    ,'pdf.fileName': '文件名'
+    ,'pdf.pageRange': '处理页码'
+    ,'pdf.mergeRange': '合并页码'
+    ,'pdf.rule': '拆分规则'
+    ,'pdf.customRule': '输出页码'
+    ,'pdf.progress': '状态'
+    ,'pdf.output': '最近输出'
+    ,'pdf.empty': '尚未添加 PDF 任务'
+    ,'pdf.pages': '页'
+    ,'pdf.select': '选择'
+    ,'pdf.rule.odd': '奇数页'
+    ,'pdf.rule.even': '偶数页'
+    ,'pdf.rule.custom': '自定义'
+    ,'pdf.status.ready': '待处理'
+    ,'pdf.status.running': '处理中'
+    ,'pdf.status.done': '已完成'
+    ,'pdf.status.error': '失败'
+    ,'pdf.helpSplitTitle': 'PDF 拆分说明'
+    ,'pdf.helpMergeTitle': 'PDF 合并说明'
+    ,'pdf.help.split1': '单次最多添加 20 个 PDF 拆分任务。'
+    ,'pdf.help.split2': '处理页码支持 1-5、8、10-12 这类范围。'
+    ,'pdf.help.split3': '拆分规则可选择奇数页、偶数页或自定义页码。'
+    ,'pdf.help.split4': '输出文件默认使用 _split.pdf 后缀。'
+    ,'pdf.help.merge1': '至少选择两个 PDF 文件才能合并。'
+    ,'pdf.help.merge2': '文件会按列表顺序和填写的页码范围合并。'
+    ,'pdf.help.merge3': '当前仅支持未加密 PDF。'
+    ,'image.title': '图片助手'
+    ,'image.ocr.component.title': "下载文字识别组件"
+    ,'image.ocr.component.intro': "首次使用需下载约 {size} MiB 的文字识别组件，完成后重启生效。组件只需下载一次，之后可离线使用。"
+    ,'image.ocr.component.download': "下载组件"
+    ,'image.ocr.component.downloading': "正在下载…"
+    ,'image.ocr.component.progress': "正在下载并校验：{percent}%。关闭此窗口后仍会继续。"
+    ,'image.ocr.component.ready': "组件已下载并校验完成。重启应用后即可识别文字，请先保存正在编辑的内容。"
+    ,'image.ocr.component.error': "下载或校验失败，请检查网络和磁盘空间后重试。"
+    ,'image.ocr.component.restart': "立即重启"
+    ,'image.ocr.component.later': "稍后重启"
+    ,'image.ocr.title': "识别文字"
+    ,'image.ocr.capture': "截图识字"
+    ,'image.ocr.captureSource': "截图选区"
+    ,'image.ocr.language': "识别语言"
+    ,'image.ocr.language.auto': "自动（中文/英文）"
+    ,'image.ocr.language.multilingual': "自动（简体/繁体/英文/日文）"
+    ,'image.ocr.language.zh-Hans': "简体中文"
+    ,'image.ocr.language.zh-Hant': "繁体中文"
+    ,'image.ocr.language.en-US': "英文"
+    ,'image.ocr.language.ja-JP': "日文"
+    ,'image.ocr.local': "本机离线处理"
+    ,'image.ocr.result': "识别结果"
+    ,'image.ocr.intro': "选择语言并开始识别，之后可编辑、复制或保存文字。"
+    ,'image.ocr.review': "请对照图片校对；重新识别将替换当前文字。"
+    ,'image.ocr.start': "开始识别"
+    ,'image.ocr.again': "重新识别"
+    ,'image.ocr.working': "正在本机识别…首次系统初始化可能较慢，可随时取消。"
+    ,'image.ocr.complete': "识别完成，可编辑结果。"
+    ,'image.ocr.empty': "未识别到文字，请尝试更清晰的图片或其他语言。"
+    ,'image.ocr.cancelled': "已取消识别"
+    ,'image.ocr.copy': "复制文字"
+    ,'image.ocr.copied': "已复制文字"
+    ,'image.ocr.save': "保存文字"
+    ,'image.ocr.metadata': "{count} 行 · {time} ms"
+    ,'image.ocr.engine.vision': "macOS Vision"
+    ,'image.ocr.engine.ppocr': "PP-OCRv6 small"
+    ,'image.ocr.unavailable.platform': "当前系统暂不支持离线文字识别。"
+    ,'image.ocr.unavailable.component': "文字识别组件不可用，请更新或重新安装应用。"
+    ,'image.ocr.unavailable.system': "文字识别需要 macOS 13 或更新版本。"
+    ,'image.ocr.error.input': "图片数据无效，请重新选择图片。"
+    ,'image.ocr.error.tooLarge': "图片过大：单边最多 16384 px，总像素最多 3200 万，PNG 数据最多 32 MiB。"
+    ,'image.ocr.error.tooComplex': "文字区域过多或单行过长，请缩小识别范围。"
+    ,'image.ocr.error.unavailable': "文字识别当前不可用，请稍后重试。"
+    ,'image.ocr.error.language': "当前系统不支持所选识别语言，请选择其他语言。"
+    ,'image.ocr.error.busy': "另一个识别任务正在运行，请稍后重试。"
+    ,'image.ocr.error.cancelled': "识别已取消。"
+    ,'image.ocr.error.timeout': "识别超时，请缩小图片范围后重试。"
+    ,'image.ocr.error.failed': "识别失败，请重试或选择其他图片。"
+    ,'image.screenshot': '截图'
+    ,'image.fromClipboard': '剪贴板'
+    ,'image.import': '导入图片'
+    ,'image.fromBase64': '从 Base64 导入'
+    ,'image.compress': '压缩'
+    ,'image.resize': "调整尺寸"
+    ,'image.resize.title': "批量调整图片尺寸"
+    ,'image.resize.preset': "尺寸预设"
+    ,'image.resize.small': "小"
+    ,'image.resize.medium': "中"
+    ,'image.resize.large': "大"
+    ,'image.resize.custom': "自定义"
+    ,'image.resize.width': "宽度（px）"
+    ,'image.resize.height': "高度（px）"
+    ,'image.resize.auto': "自动"
+    ,'image.resize.dimensionsHint': "可留空一个尺寸，按原图比例计算；至少填写一项，范围为 1–16384 的整数。"
+    ,'image.resize.mode': "缩放模式"
+    ,'image.resize.fit': "等比适应"
+    ,'image.resize.fill': "裁剪填充"
+    ,'image.resize.stretch': "拉伸"
+    ,'image.resize.formatAuto': "JPEG 原图保持 JPEG，其余为 PNG"
+    ,'image.resize.shrinkOnly': "仅缩小，不放大"
+    ,'image.resize.fitHint': "保持比例，完整放入目标框；输出可能小于填写的尺寸。"
+    ,'image.resize.fillHint': "保持比例填满目标框，超出部分从中心裁剪。"
+    ,'image.resize.stretchHint': "直接调整为目标尺寸，可能改变原图比例。"
+    ,'image.resize.shrinkFillHint': "仅缩小时，目标框也会缩小以避免放大；以每张图的预览尺寸为准。"
+    ,'image.resize.libraryHint': "处理图片库中的副本。保留原图时，同名输出会自动编号；覆盖仅影响图片库。"
+    ,'image.resize.preview': "输出尺寸预览"
+    ,'image.resize.file': "文件"
+    ,'image.resize.source': "原始尺寸"
+    ,'image.resize.output': "输出尺寸"
+    ,'image.resize.invalid': "请填写至少一个有效尺寸：1–16384 的整数。"
+    ,'image.resize.tooLarge': "输出过大：单边不得超过 16384 px，总像素不得超过 3200 万。"
+    ,'image.watermark': '水印'
+    ,'image.toSvg': '转 SVG'
+    ,'image.copy': '复制图片'
+    ,'image.toBase64': '转 Base64'
+    ,'image.toggleList': '显示或隐藏图片列表'
+    ,'image.library': '图片库'
+    ,'image.empty': '图片库为空'
+    ,'image.select': '选择图片'
+    ,'image.emptyPreview': '选择或导入一张图片'
+    ,'image.zoomIn': '放大'
+    ,'image.zoomOut': '缩小'
+    ,'image.original': '原始尺寸'
+    ,'image.fit': '适应窗口'
+    ,'image.base64Import': '导入 Base64 图片'
+    ,'image.base64Export': '图片 Base64'
+    ,'image.compressTitle': '压缩图片'
+    ,'image.watermarkTitle': '添加水印'
+    ,'image.svgTitle': '图片转 SVG'
+    ,'image.svgStart': '开始转换'
+    ,'image.svgPreset': '图像类型'
+    ,'image.svgPreset.poster': 'Logo / 插画'
+    ,'image.svgPreset.photo': '照片'
+    ,'image.svgPreset.bw': '黑白线稿'
+    ,'image.svgColors': '最大颜色数'
+    ,'image.svgDetail': '路径细节'
+    ,'image.svgDetail.low': '低（文件更小）'
+    ,'image.svgDetail.medium': '中'
+    ,'image.svgDetail.high': '高（更贴近原图）'
+    ,'image.svgSpeckle': '忽略小于此像素数的杂点'
+    ,'image.svgHint': '生成内容为可编辑矢量路径，不会把位图嵌入 SVG；转换完全在本机进行。Logo、图标和插画通常效果最佳。'
+    ,'image.svgComplete': '已转换 {count} 张图片，输出到 {path}'
+    ,'image.startProcess': '开始处理'
+    ,'image.selectedCount': '已选择 {count} 张图片'
+    ,'image.quality': '质量'
+    ,'image.scale': '尺寸比例'
+    ,'image.outputFormat': '输出格式'
+    ,'image.format.auto': '保持原格式'
+    ,'image.watermarkText': '水印文字'
+    ,'image.opacity': '透明度'
+    ,'image.position': '位置'
+    ,'image.fontSize': '字号'
+    ,'image.color': '颜色'
+    ,'image.diagonal': '文字倾斜显示'
+    ,'image.outputMode': '输出方式'
+    ,'image.keepOriginal': '保留原图并生成新文件'
+    ,'image.overwrite': '覆盖原图'
+    ,'image.position.bottom-right': '右下'
+    ,'image.position.bottom-left': '左下'
+    ,'image.position.top-right': '右上'
+    ,'image.position.top-left': '左上'
+    ,'image.position.center': '居中'
+    ,'image.position.tile': '平铺'
+    ,'image.font.auto': '自动'
+    ,'image.font.small': '小'
+    ,'image.font.medium': '中'
+    ,'image.font.large': '大'
+    ,'image.crop.x': 'X'
+    ,'image.crop.y': 'Y'
+    ,'image.crop.width': '宽度'
+    ,'image.crop.height': '高度'
+    ,'image.captureOverlayHint': '拖拽鼠标框选截图区域'
+    ,'image.captureOverlayKeys': '回车确认 · Esc 或右键取消'
+    ,'image.captureConfirm': '确认截图'
+    ,'image.saveCapture': '保存截图'
+    ,'image.clipboardEmpty': '剪贴板中没有图片'
+    ,'image.imported': '图片已导入'
+    ,'image.captureUnavailable': '未找到可截图的显示器'
+    ,'image.saveName': '保存名称'
+    ,'image.renamePrompt': '输入新的图片名称'
+    ,'image.confirmDelete': '确认删除选中的 {count} 张图片吗？'
+    ,'image.exported': '已导出到 {directory}'
+    ,'image.processComplete': '已处理 {count} 张图片'
+    ,'common.new': '新建'
+    ,'common.add': '添加'
+    ,'common.stop': '停止'
+    ,'common.refresh': '刷新'
+    ,'common.search': '搜索'
+    ,'common.searchContent': '搜索正文'
+    ,'common.convert': '转换'
+    ,'http.title': 'HTTP 请求'
+    ,'http.untitled': '未命名请求'
+    ,'http.urlRequired': '请输入请求 URL'
+    ,'http.saveName': '请求名称'
+    ,'http.confirmDelete': '删除当前请求？'
+    ,'http.curlPrompt': '粘贴 cURL 命令'
+    ,'http.savedEmpty': '暂无已保存请求'
+    ,'http.noUrl': '未设置 URL'
+    ,'http.importCurl': '导入 cURL'
+    ,'http.copyCurl': '复制为 cURL'
+    ,'http.method': '请求方法'
+    ,'http.send': '发送'
+    ,'http.timeout': '超时（毫秒）'
+    ,'http.timeoutHint': '请求超时，范围 1000–120000 毫秒'
+    ,'http.find': '查找'
+    ,'http.tab.params': 'Params'
+    ,'http.tab.headers': 'Headers'
+    ,'http.tab.cookies': 'Cookies'
+    ,'http.tab.body': 'Body'
+    ,'http.bodyType': 'Body 类型'
+    ,'http.response.body': '响应 Body'
+    ,'http.response.headers': '响应 Headers'
+    ,'http.response.cookies': '响应 Cookies'
+    ,'http.responseEmpty': '发送请求后在这里查看响应'
+    ,'http.name': 'Name'
+    ,'http.value': 'Value'
+    ,'http.domain': 'Domain'
+    ,'http.path': 'Path'
+    ,'http.expires': 'Expires'
+    ,'http.enabled': '启用'
+    ,'http.addEntry': '添加参数'
+    ,'http.history': 'HTTP 请求历史'
+    ,'http.error.ABORTED': '请求已取消'
+    ,'http.error.TIMEOUT': '请求超时'
+    ,'http.error.NETWORK': '网络请求失败'
+    ,'http.error.INVALID_REQUEST': '请求参数无效'
+    ,'http.error.RESPONSE_TOO_LARGE': '响应超过 10 MB 限制'
+    ,'translation.title': '翻译'
+    ,'translation.tab.translate': '翻译'
+    ,'translation.tab.words': '单词本'
+    ,'translation.tab.history': '历史记录'
+    ,'translation.exchange': '交换语言与文本'
+    ,'translation.provider': '翻译源'
+    ,'translation.copy': '复制译文'
+    ,'translation.splitIdentifiers': '拆分标识符'
+    ,'translation.translateNow': '翻译'
+    ,'translation.namingFormat': '命名格式'
+    ,'translation.copyName': '复制命名'
+    ,'translation.namingHint': '将目标语言设为英语，翻译短语后可复制命名'
+    ,'translation.deeplHint': 'DeepL 使用自己的 API Key，自动识别 Free / Pro。点击「翻译」发送请求，失败时不会自动切换引擎。'
+    ,'translation.configureDeepL': 'DeepL API Key 设置'
+    ,'translation.error.DEEPL_KEY_REQUIRED': '请先在设置 → 工具默认值中保存 DeepL API Key。'
+    ,'translation.error.DEEPL_INVALID_KEY': 'DeepL API Key 无效或已停用，请在设置中更新。'
+    ,'translation.error.DEEPL_QUOTA_EXCEEDED': 'DeepL 翻译额度已用完。'
+    ,'translation.error.DEEPL_RATE_LIMITED': 'DeepL 请求过于频繁，请稍后重试。'
+    ,'translation.error.DEEPL_UNSUPPORTED_LANGUAGE': 'DeepL 暂不支持所选语言，请更换语言或引擎。'
+    ,'translation.error.DEEPL_EMPTY_RESPONSE': 'DeepL 未返回有效译文，请重试。'
+    ,'translation.saveWord': '收藏到单词本'
+    ,'translation.savedWord': '已保存到单词本'
+    ,'translation.sourcePlaceholder': '输入要翻译的文本'
+    ,'translation.targetPlaceholder': '译文'
+    ,'translation.translating': '翻译中…'
+    ,'translation.fallback': '已使用备用翻译源'
+    ,'translation.sourceLanguage': '源语言'
+    ,'translation.targetLanguage': '目标语言'
+    ,'translation.apply': '应用到翻译'
+    ,'translation.retranslate': '重新翻译'
+    ,'translation.confirmDeleteWord': '删除当前单词？'
+    ,'translation.searchWords': '搜索单词、译文或备注'
+    ,'translation.remark': '备注（可选）'
+    ,'translation.wordEmpty': '选择或新建一个单词'
+    ,'translation.searchHistory': '搜索原文、译文或语言'
+    ,'translation.lang.auto': '自动检测'
+    ,'translation.lang.zh-CN': '中文（简体）'
+    ,'translation.lang.en': '英语'
+    ,'translation.lang.yue': '粤语'
+    ,'translation.lang.wyw': '文言文'
+    ,'translation.lang.jp': '日语'
+    ,'translation.lang.kor': '韩语'
+    ,'translation.lang.fra': '法语'
+    ,'translation.lang.spa': '西班牙语'
+    ,'translation.lang.th': '泰语'
+    ,'translation.lang.ara': '阿拉伯语'
+    ,'translation.lang.ru': '俄语'
+    ,'translation.lang.pt': '葡萄牙语'
+    ,'translation.lang.de': '德语'
+    ,'translation.lang.it': '意大利语'
+    ,'translation.lang.el': '希腊语'
+    ,'translation.lang.nl': '荷兰语'
+    ,'translation.lang.pl': '波兰语'
+    ,'translation.lang.bul': '保加利亚语'
+    ,'translation.lang.est': '爱沙尼亚语'
+    ,'translation.lang.dan': '丹麦语'
+    ,'translation.lang.fin': '芬兰语'
+    ,'translation.lang.cs': '捷克语'
+    ,'translation.lang.rom': '罗马尼亚语'
+    ,'translation.lang.slo': '斯洛文尼亚语'
+    ,'translation.lang.swe': '瑞典语'
+    ,'translation.lang.hu': '匈牙利语'
+    ,'translation.lang.cht': '繁体中文'
+    ,'translation.lang.vie': '越南语'
+    ,'host.title': 'Host'
+    ,'host.contextMenu': 'Host 方案操作'
+    ,'host.discardChanges': '放弃未保存的修改？'
+    ,'host.untitled': '未命名 Host'
+    ,'host.namePrompt': 'Host 方案名称'
+    ,'host.confirmDelete': '删除当前 Host 方案？'
+    ,'host.confirmApply': '将当前内容写入系统 hosts 文件？系统可能请求管理员权限。'
+    ,'host.applied': '系统 hosts 已更新'
+    ,'host.applying': '正在应用…'
+    ,'host.apply': '切换 Host'
+    ,'host.empty': '暂无 Host 方案'
+    ,'host.import': '导入 Host'
+    ,'host.export': '导出 Host'
+    ,'host.profileName': '方案名称'
+    ,'host.current': '系统当前 hosts'
+    ,'host.find': '查找与替换'
+    ,'host.findPlaceholder': '查找'
+    ,'host.replacePlaceholder': '替换为'
+    ,'host.replace': '替换'
+    ,'host.replaceAll': '全部替换'
+    ,'host.content': 'Host 内容'
+    ,'host.placeholder': '输入 hosts 文件内容'
+    ,'host.writable': '当前用户可直接写入'
+    ,'host.requiresPrivilege': '写入时需要管理员权限'
+    ,'net.title': '网络/IP'
+    ,'net.running': '正在执行…'
+    ,'net.noOutput': '命令执行完成，无输出'
+    ,'net.outputPlaceholder': '在左侧运行网络命令，结果会显示在这里'
+    ,'net.ipv4Long': 'IPv4 地址与 Long 值互转'
+    ,'net.ping': 'PING'
+    ,'net.ipRangeScan': 'IP 段存活探测'
+    ,'net.ipRangePlaceholder': '例如 192.168.10'
+    ,'net.ipRangeHint': '探测该网段的 .1 到 .254，仅输出可 Ping 通的 IP'
+    ,'net.portScan': 'TCP 端口扫描'
+    ,'net.portScanTargetPlaceholder': '目标 IP 或主机名'
+    ,'net.portScanPortsPlaceholder': '留空扫描常用端口'
+    ,'net.portScanHint': '自动识别 SSH、MySQL 等常用服务；也可输入 22,80,3306 或 1-1024（最多 4096 个）'
+    ,'net.scan': '扫描'
+    ,'net.resolve': '通过域名获取 IP'
+    ,'net.resolveAction': '解析'
+    ,'net.whois': 'WHOIS 查询'
+    ,'net.query': '查询'
+    ,'net.dns': 'DNS'
+    ,'net.flushDns': '刷新 DNS 缓存'
+    ,'net.localAddresses': '本机 IP 地址'
+    ,'net.error.ABORTED': '命令已停止'
+    ,'net.error.TIMEOUT': '命令执行超时'
+    ,'net.error.PERMISSION': '系统拒绝执行，请检查权限'
+    ,'net.error.UNSUPPORTED': '当前系统不支持该命令'
+    ,'net.error.COMMAND_FAILED': '命令执行失败'
+    ,'net.error.INVALID_TARGET': '目标地址无效'
+    ,'variables.title': '环境变量'
+    ,'variables.tab.environment': '系统环境变量'
+    ,'variables.tab.runtime': 'Electron 运行属性'
+    ,'variables.key': '键'
+    ,'variables.value': '值'
+    ,'variables.count': '显示 {count} / {total} 项'
+    ,'variables.scope': '范围'
+    ,'variables.scope.user': '用户变量'
+    ,'variables.scope.system': '系统变量'
+    ,'variables.scope.process': '当前进程'
+    ,'variables.scopeHint.user': '持久写入当前用户；新终端和应用启动后生效'
+    ,'variables.scopeHint.system': '写入全局环境，可能需要管理员授权'
+    ,'variables.scopeHint.process': '完整显示当前环境；编辑后可保存为用户变量或系统变量'
+    ,'variables.targetScope': '保存到'
+    ,'variables.add': '新增'
+    ,'variables.edit': '编辑'
+    ,'variables.addTitle': '新增环境变量'
+    ,'variables.editTitle': '编辑环境变量'
+    ,'variables.applyHint': '保存后会直接修改系统配置。已运行的程序通常需要重启才能读取新值。'
+    ,'variables.confirmDelete': '确定删除环境变量“{key}”吗？'
+    ,'variables.saved': '环境变量已更新'
+    ,'variables.deleted': '环境变量已删除'
+    ,'variables.empty': '暂无变量，点击“新增”创建'
+    ,'runtime.title': '代码运行'
+    ,'runtime.tab.java': 'Java / Groovy'
+    ,'runtime.tab.python': 'Python'
+    ,'runtime.tab.node': 'Node.js'
+    ,'runtime.mode.java': 'Java'
+    ,'runtime.mode.groovy': 'Groovy'
+    ,'runtime.detect': '检测运行时'
+    ,'runtime.detected': '已检测到 {count} 个运行时'
+    ,'runtime.missing': '未检测到 {name}'
+    ,'runtime.format': '格式化'
+    ,'runtime.run': '运行'
+    ,'runtime.stop': '停止'
+    ,'runtime.clear': '清空输出'
+    ,'runtime.history': '运行历史'
+    ,'runtime.editor': '代码编辑器'
+    ,'runtime.output': '控制台输出'
+    ,'runtime.ready': '等待运行代码'
+    ,'runtime.running': '正在运行 {name}…'
+    ,'runtime.completed': '运行完成'
+    ,'runtime.failed': '运行失败'
+    ,'runtime.cancelled': '运行已停止'
+    ,'runtime.timeout': '运行超时'
+    ,'runtime.truncated': '输出超过 2 MB，已截断并停止运行'
+    ,'runtime.command': '命令'
+    ,'runtime.exitCode': '退出码 {code}'
+    ,'runtime.duration': '耗时 {duration} ms'
+    ,'runtime.configure': '请在设置中配置 {name} 运行时路径'
+    ,'runtime.openSettings': '打开运行环境设置'
+    ,'runtime.options': '运行参数'
+    ,'runtime.arguments': '程序参数'
+    ,'runtime.argumentsPlaceholder': '--name "Moo Tool"'
+    ,'runtime.workingDirectory': '工作目录'
+    ,'runtime.defaultWorkingDirectory': '使用隔离的临时目录'
+    ,'quickNote.title': '随手记'
+    ,'quickNote.search': '搜索笔记…'
+    ,'quickNote.searchContent': '搜索正文'
+    ,'quickNote.sort': '排序'
+    ,'quickNote.sort.name': '名称'
+    ,'quickNote.sort.modified': '最近修改'
+    ,'quickNote.sort.created': '创建时间'
+    ,'quickNote.empty': '没有匹配的笔记'
+    ,'quickNote.newNote': '新建笔记'
+    ,'quickNote.newFolder': '新建文件夹'
+    ,'quickNote.expandAll': '展开全部'
+    ,'quickNote.collapseAll': '折叠全部'
+    ,'quickNote.rename': '重命名'
+    ,'quickNote.move': '移动'
+    ,'quickNote.duplicate': '创建副本'
+    ,'quickNote.delete': '删除'
+    ,'quickNote.openVault': '在文件管理器中打开 Vault'
+    ,'quickNote.revealInFinder': '在 Finder 中打开'
+    ,'quickNote.locateCurrent': '定位当前文件'
+    ,'quickNote.save': '保存'
+    ,'quickNote.saved': '笔记已保存'
+    ,'quickNote.unsaved': '有未保存更改'
+    ,'quickNote.find': '查找与替换'
+    ,'quickNote.findPlaceholder': '查找'
+    ,'quickNote.replacePlaceholder': '替换为'
+    ,'quickNote.nextMatch': '下一个匹配项'
+    ,'quickNote.replace': '替换'
+    ,'quickNote.replaceAll': '全部替换'
+    ,'quickNote.noMatches': '未找到匹配内容'
+    ,'quickNote.attachment': '插入图片附件（也可从剪贴板粘贴）'
+    ,'quickNote.clipboardEmpty': '剪贴板中没有可用图片'
+    ,'quickNote.export': '导出选中笔记'
+    ,'vault.batch.export': '导出选中文件'
+    ,'http.sendWindow': '发送并打开响应窗口'
+    ,'http.openResponse': '独立响应窗口'
+    ,'image.batch.title': '图片处理进度'
+    ,'image.batch.cancelling': '正在取消…'
+    ,'image.batch.cancelled': '已取消，保留已完成结果'
+    ,'image.batch.working': '正在处理…'
+    ,'image.batch.finished': '处理完成'
+    ,'image.batch.summary': '已处理 {completed}/{total}，成功 {succeeded}，失败 {failed}'
+    ,'vault.batch.exported': '已导出 {count} 个文件'
+    ,'vault.batch.selected': '已选择 {count} 项'
+    ,'quickNote.info': '文档信息'
+    ,'quickNote.git': 'Git 同步'
+    ,'quickNote.quickReplace': '快速替换'
+    ,'quickNote.view.editor': '编辑'
+    ,'quickNote.view.split': '分栏'
+    ,'quickNote.view.preview': '预览'
+    ,'quickNote.syntax': '语法'
+    ,'quickNote.font': '字体'
+    ,'quickNote.font.system': '系统字体'
+    ,'quickNote.font.mono': '等宽字体'
+    ,'quickNote.font.serif': '衬线字体'
+    ,'quickNote.fontSize': '字号'
+    ,'quickNote.lineSpacing': '行间距'
+    ,'quickNote.wrap': '自动换行'
+    ,'quickNote.hideSidebar': '隐藏笔记侧栏'
+    ,'quickNote.showSidebar': '显示笔记侧栏'
+    ,'quickNote.bulletList': '无序列表'
+    ,'quickNote.numberedList': '有序列表'
+    ,'quickNote.color': '笔记颜色'
+    ,'quickNote.select': '从左侧选择或新建一条笔记'
+    ,'quickNote.editorLabel': '笔记内容'
+    ,'quickNote.confirmDelete': '确定删除“{name}”吗？文件夹必须为空。'
+    ,'quickNote.dialog.createNote': '新建笔记'
+    ,'quickNote.dialog.createFolder': '新建文件夹'
+    ,'quickNote.dialog.rename': '重命名'
+    ,'quickNote.dialog.move': '移动到文件夹'
+    ,'quickNote.dialog.name': '名称'
+    ,'quickNote.dialog.target': '目标文件夹'
+    ,'quickNote.dialog.root': 'Vault 根目录'
+    ,'quickNote.create': '创建'
+    ,'quickNote.apply': '应用'
+    ,'quickNote.path': '路径'
+    ,'quickNote.created': '创建时间'
+    ,'quickNote.modified': '修改时间'
+    ,'quickNote.lines': '行数'
+    ,'quickNote.words': '词数'
+    ,'quickNote.characters': '字符数'
+    ,'quickNote.status': '{lines} 行 · {characters} 字符'
+    ,'quickNote.preview.empty': '切换到 Markdown 语法后可预览格式化内容。'
+    ,'quickNote.quick.trim': '去除首尾空格'
+    ,'quickNote.quick.removeBlankLines': '删除空行'
+    ,'quickNote.quick.removeTabs': '删除 Tab'
+    ,'quickNote.quick.scientificToNormal': '科学计数转普通数字'
+    ,'quickNote.quick.normalToScientific': '普通数字转科学计数'
+    ,'quickNote.quick.thousandsToNormal': '去除千分位'
+    ,'quickNote.quick.normalToThousands': '添加千分位'
+    ,'quickNote.quick.underscoreToCamel': '下划线转驼峰'
+    ,'quickNote.quick.camelToUnderscore': '驼峰转下划线'
+    ,'quickNote.quick.uppercase': '转大写'
+    ,'quickNote.quick.lowercase': '转小写'
+    ,'quickNote.quick.linesToComma': '换行转逗号'
+    ,'quickNote.quick.linesToSingleQuoted': '换行转单引号列表'
+    ,'quickNote.quick.linesToDoubleQuoted': '换行转双引号列表'
+    ,'quickNote.quick.commaToLines': '逗号转换行'
+    ,'quickNote.quick.tabsToLines': 'Tab 转换行'
+    ,'quickNote.quick.clearNewlines': '清除换行'
+    ,'quickNote.quick.deduplicateLines': '按行去重'
+    ,'quickNote.quick.deduplicateWithCount': '按行去重并计数'
+    ,'quickNote.quick.escape': '转义文本'
+    ,'quickNote.quick.unescape': '还原转义'
+    ,'quickNote.quick.reverseLines': '反转行顺序'
+    ,'quickNote.quick.sortAscending': '按行升序'
+    ,'quickNote.quick.sortDescending': '按行降序'
+    ,'quickNote.git.title': '随手记 Vault Git'
+    ,'quickNote.git.defaultMessage': 'MooTool 随手记检查点'
+    ,'hardware.title': '系统信息'
+    ,'hardware.tab.system': '系统'
+    ,'hardware.tab.cpu': '处理器'
+    ,'hardware.tab.memory': '内存'
+    ,'hardware.tab.storage': '存储'
+    ,'hardware.tab.network': '网络'
+    ,'hardware.loading': '正在收集系统信息…'
+    ,'hardware.empty': '没有可显示的信息'
+    ,'hardware.group.operatingSystem': '操作系统'
+    ,'hardware.group.processor': '处理器'
+    ,'hardware.group.physicalMemory': '物理内存'
+    ,'hardware.label.platform': '平台'
+    ,'hardware.label.distribution': '发行版'
+    ,'hardware.label.kernel': '内核'
+    ,'hardware.label.architecture': '架构'
+    ,'hardware.label.hostName': '主机名'
+    ,'hardware.label.serial': '序列号'
+    ,'hardware.label.manufacturer': '制造商'
+    ,'hardware.label.model': '型号'
+    ,'hardware.label.uptime': '运行时间'
+    ,'hardware.label.timeZone': '时区'
+    ,'hardware.label.brand': '品牌'
+    ,'hardware.label.vendor': '供应商'
+    ,'hardware.label.family': '系列'
+    ,'hardware.label.physicalCores': '物理核心'
+    ,'hardware.label.logicalCores': '逻辑核心'
+    ,'hardware.label.performanceCores': '性能核心'
+    ,'hardware.label.efficiencyCores': '能效核心'
+    ,'hardware.label.baseSpeed': '基础频率'
+    ,'hardware.label.maximumSpeed': '最高频率'
+    ,'hardware.label.currentLoad': '当前负载'
+    ,'hardware.label.total': '总计'
+    ,'hardware.label.used': '已用'
+    ,'hardware.label.available': '可用'
+    ,'hardware.label.active': '活跃'
+    ,'hardware.label.usage': '使用率'
+    ,'hardware.label.swapTotal': '交换空间总计'
+    ,'hardware.label.swapUsed': '交换空间已用'
+    ,'hardware.label.device': '设备'
+    ,'hardware.label.type': '类型'
+    ,'hardware.label.interface': '接口'
+    ,'hardware.label.capacity': '容量'
+    ,'hardware.label.filesystem': '文件系统'
+    ,'hardware.label.ipv4': 'IPv4'
+    ,'hardware.label.ipv6': 'IPv6'
+    ,'hardware.label.mac': 'MAC'
+    ,'hardware.label.mtu': 'MTU'
+    ,'hardware.label.speed': '速度'
+    ,'hardware.label.status': '状态'
+    ,'hardware.label.received': '接收'
+    ,'hardware.label.sent': '发送'
+    ,'app.nav.messageBoard': '留言板'
+    ,'messageBoard.title': '留言板'
+    ,'messageBoard.message': '留言内容'
+    ,'messageBoard.placeholder': '输入要展示的留言…'
+    ,'messageBoard.messageHint': '支持换行，字号会自动调整以完整展示。'
+    ,'messageBoard.presets': '常用留言'
+    ,'messageBoard.style': '版式与色彩'
+    ,'messageBoard.size': '字号'
+    ,'messageBoard.alignment': '文字对齐'
+    ,'messageBoard.alignLeft': '左对齐'
+    ,'messageBoard.alignCenter': '居中对齐'
+    ,'messageBoard.display': '沉浸展示'
+    ,'messageBoard.exitDisplay': '退出展示'
+    ,'messageBoard.exitHint': 'Esc 退出'
+    ,'messageBoard.empty': '请在左侧输入留言'
+    ,'messageBoard.badge': '重要留言'
+    ,'messageBoard.badgeEnglish': 'Message board'
+    ,'messageBoard.footer': 'MooTool · 把重要的话说大一点'
+    ,'messageBoard.preset.away': '离开一会，马上回来'
+    ,'messageBoard.preset.closed': '暂停营业'
+    ,'messageBoard.preset.rest': '今日休息'
+    ,'messageBoard.preset.busy': '请勿打扰'
+    ,'messageBoard.preset.meeting': '会议进行中'
+    ,'messageBoard.preset.quiet': '正在直播，请保持安静'
+    ,'messageBoard.preset.maintenance': '设备维护中'
+    ,'messageBoard.preset.call': '有事请电话联系'
+    ,'messageBoard.theme.sunbeam': '晴光'
+    ,'messageBoard.theme.coral': '珊瑚'
+    ,'messageBoard.theme.cobalt': '钴蓝'
+    ,'messageBoard.theme.forest': '森林'
+    ,'messageBoard.theme.paper': '纸张'
+    ,'messageBoard.theme.midnight': '午夜'
+    ,'messageBoard.keepAwake': '屏幕常亮'
+  },
+  'en-US': {
+    'common.toast.copyError': 'Copy error details',
+    'settings.escapeHidesWindow': 'Hide window with Esc',
+    'settings.escapeHidesWindowHint': 'On by default. Detached tools dock and HTTP response windows close. Dialogs, menus and find controls handle Esc first.',
+    'json.empty.title': 'Start with a JSON snippet',
+    'json.empty.description': 'Select a snippet on the left, or create or import one to start editing. Importing keeps the source file unchanged.',
+    'json.empty.import': 'Import file',
+    'json.empty.example': 'Create from example',
+    'pdf.status.cancelled': 'Cancelled',
+    'pdf.cancelling': 'Cancelling…',
+    'pdf.openOutput': 'Open file',
+    'pdf.revealOutput': 'Show in folder',
+    'pdf.copyOutput': 'Copy path',
+    'app.nav.filePreview': 'Quick File Preview',
+    'filePreview.choose': 'Choose files',
+    'filePreview.previous': 'Previous file',
+    'filePreview.next': 'Next file',
+    'filePreview.batch': 'Files in this batch',
+    'filePreview.empty': 'Drop files to preview',
+    'filePreview.hint': 'Text, JSON, images or PDF · Select multiple files at once',
+    'filePreview.footer': 'Read-only · Left/Right to switch files · Each selection or drop replaces the batch',
+    'filePreview.drop': 'Release to preview these files',
+    'filePreview.batchLimit': 'Up to 100 files per batch. Select fewer files and retry. Your current batch is retained.',
+    'filePreview.tooLarge': 'This file exceeds the preview limit for its type ({limit}). Choose a smaller file.',
+    'filePreview.unsupported': 'Content preview is unavailable for this type. You can switch to another file.',
+    'filePreview.kind.text': 'Text',
+    'filePreview.kind.json': 'JSON',
+    'filePreview.kind.image': 'Image',
+    'filePreview.kind.pdf': 'PDF',
+    'filePreview.kind.unsupported': 'Other file',
+    'filePreview.encoding': 'Encoding',
+    'filePreview.autoEncoding': 'Auto (UTF-8 / UTF-16 BOM)',
+    'filePreview.wrap': 'Wrap lines',
+    'filePreview.findShortcut': 'Find in file (⌘F / Ctrl+F)',
+    'filePreview.formatJson': 'Format JSON',
+    'filePreview.invalidJson': 'Invalid JSON, showing original text',
+    'filePreview.readOnly': 'Read-only',
+    'filePreview.text': 'File content preview',
+    'filePreview.fit': 'Fit width',
+    'filePreview.fitImage': 'Fit window',
+    'filePreview.zoomOut': 'Zoom out',
+    'filePreview.zoomIn': 'Zoom in',
+    'filePreview.previousPage': 'Previous page',
+    'filePreview.nextPage': 'Next page',
+    'filePreview.page': 'Page',
+    'filePreview.pdfPage': 'PDF page {page}',
+    'filePreview.error.binary': 'This file contains binary data and cannot be previewed as text.',
+    'filePreview.error.encoding': 'Cannot decode using this encoding. Try another; GB18030 supports legacy Chinese text.',
+    'filePreview.error.tooLarge': 'This file exceeds the preview limit.',
+    'filePreview.error.unreadable': 'Cannot read this file. Select it again.',
+    'filePreview.error.image': 'Cannot decode this image. Check its format or whether it is damaged.',
+    'filePreview.error.pdf': 'Cannot display this PDF. Check whether it is damaged.',
+    'filePreview.error.password': 'This PDF requires a password. Encrypted previews are not supported yet.',
+    'app.nav.batchRename': 'Batch Rename',
+    'batchRename.selectFiles': 'Select files',
+    'batchRename.conflicts': 'This batch has conflicts and cannot run. Change rules or deselect conflicting files, then preview again.',
+    'batchRename.find': 'Find text',
+    'batchRename.replacement': 'Replace with',
+    'batchRename.prefix': 'Prefix',
+    'batchRename.suffix': 'Suffix',
+    'batchRename.caseSensitive': 'Case sensitive',
+    'batchRename.preserveExtension': 'Keep extension',
+    'batchRename.numbering': 'Sequential numbering',
+    'batchRename.start': 'Starting number',
+    'batchRename.width': 'Number width',
+    'batchRename.separator': 'Number separator',
+    'batchRename.preview': 'Preview rename',
+    'batchRename.execute': 'Rename files',
+    'batchRename.undo': 'Undo last batch',
+    'batchRename.recover': 'Recover unfinished operation',
+    'batchRename.oldName': 'Original name',
+    'batchRename.newName': 'New name',
+    'batchRename.status': 'Status',
+    'batchRename.selectAll': 'Select all files',
+    'batchRename.empty': 'Select files and configure rules to preview names and conflicts.',
+    'batchRename.counts': '{selected} selected · {changed} to rename',
+    'batchRename.complete': 'Renamed {count} files. The last batch can be undone.',
+    'batchRename.restored': 'Restored the names of {count} files.',
+    'batchRename.recoveryHint': 'The last operation is unfinished. Click Recover unfinished operation to retry. Recovery record:',
+    'batchRename.help': 'Up to 500 regular files · Literal text replacement · No directory recursion · Re-preview changed rules · Undo retained until the next successful batch',
+    'batchRename.status.ready': 'Ready',
+    'batchRename.status.unchanged': 'Unchanged',
+    'batchRename.status.conflict': 'Conflict',
+    'batchRename.issue.invalidName': 'Invalid filename',
+    'batchRename.issue.duplicate': 'Duplicate new name',
+    'batchRename.issue.occupied': 'Name already exists',
+    'batchRename.issue.changed': 'File moved or replaced',
+    'batchRename.issue.sameFile': 'Names refer to the same file',
+    'batchRename.error.options': 'Invalid rules: text up to 120 characters, start 0–1000000, width 1–8.',
+    'batchRename.error.busy': 'A file operation is in progress. Try again later.',
+    'batchRename.error.limit': 'Select at most 500 files per batch.',
+    'batchRename.error.file': 'Select existing regular files. Directories and symbolic links are unsupported.',
+    'batchRename.error.selection': 'Invalid file selection. Select the files again.',
+    'batchRename.error.recovery': 'Recovery is unfinished. File mappings are retained. Resolve name conflicts and retry recovery.',
+    'batchRename.error.preview': 'Preview expired. Build a new preview.',
+    'batchRename.error.undo': 'No rename operation is available to undo.',
+    'batchRename.error.changed': 'A file moved or was replaced. The operation stopped. Select and preview again.',
+    'batchRename.error.occupied': 'A destination name is occupied. The operation stopped without replacing that file.',
+    'batchRename.error.unsupported': 'The filesystem does not support hard links, or write permission is missing. Original names have been restored.',
+    'batchRename.error.journal': 'Cannot read the recovery record. Preserve file-operations/batch-rename-journal.json in the app data directory for inspection.',
+    'app.command.section.pinned': 'Pinned actions',
+    'app.command.section.recent': 'Recently run',
+    'app.command.section.all': 'All actions',
+    'app.command.section.tools': 'Tools',
+    'app.command.pin': 'Pin action',
+    'app.command.unpin': 'Unpin action',
+    'app.command.pinned': 'Pinned',
+    'app.command.clearRecent': 'Clear recent actions',
+    'app.command.preferencesFailed': 'Could not read or save command palette preferences. Please try again.',
+    'settings.globalShortcut.title': 'Global command palette',
+    'settings.globalShortcut.enable': 'Enable global command palette shortcut',
+    'settings.globalShortcut.description': 'Open the palette from other apps while MooTool runs in the background. Save a changed combination to apply it immediately.',
+    'settings.globalShortcut.combination': 'Global shortcut combination',
+    'settings.globalShortcut.example': 'For example Ctrl+Alt+Space, or Cmd+Shift+Space on macOS. Default: ⌘⇧Space on macOS, Ctrl+Shift+Space on Windows/Linux.',
+    'settings.globalShortcut.reset': 'Restore default combination',
+    'settings.globalShortcut.retry': 'Retry registration',
+    'settings.globalShortcut.disabled': 'Global shortcut is disabled. In-app search and the tray entry remain available.',
+    'settings.globalShortcut.registered': 'Global shortcut enabled: {shortcut}',
+    'settings.globalShortcut.invalid': 'Enter a modifier and key combination, such as Ctrl+Alt+Space. Shift alone and unmodified keys are unsupported.',
+    'settings.globalShortcut.conflict': 'This combination conflicts with MooTool search, settings, or editor shortcuts. Choose another combination.',
+    'settings.globalShortcut.unavailable': 'Could not register the shortcut. The system or another app may be using it. Change the combination or retry.',
+    'app.command.uuid': 'Generate UUID',
+    'app.command.timestamp': 'Timestamp to date',
+    'app.command.jsonFormat': 'Format JSON',
+    'app.command.jsonMinify': 'Minify JSON',
+    'app.command.base64Encode': 'Base64 encode',
+    'app.command.base64Decode': 'Base64 decode',
+    'app.command.urlEncode': 'URL encode',
+    'app.command.urlDecode': 'URL decode',
+    'app.command.deduplicate': 'Deduplicate lines',
+    'app.command.clipboardText': "Clipboard plain text",
+    'app.command.clipboardHtml': "Clipboard HTML source",
+    'app.command.htmlMarkdown': "Rich text to Markdown",
+    'app.command.tableJson': "Table to JSON",
+    'app.command.richClipboard': "Read clipboard rich text and preview",
+    'app.command.fileFormat': "Save file format",
+    'app.command.save': "Save as file",
+    'app.command.importJson': 'Import to JSON workspace',
+    'app.command.importNote': 'Import to Quick Note',
+    'app.command.importFailed': 'Could not import. Please try again.',
+    'app.command.saved': "File saved",
+    'app.command.saveFailed': "Could not save. Try again or copy the result and save it manually.",
+    'app.command.invalidJsonSave': "The preview is not valid JSON. Choose another file format or run a JSON conversion first.",
+    'app.command.noHtml': "The clipboard has no HTML. Copy rich text first.",
+    'app.command.invalidTable': "A table needs a header and at least one data row, matching column counts and balanced quotes.",
+    'app.command.tableHeaders': "Table headers must be non-empty and unique. Edit the first row and try again.",
+    'app.command.tableLimit': "Tables support up to 200 columns and 5000 data rows.",
+    'app.command.unsupportedTable': "Merged cells and nested tables are not supported. Flatten the table first.",
+    'app.command.complexHtml': "The HTML structure is too complex. Copy a smaller selection and try again.",
+    'app.command.action': 'Run action',
+    'app.command.tool': 'Open tool',
+    'app.command.clipboard': 'Read clipboard and preview',
+    'app.command.inline': 'Process input and preview',
+    'app.command.noInput': 'Generate and preview',
+    'app.command.preview': 'Result preview',
+    'app.command.copy': 'Copy result',
+    'app.command.copied': 'Result copied',
+    'app.command.back': 'Back to search',
+    'app.command.hint': '↑ ↓ Select · Enter Run · Esc Close; try uuid or timestamp 1728000000',
+    'app.command.previewHint': 'Enter Copy result · Esc Back to search',
+    'app.command.invalidBase64': 'Enter valid UTF-8 Base64 text.',
+    'app.command.invalidUrl': 'The URL contains an invalid percent escape.',
+    'app.command.tooLarge': 'Input cannot exceed 100,000 characters.',
+    'app.command.emptyInput': 'No text to process. Copy content or type text after the command.',
+    'app.command.clipboardFailed': 'Cannot read the clipboard. Type text after the command instead.',
+    'app.command.copyFailed': 'Copy failed. Try again or copy the result manually.',
+    'common.toast.dismiss': 'Dismiss notification',
+    'common.resizePane': 'Resize panes',
+    'common.loading': 'Loading…',
+    'common.close': 'Close',
+    'common.cancel': 'Cancel',
+    'common.confirm': 'Confirm action',
+    'findReplace.find': 'Find',
+    'findReplace.findPlaceholder': 'Find',
+    'findReplace.replacePlaceholder': 'Replace with',
+    'findReplace.replace': 'Replace',
+    'findReplace.replaceAll': 'Replace all',
+    'findReplace.regex': 'Use regex',
+    'findReplace.matchCase': 'Match case',
+    'findReplace.wholeWord': 'Whole word',
+    'findReplace.foundPrefix': 'Found:',
+    'findReplace.replacedPrefix': 'Replaced:',
+    'findReplace.previous': 'Previous occurrence',
+    'findReplace.next': 'Next occurrence',
+    'findReplace.noMatches': 'No matches found',
+    'findReplace.wrappedToStart': 'Reached the last match; continuing from the first',
+    'findReplace.wrappedToEnd': 'Reached the first match; continuing from the last',
+    'app.nav.tools': 'Tool navigation',
+    'app.nav.home': 'MooTool',
+    'app.nav.quickNote': 'Quick Note',
+    'app.nav.textDiff': 'Text Diff',
+    'app.nav.reformat': 'Reformat',
+    'app.nav.json': 'JSON',
+    'app.nav.java': 'Code Runner',
+    'app.nav.ymlProperties': 'Config Converter',
+    'app.nav.protobuf': 'Protobuf',
+    'app.nav.variables': 'Environment',
+    'app.nav.host': 'Host',
+    'app.nav.net': 'Network/IP',
+    'app.nav.uaParse': 'UA Parser',
+    'app.nav.timeConvert': 'Time',
+    'app.nav.translation': 'Translation',
+    'app.nav.calculator': 'Calculator',
+    'app.nav.hardware': 'System Info',
+    'app.nav.encode': 'Encode',
+    'app.nav.crypto': 'Crypto/Random',
+    'app.nav.qrCode': 'QR Code',
+    'app.nav.http': 'HTTP',
+    'app.nav.diff': 'Text Diff',
+    'app.nav.regex': 'Regex',
+    'app.nav.colorBoard': 'Color Board',
+    'app.nav.image': 'Images',
+    'app.nav.pdf': 'PDF',
+    'app.nav.cron': 'Cron',
+    'app.group.text': 'Notes & Text',
+    'app.group.dev': 'Development & Format',
+    'app.group.network': 'Network & Requests',
+    'app.group.encode': 'Encoding & Crypto',
+    'app.group.daily': 'Utilities',
+    'app.group.system': 'System',
+    'app.nav.recent': 'Recent',
+    'app.nav.settings': 'Settings',
+    'app.nav.search': 'Search',
+    'app.nav.collapse': 'Collapse sidebar',
+    'app.nav.expand': 'Expand sidebar',
+    'app.nav.manageGroups': 'Manage groups',
+    'app.group.all': 'All tools',
+    'app.group.manage.title': 'Manage tool groups',
+    'app.group.manage.new': 'New group',
+    'app.group.manage.defaultName': 'New group {number}',
+    'app.group.manage.empty': 'No custom groups yet. Select New group to create one.',
+    'app.group.manage.name': 'Group name',
+    'app.group.manage.tools': 'Choose tools',
+    'app.group.manage.delete': 'Delete group',
+    'app.group.manage.deleteConfirm': 'Delete the group “{name}”?',
+    'app.group.manage.nameRequired': 'Enter a group name.',
+    'app.group.manage.toolRequired': 'Select at least one tool.',
+    'app.group.manage.saveFailed': 'Could not save groups',
+    'app.recent.empty': 'No recent tools',
+    'app.search.title': 'Command palette',
+    'app.search.placeholder': 'Search tools, actions, or type a command…',
+    'app.search.empty': 'No matching tools',
+    'app.search.close': 'Close search',
+    'app.home.website': 'Open the MooTool website',
+    'app.home.tagline': 'Handy desktop toolset for developers',
+    'app.home.author': 'Proudly by RememBerBer Zhou Bo',
+    'app.home.about.title': 'About',
+    'app.home.about.line1': 'Hi! Thanks for using MooTool. "Moo" is named after my daughter.',
+    'app.home.about.lineDaily': 'I keep building and improving MooTool to support my own day-to-day development work.',
+    'app.home.about.line2': 'Fewer Java developers build with Swing nowadays, but I still enjoy it.',
+    'app.home.about.line2Note': 'Though the version you are using now is no longer the Swing edition 😛',
+    'app.home.about.line3': 'So in every bit of free time, I kept working on this project.',
+    'app.home.about.line4': 'I finally shipped something, though many similar tools exist on the web.',
+    'app.home.about.line5': 'Hope you enjoy using it as much as I enjoyed building it.',
+    'app.home.source.title': 'Code',
+    'app.home.help.title': 'Help us improve',
+    'app.home.help.issue': 'Report an issue or share an idea',
+    'app.home.thanks.title': 'Thanks to',
+    'app.home.otherWorks.title': 'Other works',
+    'app.home.wePush.desc': 'A lightweight tool focused on batch messaging',
+    'app.home.mooInfo.desc': 'Visual OSHI implementation for system and hardware information',
+    'app.home.sponsor.title': 'Sponsor',
+    'app.home.sponsor.prompt': 'Buy me a coffee',
+    'app.home.sponsor.tip': 'Thank you for your support',
+    'app.home.contributors.title': 'Contributors',
+    'app.home.contributors.thanks': 'Thank you to everyone who has contributed to MooTool.',
+    'app.placeholder': 'This tool page will follow the JSON workbench structure.',
+    'toolWindow.detach': 'Open in a separate window',
+    'toolWindow.dock': 'Return to workspace',
+    'toolWindow.detachTool': 'Open {tool} in a separate window',
+    'toolWindow.dockTool': 'Return {tool} to the workspace',
+    'toolWindow.focus': 'Find window',
+    'toolWindow.detachedTitle': '{tool} is open in a separate window',
+    'toolWindow.detachedDescription': 'Close the separate window to return this tool here automatically.',
+    'toolWindow.updateNotesTitle': 'You\'re viewing what\'s new',
+    'toolWindow.updateNotesDescription': 'Move the pointer away to return to {tool}. Your work will stay right where it was.',
+    'pdf.phase.reading': 'Reading PDFs',
+    'pdf.phase.processing': 'Processing PDFs',
+    'pdf.phase.saving': 'Saving PDFs',
+    'toolWindow.crashed': 'The tool page exited unexpectedly',
+    'toolWindow.recoveryDetail': 'Automatic recovery failed. Reload to restore saved drafts. Unsaved changes may have been lost.',
+    'toolWindow.reload': 'Reload',
+    'toolWindow.invalid': 'This tool window could not be opened.',
+    'settings.title': 'Settings',
+    'settings.close': 'Close settings',
+    'settings.back': 'Back to workspace',
+    'settings.saveFailed': 'Failed to save settings',
+    'settings.language': 'Language',
+    'settings.category.general': 'General',
+    'settings.category.appearance': 'Appearance',
+    'settings.category.layout': 'Layout & Habits',
+    'settings.category.editor': 'Editor',
+    'settings.category.network': 'Network',
+    'settings.category.data': 'Data & Backup',
+    'settings.category.vault': 'Vault',
+    'settings.category.runtime': 'Runtimes',
+    'settings.ai.delete': "Delete",
+    'settings.ai.repair': "Repair / update",
+    'settings.ai.uninstall': "Uninstall selected integration",
+    'settings.ai.removed': "Selected integration removed. Reload your client.",
+    'settings.ai.uninstallHint': "Removes only MooTool-managed content for the selected client and mode. Other configuration, documents and user edits are preserved.",
+    'settings.ai.state.not-installed': "Not installed",
+    'settings.ai.state.installed': "Installed",
+    'settings.ai.state.needs-repair': "Needs repair / update",
+    'settings.ai.state.conflict': "User edits or configuration conflict",
+    'settings.ai.dataTitle': "Read-only vault access",
+    'settings.ai.dataHint': "Off by default. Enable AI searches and reads for each vault. Disabling takes effect on the next call; changing vault locations revokes access.",
+    'settings.ai.access.notes': "Allow reading Quick Notes",
+    'settings.ai.access.json': "Allow reading JSON documents",
+    'settings.category.ai': "AI integration",
+    'settings.ai.title': "Use MooTool with AI",
+    'settings.ai.description': "Install local MooTool capabilities for Codex, Claude Code or Cursor in one click.",
+    'settings.ai.scope': "JSON, encoding, timestamps, text diffs, hashes and UUIDs, plus optional read-only access to Quick Notes and JSON documents.",
+    'settings.ai.client': "AI client",
+    'settings.ai.mode': "Integration",
+    'settings.ai.skillHint': "The Skill can call the bundled tools independently, with no separate Node.js installation.",
+    'settings.ai.mcpHint': "The client starts MCP automatically, even with the MooTool window closed. Installation tests the server first, preserves existing configuration and creates backups.",
+    'settings.ai.install': "Install in one click",
+    'settings.ai.installed': "Installed",
+    'settings.ai.test': "Test connection",
+    'settings.ai.refresh': "Refresh preview",
+    'settings.ai.restart': "Installed. Restart your AI client or reload MCP / Skills. Your client may also ask you to enable the tools.",
+    'settings.ai.backups': "Original configuration backups",
+    'settings.ai.connected': "Connected and tool call verified. {count} tools available.",
+    'settings.ai.preview': "Installation paths and added content",
+    'settings.ai.create': "Create",
+    'settings.ai.update': "Merge",
+    'settings.ai.unchanged': "Already present",
+    'settings.ai.copy': "Copy MCP configuration (other clients)",
+    'settings.ai.copied': "MCP configuration copied",
+    'settings.category.tools': 'Tool Defaults',
+    'settings.category.shortcuts': 'Shortcuts',
+    'settings.category.about': 'About & Updates',
+    'settings.group.application': 'Application Behavior',
+    'settings.group.theme': 'Theme & Type',
+    'settings.group.navigation': 'Tool Navigation',
+    'settings.group.editor': 'Editing',
+    'settings.group.proxy': 'HTTP Proxy',
+    'settings.group.timeouts': 'Timeouts and Cancellation',
+    'settings.group.storage': 'Data Directory',
+    'settings.group.backup': 'Local Backup',
+    'settings.backup.all': 'Full Backup',
+    'settings.backup.database': 'Data File',
+    'settings.backup.settings': 'Settings File',
+    'settings.backup.images': 'Image Directory',
+    'settings.backup.export': 'Export',
+    'settings.backup.open': 'Open Folder',
+    'settings.backup.success': 'Backup exported',
+    'settings.group.migration': 'Legacy Data Migration',
+    'settings.migration.source': 'Java data directory',
+    'settings.migration.scan': 'Scan',
+    'settings.migration.ready': '{count} items are ready to migrate',
+    'settings.migration.databaseFound': 'Database found',
+    'settings.migration.databaseMissing': 'Legacy database not found',
+    'settings.migration.configFound': 'Settings found',
+    'settings.migration.configMissing': 'Legacy settings not found',
+    'settings.migration.import': 'Start Migration',
+    'settings.migration.importing': 'Migrating…',
+    'settings.migration.confirmTitle': 'Migrate Java Data',
+    'settings.migration.confirmBody': 'Migrate {count} items. MooTool Next creates a full backup first and does not modify the Java source files.',
+    'settings.migration.success': 'Migrated {count} items',
+    'settings.migration.alreadyMigrated': 'This source has already been migrated',
+    'settings.migration.warning.remotes': 'The two legacy Vaults use different remotes, so remote URLs will not be merged automatically.',
+    'settings.migration.warning.secrets': 'Proxy passwords and Git tokens were skipped. Save them again securely in Settings.',
+    'app.migrationHint.title': 'Migrate Java Data',
+    'app.migrationHint.body': 'If you previously used the Java edition of MooTool, you can migrate your data in Settings → Data & Backup. Migration does not modify or delete the original Java data.',
+    'app.migrationHint.openSettings': 'Open Settings',
+    'app.migrationHint.dismiss': 'Got it',
+    'settings.group.vaultPaths': 'Vault Paths',
+    'settings.group.git': 'Git Sync',
+    'settings.group.runtimes': 'Local Runtimes',
+    'settings.group.toolDefaults': 'Default Parameters',
+    'settings.group.shortcuts': 'Application Shortcuts',
+    'settings.autoCheckUpdates': 'Check for updates at startup',
+    'settings.autoDownloadUpdates': 'Download new versions silently',
+    'settings.startMaximized': 'Start maximized',
+    'settings.trayEnabled': 'Enable system tray',
+    'settings.closeBehavior': 'When closing the main window',
+    'settings.close.ask': 'Ask each time',
+    'settings.close.hide': 'Hide',
+    'settings.close.quit': 'Quit',
+    'settings.interfaceStyle': 'Interface style',
+    'settings.interfaceStyle.modern': 'Modern',
+    'settings.interfaceStyle.quiet': 'Quiet',
+    'settings.interfaceStyle.hero': 'Hero (NextUI)',
+    'settings.interfaceStyle.smartisan': 'Smartisan OS',
+    'settings.interfaceStyle.miuiV5': 'MIUI V5',
+    'settings.interfaceStyle.claude': 'Claude',
+    'settings.theme': 'Color mode',
+    'settings.theme.system': 'System',
+    'settings.windowMaterial': 'Window material',
+    'settings.windowMaterial.current': 'Current material',
+    'settings.windowMaterial.pending': 'Changes saved. Restart the app to apply.',
+    'settings.windowMaterial.reason.accessibility': 'Solid surfaces requested by accessibility preferences',
+    'settings.windowMaterial.reason.platform': 'Solid surfaces on this platform',
+    'settings.windowMaterial.reason.system-version': 'Vibrancy on this macOS version',
+    'settings.windowMaterial.reason.extension': 'Native glass unavailable; using fallback',
+    'settings.windowMaterial.reason.native-failure': 'Native material unavailable; using solid',
+    'settings.windowMaterial.reason.initializing': 'Detecting window material',
+    'settings.windowMaterial.auto': 'Automatic',
+    'settings.windowMaterial.solid': 'Solid',
+    'settings.windowMaterial.vibrancy': 'Vibrancy',
+    'settings.windowMaterial.hint': 'Applies on next launch. Liquid Glass requires macOS 26+; falls back to vibrancy, or solid on other systems. Reduced transparency and high contrast use solid surfaces.',
+    'settings.theme.light': 'Light',
+    'settings.theme.dark': 'Dark',
+    'settings.accentColor': 'Accent color',
+    'settings.fontSize': 'Global font size',
+    'settings.unifiedBackground': 'Unified workspace background',
+    'settings.navigationStyle': 'Navigation style',
+    'settings.navigation.classic': 'Classic',
+    'settings.navigation.card': 'Cards',
+    'settings.navigation.grouped': 'Grouped',
+    'settings.navigation.toolsTitle': 'Sidebar tool list',
+    'settings.navigation.toolsDescription': 'Choose which items appear under All tools. MooTool, search, recent tools, and custom groups are not affected.',
+    'settings.navigation.showAll': 'Show all',
+    'settings.navigation.hideAll': 'Hide all',
+    'settings.showRecent': 'Show recent tools',
+    'settings.compactNavigation': 'Compact navigation',
+    'settings.showSeparators': 'Show separators',
+    'settings.hideNavigationTitles': 'Hide navigation titles',
+    'settings.sqlDialect': 'SQL dialect',
+    'settings.jsonFontSize': 'JSON font size',
+    'settings.quickNoteFontSize': 'Quick Note font size',
+    'settings.softWrap': 'Wrap editor lines',
+    'settings.proxyEnabled': 'Use HTTP proxy',
+    'settings.proxyHost': 'Host',
+    'settings.proxyPort': 'Port',
+    'settings.proxyUsername': 'Username',
+    'settings.proxyPassword': 'Password',
+    'settings.requestTimeout': 'HTTP request timeout (ms)',
+    'settings.translationTimeout': 'Translation timeout (ms)',
+    'settings.dataDirectory': 'Data directory',
+    'settings.quickNoteVault': 'Quick Note Vault',
+    'settings.jsonVault': 'JSON Vault',
+    'settings.gitRemote': 'Remote repository',
+    'settings.gitUsername': 'Git username',
+    'settings.gitToken': 'Git personal token',
+    'settings.autoCommit': 'Create Git checkpoints automatically',
+    'settings.autoCommitIdleSeconds': 'Checkpoint after editing idle (seconds)',
+    'settings.autoCommitInactiveSeconds': 'Checkpoint after window inactive (seconds)',
+    'settings.autoPullMinutes': 'Auto-pull interval (minutes)',
+    'settings.hideGitignoredFiles': 'Hide files matched by .gitignore',
+    'settings.runtime.detect': 'Detect again',
+    'settings.runtime.notFound': 'Not found',
+    'settings.runtime.auto': 'Find automatically from the system',
+    'settings.runtime.path': 'path',
+    'settings.qrCodeSize': 'QR code size',
+    'settings.qrErrorCorrection': 'QR error correction',
+    'settings.randomStringLength': 'Random string length',
+    'settings.exportDirectory': 'Default export directory',
+    'settings.translationProvider': 'Default translator',
+    'settings.translationSource': 'Default source language',
+    'settings.translationTarget': 'Default target language',
+    'settings.shortcut.search': 'Search tools',
+    'settings.shortcut.settings': 'Open settings',
+    'settings.chooseDirectory': 'Choose directory',
+    'settings.version': 'Version {version}',
+    'settings.update.check': 'Check for Updates',
+    'settings.update.checking': 'Checking…',
+    'settings.update.latest': 'MooTool is up to date',
+    'settings.update.available': 'Version {version} is available',
+    'settings.update.failed': 'Update check failed. Try again later.',
+    'settings.update.target': '{product} · {platform}/{architecture}',
+    'settings.update.download': 'Download Update',
+    'settings.update.downloading': 'Downloading in background {percent}%',
+    'settings.update.ready': 'Version {version} is ready',
+    'settings.update.whatsNew': 'What\'s new',
+    'settings.update.installRestart': 'Install and Restart',
+    'settings.update.manualInstall': 'Update downloaded — open the DMG to install',
+    'settings.update.openDownloaded': 'Open DMG',
+    'settings.update.downloadFailed': 'The update download failed. Try again later.',
+    'settings.update.installFailed': 'Could not start the update installer. Try again later.',
+    'settings.update.noDownload': 'No installer matches this device yet. Check the release page.',
+    'settings.update.openRelease': 'Open Releases',
+    'settings.update.project': 'Project Page',
+    'settings.secret.stored': 'Stored securely',
+    'settings.secret.saved': 'Sensitive value stored securely',
+    'settings.secret.save': 'Save',
+    'settings.secret.clear': 'Clear',
+    'settings.secret.unavailable': 'Secure system storage is unavailable',
+    'history.title': 'History',
+    'history.search': 'Search history…',
+    'history.empty': 'No history yet',
+    'history.clearAll': 'Clear all',
+    'history.confirmClear': 'Clear all history for this tool?',
+    'history.copyInput': 'Copy input',
+    'history.copyOutput': 'Copy output',
+    'history.delete': 'Delete record',
+    'json.title': 'JSON Workbench',
+    'json.editor.label': 'JSON editor',
+    'json.valid.idle': 'Waiting for JSON input',
+    'json.valid.ok': 'Valid JSON · {type}',
+    'json.valid.error': 'Failed to parse JSON',
+    'json.error.empty': 'Enter JSON content',
+    'json.error.notString': 'Current content is not a JSON string',
+    'json.error.duplicateKeys': 'Duplicate keys found: {paths}',
+    'json.error.emptyXml': 'Enter XML content',
+    'json.error.emptyPath': 'Enter a JSON Path',
+    'json.error.objectRequired': 'This operation requires a JSON object',
+    'json.error.emptyJavaBean': 'Enter JavaBean class code',
+    'json.error.noJavaFields': 'No convertible Java fields found',
+    'json.action.format': 'Format',
+    'json.action.compress': 'Minify',
+    'json.font': 'Font',
+    'json.action.wrap': 'Enable soft wrap',
+    'json.action.nowrap': 'Disable soft wrap',
+    'json.action.copy': 'Copy',
+    'json.action.copied': 'Copied',
+    'json.action.clear': 'Clear',
+    'json.action.find': 'Find',
+    'json.action.import': 'Import',
+    'json.action.export': 'Export',
+    'json.action.history': 'History',
+    'json.action.more': 'More tools',
+    'json.action.escape': 'Escape JSON string',
+    'json.action.unescape': 'Unescape JSON string',
+    'json.action.escapeText': 'Escape text',
+    'json.action.unescapeText': 'Unescape text',
+    'json.action.jsonToXml': 'JSON to XML',
+    'json.action.xmlToJson': 'XML to JSON',
+    'json.action.beanToJson': 'JavaBean to JSON',
+    'json.action.jsonToBean': 'JSON to JavaBean',
+    'json.action.swap': 'Swap Key / Value',
+    'json.notice.formatted': 'Formatted',
+    'json.notice.compressed': 'Minified',
+    'json.notice.copied': 'Copied to clipboard',
+    'json.notice.copyFailed': 'Copy failed',
+    'json.notice.failed': 'Operation failed',
+    'json.notice.escaped': 'Converted to a JSON string',
+    'json.notice.unescaped': 'Restored JSON string',
+    'json.notice.imported': 'File imported',
+    'json.notice.exported': 'File exported',
+    'json.notice.pathApplied': 'JSON Path applied',
+    'json.notice.noMatches': 'No matches found',
+    'json.panel.actions': 'Actions',
+    'json.panel.result': 'Result',
+    'json.panel.format': 'Format options',
+    'json.panel.convert': 'Convert',
+    'json.panel.jsonPath': 'JSON Path',
+    'json.format.indent': 'Indent spaces',
+    'json.format.sortKeys': 'Sort object keys',
+    'json.format.ignoreCase': 'Ignore case when sorting and checking duplicates',
+    'json.format.duplicateKeys': 'Check duplicate keys before formatting',
+    'json.format.apply': 'Apply custom format',
+    'json.find.placeholder': 'Find in JSON…',
+    'json.find.matches': '{count} matches',
+    'json.find.next': 'Next match',
+    'json.find.close': 'Close find',
+    'json.path.placeholder': 'For example $.store.book[*].title',
+    'json.path.query': 'Query',
+    'json.path.pick': 'Visual picker',
+    'json.pathPicker.title': 'Select JSON Path',
+    'json.pathPicker.use': 'Use this path',
+    'json.pathPicker.path': 'Path',
+    'json.pathPicker.preview': 'Value preview',
+    'json.dialog.input': 'Input',
+    'json.dialog.output': 'Output',
+    'json.dialog.run': 'Convert',
+    'json.dialog.className': 'Root class name',
+    'json.dialog.useOutput': 'Use output',
+    'json.vault.title': 'JSON Vault',
+    'json.vault.new': 'New snippet',
+    'json.vault.save': 'Save snippet',
+    'json.vault.delete': 'Delete snippet',
+    'json.vault.refresh': 'Refresh Vault',
+    'json.vault.empty': 'No JSON snippets yet',
+    'json.vault.fileName': 'File name or relative path',
+    'json.vault.fileNameHint': 'For example drafts/request.json',
+    'json.vault.create': 'Create',
+    'json.vault.saved': 'Snippet saved',
+    'json.vault.created': 'Snippet created',
+    'json.vault.deleted': 'Snippet deleted',
+    'json.vault.confirmDelete': 'Delete "{name}"?',
+    'json.vault.confirmDiscard': 'The current snippet has unsaved changes. Discard them?'
+    ,'json.vault.newFolder': 'New folder'
+    ,'json.vault.expandAll': 'Expand all'
+    ,'json.vault.collapseAll': 'Collapse all'
+    ,'json.vault.defaultFolder': 'New folder'
+    ,'json.vault.folderName': 'Folder relative path'
+    ,'json.vault.folderCreated': 'Folder created'
+    ,'json.vault.rename': 'Rename'
+    ,'json.vault.renameName': 'New name'
+    ,'json.vault.renamed': 'Entry renamed'
+    ,'json.vault.move': 'Move'
+    ,'json.vault.moveTo': 'Destination folder'
+    ,'json.vault.moved': 'Entry moved'
+    ,'json.vault.duplicate': 'Duplicate snippet'
+    ,'json.vault.duplicated': 'Snippet copy created'
+    ,'json.vault.openFolder': 'Open Vault in file manager'
+    ,'json.vault.revealInFinder': 'Reveal in file manager'
+    ,'json.vault.locateCurrent': 'Locate current file'
+    ,'json.vault.sort': 'Sort order'
+    ,'json.vault.sortName': 'By name'
+    ,'json.vault.sortModified': 'By modified time'
+    ,'json.vault.more': 'More Vault actions'
+    ,'json.vault.root': 'Vault root'
+    ,'json.git.title': 'JSON Vault Git'
+    ,'json.git.open': 'Open Git panel'
+    ,'json.git.unavailable': 'Git command was not found'
+    ,'json.git.noRepo': 'This Vault is not a Git repository yet'
+    ,'json.git.init': 'Initialize Git'
+    ,'json.git.refresh': 'Refresh'
+    ,'json.git.fetch': 'Fetch'
+    ,'json.git.pull': 'Pull'
+    ,'json.git.push': 'Push'
+    ,'json.git.branch': 'Branch {branch}'
+    ,'json.git.sync': '↑{ahead} ↓{behind}'
+    ,'json.git.remote': 'Remote repository'
+    ,'json.git.remotePlaceholder': 'https://... or git@host:repo.git'
+    ,'json.git.saveRemote': 'Save remote URL'
+    ,'json.git.removeRemote': 'Remove remote'
+    ,'json.git.changes': 'Working changes'
+    ,'json.git.history': 'Commit history'
+    ,'json.git.emptyChanges': 'Working tree is clean'
+    ,'json.git.emptyHistory': 'No commits yet'
+    ,'json.git.diff': 'Diff'
+    ,'json.git.noDiff': 'Select a change or commit to inspect its diff'
+    ,'json.git.diffFile': 'Changed file'
+    ,'json.git.diffBefore': 'Before'
+    ,'json.git.diffAfter': 'After'
+    ,'json.git.diffBinary': 'Content comparison is unavailable for binary files'
+    ,'json.git.diffTooLarge': 'This file is too large to preview'
+    ,'json.git.commitMessage': 'Commit message'
+    ,'json.git.defaultMessage': 'MooTool JSON checkpoint'
+    ,'json.git.commit': 'Commit all changes'
+    ,'json.git.conflict': 'Conflict'
+    ,'json.git.done': 'Git operation completed'
+    ,'json.git.discard': 'Discard change'
+    ,'json.git.confirmDiscard': 'Discard local changes to "{path}"? This cannot be undone.'
+    ,'json.git.abortMerge': 'Abort merge / rebase'
+    ,'json.git.confirmAbort': 'Abort the current merge or rebase and restore the previous state?'
+    ,'json.git.continueOperation': 'Continue merge / rebase'
+    ,'json.git.useOurs': 'Use ours'
+    ,'json.git.useTheirs': 'Use theirs'
+    ,'time.title': 'Time Converter'
+    ,'time.current': 'Current time'
+    ,'time.timestamp': 'Unix timestamp'
+    ,'time.localTime': 'Local time'
+    ,'time.timezone': 'Time zone'
+    ,'time.unit.second': 'Seconds (s)'
+    ,'time.unit.millisecond': 'Milliseconds (ms)'
+    ,'time.toLocal': 'Convert to local time'
+    ,'time.toTimestamp': 'Convert to timestamp'
+    ,'time.copy': 'Copy'
+    ,'time.clock': 'Full-screen clock'
+    ,'time.history': 'History'
+    ,'time.formatHint': 'Format: yyyy-MM-dd HH:mm:ss'
+    ,'time.error.timestamp': 'Enter a valid Unix timestamp'
+    ,'time.error.localTime': 'Enter a valid time in yyyy-MM-dd HH:mm:ss format'
+    ,'time.notice.toLocal': 'Converted to {zone} time'
+    ,'time.notice.toTimestamp': 'Converted to Unix timestamp'
+    ,'time.notice.copied': 'Copied'
+    ,'time.clock.close': 'Exit full-screen clock'
+    ,'common.action.copy': 'Copy'
+    ,'common.action.paste': 'Paste'
+    ,'common.action.clear': 'Clear'
+    ,'common.action.history': 'History'
+    ,'common.action.swap': 'Swap'
+    ,'common.action.apply': 'Apply'
+    ,'common.action.save': 'Save'
+    ,'common.action.delete': 'Delete'
+    ,'common.input': 'Input'
+    ,'common.output': 'Output'
+    ,'common.result': 'Result'
+    ,'common.name': 'Name'
+    ,'common.description': 'Description'
+    ,'common.yes': 'Yes'
+    ,'common.no': 'No'
+    ,'common.error.process': 'Processing failed: {message}'
+    ,'favorite.title': 'Favorites'
+    ,'favorite.add': 'Favorite current value'
+    ,'favorite.empty': 'No favorites yet'
+    ,'favorite.namePlaceholder': 'Favorite name'
+    ,'favorite.saved': 'Favorite saved'
+    ,'favorite.deleted': 'Favorite deleted'
+    ,'favorite.folder': 'Folder'
+    ,'favorite.folderName': 'Enter a folder name'
+    ,'favorite.newFolder': 'New folder'
+    ,'favorite.renameFolder': 'Rename folder'
+    ,'favorite.deleteFolder': 'Delete folder'
+    ,'favorite.deleteFolderConfirm': 'Delete “{name}” and all colors in it?'
+    ,'favorite.duplicateFolder': 'A folder with this name already exists'
+    ,'encode.title': 'Encode / Decode'
+    ,'encode.tab.unicode': 'Native / Unicode'
+    ,'encode.tab.url': 'URL'
+    ,'encode.tab.hex': 'Native / Hex'
+    ,'encode.tab.ascii': 'Native / ASCII'
+    ,'encode.native': 'Native text'
+    ,'encode.unicode': 'Unicode text'
+    ,'encode.url': 'URL source'
+    ,'encode.encoded': 'Encoded result'
+    ,'encode.hex': 'Hexadecimal'
+    ,'encode.ascii': 'ASCII'
+    ,'encode.toUnicode': 'To Unicode'
+    ,'encode.fromUnicode': 'To native'
+    ,'encode.urlEncode': 'URL encode'
+    ,'encode.urlDecode': 'URL decode'
+    ,'encode.toHex': 'To hex'
+    ,'encode.fromHex': 'To text'
+    ,'encode.toAscii': 'To ASCII'
+    ,'encode.fromAscii': 'To text'
+    ,'encode.charset': 'Charset'
+    ,'encode.asciiDecimal': 'Decimal'
+    ,'encode.asciiHex': 'Hexadecimal'
+    ,'ua.title': 'UA Parser'
+    ,'ua.input': 'User-Agent input'
+    ,'ua.preset': 'Choose a preset UA…'
+    ,'ua.parse': 'Parse'
+    ,'ua.browser': 'Browser'
+    ,'ua.browserVersion': 'Browser version'
+    ,'ua.engine': 'Rendering engine'
+    ,'ua.engineVersion': 'Engine version'
+    ,'ua.os': 'Operating system'
+    ,'ua.osVersion': 'OS version'
+    ,'ua.deviceType': 'Device type'
+    ,'ua.deviceBrand': 'Device brand'
+    ,'ua.deviceModel': 'Device model'
+    ,'ua.mobile': 'Mobile'
+    ,'ua.bot': 'Crawler / Bot'
+    ,'ua.empty': 'Enter a User-Agent'
+    ,'ua.unknown': 'Unknown'
+    ,'calculator.title': 'Calculator'
+    ,'calculator.arithmetic': 'Arithmetic'
+    ,'calculator.expression': 'Expression'
+    ,'calculator.calculate': 'Calculate'
+    ,'calculator.base': 'Base conversion'
+    ,'calculator.baseHint': 'Supports integers and fractions, e.g. A.F → 10.9375, with optional 0x / 0b prefixes. Fractions must terminate in the target base.'
+    ,'calculator.float': 'IEEE 754 floating point: HEX → DEC'
+    ,'calculator.floatFormat': 'Float format'
+    ,'calculator.float32': '32-bit (single precision)'
+    ,'calculator.float64': '64-bit (double precision)'
+    ,'calculator.byteOrder': 'Byte order'
+    ,'calculator.bigEndian': 'Big endian (most significant byte first)'
+    ,'calculator.littleEndian': 'Little endian (least significant byte first)'
+    ,'calculator.floatHint': 'Enter {digits} hexadecimal digits, optionally prefixed with 0x or separated into bytes by spaces. Example: 32-bit big endian 3F800000 → 1.0.'
+    ,'calculator.decimal': 'Decimal'
+    ,'calculator.hex': 'Hexadecimal'
+    ,'calculator.binary': 'Binary'
+    ,'calculator.number': 'Number operations'
+    ,'calculator.first': 'Value 1'
+    ,'calculator.second': 'Value 2'
+    ,'calculator.gcd': 'GCD'
+    ,'calculator.lcm': 'LCM'
+    ,'calculator.calculateGcd': 'Calculate GCD'
+    ,'calculator.calculateLcm': 'Calculate LCM'
+    ,'calculator.n': 'n'
+    ,'calculator.m': 'm'
+    ,'calculator.permutation': 'Permutation A(n,m)'
+    ,'calculator.combination': 'Combination C(n,m)'
+    ,'calculator.history': 'Calculation history'
+    ,'regex.title': 'Regular Expression'
+    ,'regex.tab.test': 'Match test'
+    ,'regex.tab.common': 'Common patterns'
+    ,'regex.expression': 'Regular expression'
+    ,'regex.source': 'Test text'
+    ,'regex.matches': '{count} matches'
+    ,'regex.noMatches': 'No matches'
+    ,'regex.flag.global': 'Global'
+    ,'regex.flag.ignoreCase': 'Ignore case'
+    ,'regex.flag.multiline': 'Multiline'
+    ,'regex.flag.dotAll': 'Dot matches newline'
+    ,'regex.invalid': 'Invalid regular expression: {message}'
+    ,'regex.common.phone': 'Mainland China mobile'
+    ,'regex.common.email': 'Email address'
+    ,'regex.common.domain': 'Domain name'
+    ,'regex.common.chinese': 'Chinese characters'
+    ,'regex.common.integer': 'Integer'
+    ,'regex.common.color': 'Color code'
+    ,'regex.common.ipv4': 'IPv4 address'
+    ,'regex.common.account': 'Account name'
+    ,'regex.common.htmlId': 'HTML id attribute'
+    ,'regex.common.jpg': 'JPG image URL'
+    ,'regex.common.magnet': 'Magnet link'
+    ,'regex.common.alnum': 'Letters and numbers'
+    ,'regex.common.len3to20': 'Any 3-20 characters'
+    ,'regex.common.letters26': 'Latin letters'
+    ,'regex.common.wordUnderscore': 'Letters, numbers or underscore'
+    ,'regex.common.cnEnNum': 'Chinese, letters, numbers and underscore'
+    ,'regex.common.noSpecial': 'No special characters'
+    ,'regex.common.positiveInt': 'Positive integer'
+    ,'regex.common.negativeInt': 'Negative integer'
+    ,'regex.common.nonNegativeInt': 'Non-negative integer'
+    ,'regex.common.float': 'Floating-point number'
+    ,'cron.title': 'Cron Expression'
+    ,'cron.expression': 'Cron expression'
+    ,'cron.builder': 'Expression builder'
+    ,'cron.second': 'Second'
+    ,'cron.minute': 'Minute'
+    ,'cron.hour': 'Hour'
+    ,'cron.day': 'Day'
+    ,'cron.month': 'Month'
+    ,'cron.week': 'Weekday'
+    ,'cron.year': 'Year (optional)'
+    ,'cron.parse': 'Parse schedule'
+    ,'cron.nextRuns': 'Next 10 runs'
+    ,'cron.humanReadable': 'Natural language'
+    ,'cron.preset': 'Common expressions'
+    ,'cron.everyMinute': 'Every minute'
+    ,'cron.everyHour': 'Every hour'
+    ,'cron.everyDay': 'Daily at midnight'
+    ,'cron.weekdays': 'Weekdays at 9 AM'
+    ,'cron.invalid': 'Cannot parse Cron: {message}'
+    ,'diff.title': 'Text Diff'
+    ,'diff.sideBySide': 'Side by side'
+    ,'diff.unified': 'Unified'
+    ,'diff.left': 'Original text'
+    ,'diff.right': 'New text'
+    ,'diff.compare': 'Compare'
+    ,'diff.ignoreWhitespace': 'Ignore whitespace'
+    ,'diff.realtime': 'Live comparison'
+    ,'diff.copy': 'Copy diff'
+    ,'diff.previous': 'Previous difference'
+    ,'diff.next': 'Next difference'
+    ,'diff.summary': 'Added {added} · removed {removed} · changed {changed}'
+    ,'diff.identical': 'Both texts are identical'
+    ,'diff.highlightMode': 'Highlight mode'
+    ,'diff.highlightBoth': 'Dual highlight'
+    ,'diff.highlightCharacters': 'Character only'
+    ,'diff.highlightLines': 'Line only'
+    ,'diff.displayMode': 'Display mode'
+    ,'diff.unifiedPanel': 'Unified diff'
+    ,'diff.status.ready': 'Ready'
+    ,'diff.status.enterText': 'Enter text to compare'
+    ,'diff.status.characterComplete': '{count} character difference(s)'
+    ,'diff.status.complete': 'Compare complete, {count} difference(s) found'
+    ,'diff.status.cleared': 'Cleared'
+    ,'diff.status.swapped': 'Texts swapped'
+    ,'diff.status.copied': 'Diff copied to clipboard'
+    ,'diff.status.noCopy': 'No diff result to copy'
+    ,'diff.status.navigation': 'Jump to difference {current}/{total}'
+    ,'config.title': 'Config Converter'
+    ,'config.tab.convert': 'YAML / Properties'
+    ,'config.tab.validate': 'YAML validation'
+    ,'config.properties': 'Properties'
+    ,'config.yaml': 'YAML'
+    ,'config.toYaml': 'To YAML'
+    ,'config.toProperties': 'To Properties'
+    ,'config.validate': 'Validate'
+    ,'config.format': 'Format'
+    ,'config.valid': 'YAML is valid'
+    ,'config.invalid': 'Invalid YAML: {message}'
+    ,'common.action.format': 'Format'
+    ,'common.export': 'Export'
+    ,'common.help': 'Help'
+    ,'common.import': 'Import'
+    ,'common.processing': 'Processing…'
+    ,'common.rename': 'Rename'
+    ,'common.save': 'Save'
+    ,'common.saved': 'Saved'
+    ,'reformat.title': 'Reformat'
+    ,'reformat.tab.text': 'Text'
+    ,'reformat.tab.file': 'File'
+    ,'reformat.type': 'Type'
+    ,'reformat.indent': 'Indent'
+    ,'reformat.input': 'Content to format'
+    ,'reformat.chooseFile': 'Choose file'
+    ,'reformat.noFile': 'No file selected'
+    ,'reformat.original': 'Original'
+    ,'reformat.result': 'Formatted result'
+    ,'reformat.formatted': 'Formatting complete'
+    ,'reformat.historySummary': '{type} formatting'
+    ,'crypto.title': 'Crypto / Random'
+    ,'crypto.tab.symmetric': 'Symmetric'
+    ,'crypto.tab.asymmetric': 'Asymmetric'
+    ,'crypto.tab.digest': 'Digest'
+    ,'crypto.tab.base': 'Base64 / Base32'
+    ,'crypto.tab.random': 'Random'
+    ,'crypto.algorithm': 'Algorithm'
+    ,'crypto.key': 'Key'
+    ,'crypto.keyHint': 'Enter a key with the length required by the algorithm'
+    ,'crypto.aesKeyHint': 'AES requires exactly 16, 24 or 32 UTF-8 bytes, without truncation or padding.'
+    ,'crypto.legacyAes': 'Legacy Electron key handling (decrypt only)'
+    ,'crypto.plainText': 'Plain text'
+    ,'crypto.cipherText': 'Cipher text'
+    ,'crypto.cipherOrSignature': 'Cipher text / signature'
+    ,'crypto.encrypt': 'Encrypt'
+    ,'crypto.decrypt': 'Decrypt'
+    ,'crypto.generateKeyPair': 'Generate key pair'
+    ,'crypto.keyGenerated': 'Key pair generated'
+    ,'crypto.publicKey': 'Public key'
+    ,'crypto.privateKey': 'Private key'
+    ,'crypto.publicEncrypt': 'Public-key encrypt'
+    ,'crypto.privateDecrypt': 'Private-key decrypt'
+    ,'crypto.privateEncrypt': 'Private-key encrypt'
+    ,'crypto.publicDecrypt': 'Public-key decrypt'
+    ,'crypto.rsaOnly': 'This operation only supports RSA'
+    ,'crypto.sign': 'Sign'
+    ,'crypto.verify': 'Verify'
+    ,'crypto.verified': 'Signature verified'
+    ,'crypto.notVerified': 'Signature verification failed'
+    ,'crypto.digest': 'Calculate digest'
+    ,'crypto.fileDigest': 'File digest'
+    ,'crypto.textDigest': 'Text digest'
+    ,'crypto.digestInput': 'Digest input'
+    ,'crypto.digestResult': 'Digest result'
+    ,'crypto.encode': 'Encode'
+    ,'crypto.decode': 'Decode'
+    ,'crypto.length': 'Length'
+    ,'crypto.generate': 'Generate'
+    ,'crypto.random.uuid': 'UUID'
+    ,'crypto.random.digits': 'Random digits'
+    ,'crypto.random.string': 'Random string'
+    ,'crypto.random.password': 'Random password'
+    ,'color.title': 'Color Board'
+    ,'color.select': 'Select color'
+    ,'color.inputColor': 'Enter color'
+    ,'color.picker': 'Screen picker'
+    ,'color.pickerOverlayHint': 'Move to preview a color, then click to select'
+    ,'color.pickerOverlayKeys': 'Esc or right-click to cancel'
+    ,'color.freePick': 'Color picker'
+    ,'color.eyeDropperUnavailable': 'Screen color picking is unavailable on this system'
+    ,'color.format': 'Format'
+    ,'color.code': 'Color code'
+    ,'color.current': 'Current color'
+    ,'color.favorite': 'Favorite'
+    ,'color.favorites': 'Favorites'
+    ,'color.favoriteDialog': 'Save Color'
+    ,'color.compare': 'Comparison color'
+    ,'color.operation.invert': 'Invert'
+    ,'color.operation.intersect': 'Intersect'
+    ,'color.operation.add': 'Add'
+    ,'color.operation.difference': 'Difference'
+    ,'color.operation.average': 'Average'
+    ,'color.operation.swap': 'Swap'
+    ,'color.themeColors': 'Theme colors'
+    ,'color.theme': 'Theme'
+    ,'color.theme.default': 'Default'
+    ,'color.theme.theme1': 'Theme 1'
+    ,'color.theme.theme2': 'Theme 2'
+    ,'color.theme.theme3': 'Theme 3'
+    ,'color.theme.theme4': 'Theme 4'
+    ,'color.theme.theme5': 'Theme 5'
+    ,'color.theme.china': 'Chinese Colors'
+    ,'color.standardColors': 'Standard colors'
+    ,'color.shiftHint': 'Hold Shift to select the comparison color.'
+    ,'qrcode.title': 'QR Code'
+    ,'qrcode.tab.generate': 'Generate'
+    ,'qrcode.tab.recognize': 'Recognize'
+    ,'qrcode.tab.history': 'History'
+    ,'qrcode.content': 'QR content'
+    ,'qrcode.size': 'Size'
+    ,'qrcode.correction': 'Error correction'
+    ,'qrcode.logo': 'Center logo'
+    ,'qrcode.chooseLogo': 'Choose logo'
+    ,'qrcode.level.L': 'L · about 7%'
+    ,'qrcode.level.M': 'M · about 15%'
+    ,'qrcode.level.Q': 'Q · about 25%'
+    ,'qrcode.level.H': 'H · about 30%'
+    ,'qrcode.generate': 'Generate QR code'
+    ,'qrcode.generated': 'QR code generated'
+    ,'qrcode.preview': 'QR preview'
+    ,'qrcode.chooseImage': 'Choose QR image'
+    ,'qrcode.fromClipboard': 'Read from clipboard'
+    ,'qrcode.clipboard': 'Clipboard image'
+    ,'qrcode.clipboardEmpty': 'No image in the clipboard'
+    ,'qrcode.recognize': 'Recognize QR code'
+    ,'qrcode.recognized': 'QR recognition complete'
+    ,'qrcode.sourceImage': 'Source image'
+    ,'qrcode.result': 'Recognition result'
+    ,'qrcode.history.generate': 'Generate QR code'
+    ,'qrcode.history.recognize': 'Recognize QR code'
+    ,'protobuf.title': 'Protobuf'
+    ,'protobuf.tab.json': 'JSON / Binary'
+    ,'protobuf.tab.wire': 'Wire Decoder'
+    ,'protobuf.tab.convert': 'Hex / Base64'
+    ,'protobuf.definition': 'Proto definition'
+    ,'protobuf.message': 'Message type'
+    ,'protobuf.binaryFormat': 'Binary format'
+    ,'protobuf.toBinary': 'To Binary'
+    ,'protobuf.toJson': 'To JSON'
+    ,'protobuf.binary': 'Binary content'
+    ,'protobuf.wireInput': 'Wire data'
+    ,'protobuf.decode': 'Decode'
+    ,'protobuf.wireOutput': 'Wire fields'
+    ,'protobuf.hexToBase64': 'Hex to Base64'
+    ,'protobuf.base64ToHex': 'Base64 to Hex'
+    ,'protobuf.history.jsonToBinary': 'JSON to Binary'
+    ,'protobuf.history.binaryToJson': 'Binary to JSON'
+    ,'protobuf.history.format': 'Format Proto'
+    ,'protobuf.history.wire': 'Decode Wire'
+    ,'protobuf.history.hexToBase64': 'Hex to Base64'
+    ,'protobuf.history.base64ToHex': 'Base64 to Hex'
+    ,'pdf.title': 'PDF'
+    ,'pdf.tab.split': 'Split PDF'
+    ,'pdf.tab.merge': 'Merge PDF'
+    ,'pdf.addTask': 'Add split task'
+    ,'pdf.addFile': 'Add PDF'
+    ,'pdf.startSplit': 'Start split'
+    ,'pdf.startMerge': 'Start merge'
+    ,'pdf.selectTask': 'Select at least one split task'
+    ,'pdf.selectTwo': 'Select at least two PDF files'
+    ,'pdf.confirmSplit': 'Start splitting the selected PDFs?'
+    ,'pdf.splitComplete': 'Split complete, {count} pages written'
+    ,'pdf.mergeComplete': 'Merge complete, {count} pages'
+    ,'pdf.fileName': 'File name'
+    ,'pdf.pageRange': 'Input pages'
+    ,'pdf.mergeRange': 'Merge pages'
+    ,'pdf.rule': 'Split rule'
+    ,'pdf.customRule': 'Output pages'
+    ,'pdf.progress': 'Status'
+    ,'pdf.output': 'Recent output'
+    ,'pdf.empty': 'No PDF tasks added'
+    ,'pdf.pages': 'pages'
+    ,'pdf.select': 'Select'
+    ,'pdf.rule.odd': 'Odd pages'
+    ,'pdf.rule.even': 'Even pages'
+    ,'pdf.rule.custom': 'Custom'
+    ,'pdf.status.ready': 'Ready'
+    ,'pdf.status.running': 'Running'
+    ,'pdf.status.done': 'Done'
+    ,'pdf.status.error': 'Error'
+    ,'pdf.helpSplitTitle': 'PDF split help'
+    ,'pdf.helpMergeTitle': 'PDF merge help'
+    ,'pdf.help.split1': 'Up to 20 PDF split tasks can be added at once.'
+    ,'pdf.help.split2': 'Page ranges support values such as 1-5, 8, and 10-12.'
+    ,'pdf.help.split3': 'Choose odd, even, or custom output pages.'
+    ,'pdf.help.split4': 'Output files use the _split.pdf suffix by default.'
+    ,'pdf.help.merge1': 'Select at least two PDF files to merge.'
+    ,'pdf.help.merge2': 'Files are merged in list order using their page ranges.'
+    ,'pdf.help.merge3': 'Only unencrypted PDF files are currently supported.'
+    ,'image.title': 'Image Assistant'
+    ,'image.ocr.component.title': "Download text recognition"
+    ,'image.ocr.component.intro': "First use requires a text recognition component (about {size} MiB). Restart after downloading. Download once, then use offline."
+    ,'image.ocr.component.download': "Download component"
+    ,'image.ocr.component.downloading': "Downloading…"
+    ,'image.ocr.component.progress': "Downloading and verifying: {percent}%. Closing this dialog will keep the download running."
+    ,'image.ocr.component.ready': "The component is downloaded and verified. Restart to recognize text. Save your work first."
+    ,'image.ocr.component.error': "Download or verification failed. Check your connection and disk space, then retry."
+    ,'image.ocr.component.restart': "Restart now"
+    ,'image.ocr.component.later': "Restart later"
+    ,'image.ocr.title': "Recognize text"
+    ,'image.ocr.capture': "Capture text"
+    ,'image.ocr.captureSource': "Captured region"
+    ,'image.ocr.language': "Recognition language"
+    ,'image.ocr.language.auto': "Auto (Chinese/English)"
+    ,'image.ocr.language.multilingual': "Auto (Simplified/Traditional/English/Japanese)"
+    ,'image.ocr.language.zh-Hans': "Simplified Chinese"
+    ,'image.ocr.language.zh-Hant': "Traditional Chinese"
+    ,'image.ocr.language.en-US': "English"
+    ,'image.ocr.language.ja-JP': "Japanese"
+    ,'image.ocr.local': "Processed offline on this device"
+    ,'image.ocr.result': "Recognized text"
+    ,'image.ocr.intro': "Choose a language and start recognition, then edit, copy or save the text."
+    ,'image.ocr.review': "Compare the text with the image. Recognizing again replaces the current text."
+    ,'image.ocr.start': "Start recognition"
+    ,'image.ocr.again': "Recognize again"
+    ,'image.ocr.working': "Recognizing locally… Initial system setup may take longer. You can cancel at any time."
+    ,'image.ocr.complete': "Recognition complete. You can edit the text."
+    ,'image.ocr.empty': "No text was found. Try a clearer image or another language."
+    ,'image.ocr.cancelled': "Recognition cancelled"
+    ,'image.ocr.copy': "Copy text"
+    ,'image.ocr.copied': "Text copied"
+    ,'image.ocr.save': "Save text"
+    ,'image.ocr.metadata': "{count} lines · {time} ms"
+    ,'image.ocr.engine.vision': "macOS Vision"
+    ,'image.ocr.engine.ppocr': "PP-OCRv6 small"
+    ,'image.ocr.unavailable.platform': "Offline text recognition is not available on this system yet."
+    ,'image.ocr.unavailable.component': "The text recognition component is unavailable. Update or reinstall the app."
+    ,'image.ocr.unavailable.system': "Text recognition requires macOS 13 or later."
+    ,'image.ocr.error.input': "Invalid image data. Select the image again."
+    ,'image.ocr.error.tooLarge': "Image too large: maximum 16384 px per side, 32 million pixels and 32 MiB of PNG data."
+    ,'image.ocr.error.tooComplex': "Too many text regions or an excessively long line. Select a smaller area."
+    ,'image.ocr.error.unavailable': "Text recognition is unavailable. Try again later."
+    ,'image.ocr.error.language': "This system does not support the selected recognition language. Choose another language."
+    ,'image.ocr.error.busy': "Another recognition task is running. Try again shortly."
+    ,'image.ocr.error.cancelled': "Recognition was cancelled."
+    ,'image.ocr.error.timeout': "Recognition timed out. Select a smaller image region and try again."
+    ,'image.ocr.error.failed': "Recognition failed. Try again or choose another image."
+    ,'image.screenshot': 'Capture'
+    ,'image.fromClipboard': 'Clipboard'
+    ,'image.import': 'Import images'
+    ,'image.fromBase64': 'Import Base64'
+    ,'image.compress': 'Compress'
+    ,'image.resize': "Resize"
+    ,'image.resize.title': "Batch resize images"
+    ,'image.resize.preset': "Size preset"
+    ,'image.resize.small': "Small"
+    ,'image.resize.medium': "Medium"
+    ,'image.resize.large': "Large"
+    ,'image.resize.custom': "Custom"
+    ,'image.resize.width': "Width (px)"
+    ,'image.resize.height': "Height (px)"
+    ,'image.resize.auto': "Auto"
+    ,'image.resize.dimensionsHint': "Leave one dimension empty to calculate it proportionally. Enter at least one integer from 1 to 16384."
+    ,'image.resize.mode': "Resize mode"
+    ,'image.resize.fit': "Fit"
+    ,'image.resize.fill': "Fill and crop"
+    ,'image.resize.stretch': "Stretch"
+    ,'image.resize.formatAuto': "JPEG for JPEG sources; PNG otherwise"
+    ,'image.resize.shrinkOnly': "Only shrink, never enlarge"
+    ,'image.resize.fitHint': "Keep the aspect ratio and fit the whole image inside the box. Output may be smaller than the specified dimensions."
+    ,'image.resize.fillHint': "Keep the aspect ratio and fill the box, cropping from the center."
+    ,'image.resize.stretchHint': "Resize directly to the target dimensions, which may change the aspect ratio."
+    ,'image.resize.shrinkFillHint': "With shrink-only enabled, the target box also shrinks to prevent enlargement. Check each image in the preview."
+    ,'image.resize.libraryHint': "Processes library copies. Keeping originals adds a number for name conflicts; overwrite affects the library only."
+    ,'image.resize.preview': "Output size preview"
+    ,'image.resize.file': "File"
+    ,'image.resize.source': "Original size"
+    ,'image.resize.output': "Output size"
+    ,'image.resize.invalid': "Enter at least one valid dimension: an integer from 1 to 16384."
+    ,'image.resize.tooLarge': "Output is too large: maximum 16384 px per side and 32 million pixels total."
+    ,'image.watermark': 'Watermark'
+    ,'image.toSvg': 'To SVG'
+    ,'image.copy': 'Copy image'
+    ,'image.toBase64': 'To Base64'
+    ,'image.toggleList': 'Show or hide image list'
+    ,'image.library': 'Image library'
+    ,'image.empty': 'Image library is empty'
+    ,'image.select': 'Select image'
+    ,'image.emptyPreview': 'Select or import an image'
+    ,'image.zoomIn': 'Zoom in'
+    ,'image.zoomOut': 'Zoom out'
+    ,'image.original': 'Original size'
+    ,'image.fit': 'Fit window'
+    ,'image.base64Import': 'Import Base64 image'
+    ,'image.base64Export': 'Image Base64'
+    ,'image.compressTitle': 'Compress images'
+    ,'image.watermarkTitle': 'Add watermark'
+    ,'image.svgTitle': 'Image to SVG'
+    ,'image.svgStart': 'Start conversion'
+    ,'image.svgPreset': 'Image type'
+    ,'image.svgPreset.poster': 'Logo / illustration'
+    ,'image.svgPreset.photo': 'Photo'
+    ,'image.svgPreset.bw': 'Black-and-white line art'
+    ,'image.svgColors': 'Maximum colors'
+    ,'image.svgDetail': 'Path detail'
+    ,'image.svgDetail.low': 'Low (smaller file)'
+    ,'image.svgDetail.medium': 'Medium'
+    ,'image.svgDetail.high': 'High (closer to source)'
+    ,'image.svgSpeckle': 'Ignore speckles smaller than this pixel count'
+    ,'image.svgHint': 'Creates editable vector paths without embedding the bitmap in the SVG. Conversion runs entirely on this device. Logos, icons, and illustrations usually work best.'
+    ,'image.svgComplete': 'Converted {count} image(s) to {path}'
+    ,'image.startProcess': 'Start processing'
+    ,'image.selectedCount': '{count} images selected'
+    ,'image.quality': 'Quality'
+    ,'image.scale': 'Scale'
+    ,'image.outputFormat': 'Output format'
+    ,'image.format.auto': 'Keep original format'
+    ,'image.watermarkText': 'Watermark text'
+    ,'image.opacity': 'Opacity'
+    ,'image.position': 'Position'
+    ,'image.fontSize': 'Font size'
+    ,'image.color': 'Color'
+    ,'image.diagonal': 'Rotate watermark text'
+    ,'image.outputMode': 'Output mode'
+    ,'image.keepOriginal': 'Keep original and create a new file'
+    ,'image.overwrite': 'Overwrite original'
+    ,'image.position.bottom-right': 'Bottom right'
+    ,'image.position.bottom-left': 'Bottom left'
+    ,'image.position.top-right': 'Top right'
+    ,'image.position.top-left': 'Top left'
+    ,'image.position.center': 'Center'
+    ,'image.position.tile': 'Tile'
+    ,'image.font.auto': 'Auto'
+    ,'image.font.small': 'Small'
+    ,'image.font.medium': 'Medium'
+    ,'image.font.large': 'Large'
+    ,'image.crop.x': 'X'
+    ,'image.crop.y': 'Y'
+    ,'image.crop.width': 'Width'
+    ,'image.crop.height': 'Height'
+    ,'image.captureOverlayHint': 'Drag to select a capture area'
+    ,'image.captureOverlayKeys': 'Enter to confirm · Esc or right-click to cancel'
+    ,'image.captureConfirm': 'Confirm capture'
+    ,'image.saveCapture': 'Save capture'
+    ,'image.clipboardEmpty': 'No image in the clipboard'
+    ,'image.imported': 'Image imported'
+    ,'image.captureUnavailable': 'No display is available for capture'
+    ,'image.saveName': 'Save name'
+    ,'image.renamePrompt': 'Enter a new image name'
+    ,'image.confirmDelete': 'Delete the selected {count} images?'
+    ,'image.exported': 'Exported to {directory}'
+    ,'image.processComplete': 'Processed {count} images'
+    ,'common.new': 'New'
+    ,'common.add': 'Add'
+    ,'common.stop': 'Stop'
+    ,'common.refresh': 'Refresh'
+    ,'common.search': 'Search'
+    ,'common.searchContent': 'Search contents'
+    ,'common.convert': 'Convert'
+    ,'http.title': 'HTTP Request'
+    ,'http.untitled': 'Untitled request'
+    ,'http.urlRequired': 'Enter a request URL'
+    ,'http.saveName': 'Request name'
+    ,'http.confirmDelete': 'Delete this request?'
+    ,'http.curlPrompt': 'Paste a cURL command'
+    ,'http.savedEmpty': 'No saved requests'
+    ,'http.noUrl': 'No URL'
+    ,'http.importCurl': 'Import cURL'
+    ,'http.copyCurl': 'Copy as cURL'
+    ,'http.method': 'Method'
+    ,'http.send': 'Send'
+    ,'http.timeout': 'Timeout (ms)'
+    ,'http.timeoutHint': 'Request timeout, range 1000–120000 ms'
+    ,'http.find': 'Find'
+    ,'http.tab.params': 'Params'
+    ,'http.tab.headers': 'Headers'
+    ,'http.tab.cookies': 'Cookies'
+    ,'http.tab.body': 'Body'
+    ,'http.bodyType': 'Body type'
+    ,'http.response.body': 'Response Body'
+    ,'http.response.headers': 'Response Headers'
+    ,'http.response.cookies': 'Response Cookies'
+    ,'http.responseEmpty': 'Send a request to inspect its response'
+    ,'http.name': 'Name'
+    ,'http.value': 'Value'
+    ,'http.domain': 'Domain'
+    ,'http.path': 'Path'
+    ,'http.expires': 'Expires'
+    ,'http.enabled': 'Enabled'
+    ,'http.addEntry': 'Add an entry'
+    ,'http.history': 'HTTP Request History'
+    ,'http.error.ABORTED': 'Request cancelled'
+    ,'http.error.TIMEOUT': 'Request timed out'
+    ,'http.error.NETWORK': 'Network request failed'
+    ,'http.error.INVALID_REQUEST': 'Invalid request'
+    ,'http.error.RESPONSE_TOO_LARGE': 'Response exceeds the 10 MB limit'
+    ,'translation.title': 'Translation'
+    ,'translation.tab.translate': 'Translate'
+    ,'translation.tab.words': 'Word Book'
+    ,'translation.tab.history': 'History'
+    ,'translation.exchange': 'Swap languages and text'
+    ,'translation.provider': 'Translator'
+    ,'translation.copy': 'Copy translation'
+    ,'translation.splitIdentifiers': 'Split identifier'
+    ,'translation.translateNow': 'Translate'
+    ,'translation.namingFormat': 'Naming format'
+    ,'translation.copyName': 'Copy name'
+    ,'translation.namingHint': 'Translate a short phrase into English to copy a name'
+    ,'translation.deeplHint': 'DeepL uses your API key and detects Free / Pro automatically. Click Translate to send; failures do not switch engines.'
+    ,'translation.configureDeepL': 'DeepL API key settings'
+    ,'translation.error.DEEPL_KEY_REQUIRED': 'Save your DeepL API key in Settings → Tool defaults first.'
+    ,'translation.error.DEEPL_INVALID_KEY': 'DeepL API key is invalid or inactive. Update it in Settings.'
+    ,'translation.error.DEEPL_QUOTA_EXCEEDED': 'DeepL translation quota has been exceeded.'
+    ,'translation.error.DEEPL_RATE_LIMITED': 'DeepL rate limit reached. Try again later.'
+    ,'translation.error.DEEPL_UNSUPPORTED_LANGUAGE': 'DeepL does not support the selected language. Change the language or engine.'
+    ,'translation.error.DEEPL_EMPTY_RESPONSE': 'DeepL returned no valid translation. Try again.'
+    ,'translation.saveWord': 'Save to word book'
+    ,'translation.savedWord': 'Saved to word book'
+    ,'translation.sourcePlaceholder': 'Enter text to translate'
+    ,'translation.targetPlaceholder': 'Translation'
+    ,'translation.translating': 'Translating…'
+    ,'translation.fallback': 'fallback used'
+    ,'translation.sourceLanguage': 'Source language'
+    ,'translation.targetLanguage': 'Target language'
+    ,'translation.apply': 'Apply to translation'
+    ,'translation.retranslate': 'Translate again'
+    ,'translation.confirmDeleteWord': 'Delete this word?'
+    ,'translation.searchWords': 'Search words, translations, or notes'
+    ,'translation.remark': 'Note (optional)'
+    ,'translation.wordEmpty': 'Select or create a word'
+    ,'translation.searchHistory': 'Search source, translation, or language'
+    ,'translation.lang.auto': 'Detect language'
+    ,'translation.lang.zh-CN': 'Chinese (Simplified)'
+    ,'translation.lang.en': 'English'
+    ,'translation.lang.yue': 'Cantonese'
+    ,'translation.lang.wyw': 'Classical Chinese'
+    ,'translation.lang.jp': 'Japanese'
+    ,'translation.lang.kor': 'Korean'
+    ,'translation.lang.fra': 'French'
+    ,'translation.lang.spa': 'Spanish'
+    ,'translation.lang.th': 'Thai'
+    ,'translation.lang.ara': 'Arabic'
+    ,'translation.lang.ru': 'Russian'
+    ,'translation.lang.pt': 'Portuguese'
+    ,'translation.lang.de': 'German'
+    ,'translation.lang.it': 'Italian'
+    ,'translation.lang.el': 'Greek'
+    ,'translation.lang.nl': 'Dutch'
+    ,'translation.lang.pl': 'Polish'
+    ,'translation.lang.bul': 'Bulgarian'
+    ,'translation.lang.est': 'Estonian'
+    ,'translation.lang.dan': 'Danish'
+    ,'translation.lang.fin': 'Finnish'
+    ,'translation.lang.cs': 'Czech'
+    ,'translation.lang.rom': 'Romanian'
+    ,'translation.lang.slo': 'Slovenian'
+    ,'translation.lang.swe': 'Swedish'
+    ,'translation.lang.hu': 'Hungarian'
+    ,'translation.lang.cht': 'Chinese (Traditional)'
+    ,'translation.lang.vie': 'Vietnamese'
+    ,'host.title': 'Host'
+    ,'host.contextMenu': 'Host profile actions'
+    ,'host.discardChanges': 'Discard unsaved changes?'
+    ,'host.untitled': 'Untitled Host'
+    ,'host.namePrompt': 'Host profile name'
+    ,'host.confirmDelete': 'Delete this Host profile?'
+    ,'host.confirmApply': 'Write this content to the system hosts file? Administrator permission may be requested.'
+    ,'host.applied': 'System hosts updated'
+    ,'host.applying': 'Applying…'
+    ,'host.apply': 'Switch Host'
+    ,'host.empty': 'No Host profiles'
+    ,'host.import': 'Import Host'
+    ,'host.export': 'Export Host'
+    ,'host.profileName': 'Profile name'
+    ,'host.current': 'Current system hosts'
+    ,'host.find': 'Find and replace'
+    ,'host.findPlaceholder': 'Find'
+    ,'host.replacePlaceholder': 'Replace with'
+    ,'host.replace': 'Replace'
+    ,'host.replaceAll': 'Replace all'
+    ,'host.content': 'Host content'
+    ,'host.placeholder': 'Enter hosts file content'
+    ,'host.writable': 'Writable by the current user'
+    ,'host.requiresPrivilege': 'Administrator permission required to write'
+    ,'net.title': 'Network/IP'
+    ,'net.running': 'Running…'
+    ,'net.noOutput': 'Command completed without output'
+    ,'net.outputPlaceholder': 'Run a network command to view its output here'
+    ,'net.ipv4Long': 'IPv4 and Long Conversion'
+    ,'net.ping': 'PING'
+    ,'net.ipRangeScan': 'IP Range Reachability'
+    ,'net.ipRangePlaceholder': 'For example, 192.168.10'
+    ,'net.ipRangeHint': 'Probes .1 through .254 and lists only hosts that respond to ping'
+    ,'net.portScan': 'TCP Port Scan'
+    ,'net.portScanTargetPlaceholder': 'Target IP or host name'
+    ,'net.portScanPortsPlaceholder': 'Blank scans common ports'
+    ,'net.portScanHint': 'Recognizes common services such as SSH and MySQL; enter 22,80,3306 or 1-1024 for a custom scan (up to 4096)'
+    ,'net.scan': 'Scan'
+    ,'net.resolve': 'Resolve Host to IP'
+    ,'net.resolveAction': 'Resolve'
+    ,'net.whois': 'WHOIS Lookup'
+    ,'net.query': 'Query'
+    ,'net.dns': 'DNS'
+    ,'net.flushDns': 'Flush DNS Cache'
+    ,'net.localAddresses': 'Local IP Addresses'
+    ,'net.error.ABORTED': 'Command stopped'
+    ,'net.error.TIMEOUT': 'Command timed out'
+    ,'net.error.PERMISSION': 'Permission denied'
+    ,'net.error.UNSUPPORTED': 'This command is unavailable on the current system'
+    ,'net.error.COMMAND_FAILED': 'Command failed'
+    ,'net.error.INVALID_TARGET': 'Invalid target'
+    ,'variables.title': 'Environment Variables'
+    ,'variables.tab.environment': 'System Environment'
+    ,'variables.tab.runtime': 'Electron Runtime Properties'
+    ,'variables.key': 'Key'
+    ,'variables.value': 'Value'
+    ,'variables.count': 'Showing {count} of {total}'
+    ,'variables.scope': 'Scope'
+    ,'variables.scope.user': 'User'
+    ,'variables.scope.system': 'System'
+    ,'variables.scope.process': 'Current process'
+    ,'variables.scopeHint.user': 'Saved for this user; applies to newly started terminals and applications'
+    ,'variables.scopeHint.system': 'Saved globally and may require administrator approval'
+    ,'variables.scopeHint.process': 'Shows the complete current environment; edits can be saved for the user or system'
+    ,'variables.targetScope': 'Save to'
+    ,'variables.add': 'Add'
+    ,'variables.edit': 'Edit'
+    ,'variables.addTitle': 'Add Environment Variable'
+    ,'variables.editTitle': 'Edit Environment Variable'
+    ,'variables.applyHint': 'Saving updates the operating-system configuration directly. Running applications usually need to restart to read the new value.'
+    ,'variables.confirmDelete': 'Delete environment variable "{key}"?'
+    ,'variables.saved': 'Environment variable updated'
+    ,'variables.deleted': 'Environment variable deleted'
+    ,'variables.empty': 'No variables yet. Select Add to create one.'
+    ,'runtime.title': 'Code Runner'
+    ,'runtime.tab.java': 'Java / Groovy'
+    ,'runtime.tab.python': 'Python'
+    ,'runtime.tab.node': 'Node.js'
+    ,'runtime.mode.java': 'Java'
+    ,'runtime.mode.groovy': 'Groovy'
+    ,'runtime.detect': 'Detect runtimes'
+    ,'runtime.detected': '{count} runtimes detected'
+    ,'runtime.missing': '{name} was not detected'
+    ,'runtime.format': 'Format'
+    ,'runtime.run': 'Run'
+    ,'runtime.stop': 'Stop'
+    ,'runtime.clear': 'Clear output'
+    ,'runtime.history': 'Run history'
+    ,'runtime.editor': 'Code editor'
+    ,'runtime.output': 'Console output'
+    ,'runtime.ready': 'Run code to see output'
+    ,'runtime.running': 'Running {name}…'
+    ,'runtime.completed': 'Run completed'
+    ,'runtime.failed': 'Run failed'
+    ,'runtime.cancelled': 'Run stopped'
+    ,'runtime.timeout': 'Run timed out'
+    ,'runtime.truncated': 'Output exceeded 2 MB and the run was stopped'
+    ,'runtime.command': 'Command'
+    ,'runtime.exitCode': 'Exit code {code}'
+    ,'runtime.duration': '{duration} ms'
+    ,'runtime.configure': 'Configure the {name} runtime path in Settings'
+    ,'runtime.openSettings': 'Open runtime settings'
+    ,'runtime.options': 'Run Options'
+    ,'runtime.arguments': 'Program arguments'
+    ,'runtime.argumentsPlaceholder': '--name "Moo Tool"'
+    ,'runtime.workingDirectory': 'Working directory'
+    ,'runtime.defaultWorkingDirectory': 'Use an isolated temporary directory'
+    ,'quickNote.title': 'Quick Note'
+    ,'quickNote.search': 'Search notes…'
+    ,'quickNote.searchContent': 'Search contents'
+    ,'quickNote.sort': 'Sort'
+    ,'quickNote.sort.name': 'Name'
+    ,'quickNote.sort.modified': 'Last modified'
+    ,'quickNote.sort.created': 'Created'
+    ,'quickNote.empty': 'No matching notes'
+    ,'quickNote.newNote': 'New note'
+    ,'quickNote.newFolder': 'New folder'
+    ,'quickNote.expandAll': 'Expand all'
+    ,'quickNote.collapseAll': 'Collapse all'
+    ,'quickNote.rename': 'Rename'
+    ,'quickNote.move': 'Move'
+    ,'quickNote.duplicate': 'Duplicate'
+    ,'quickNote.delete': 'Delete'
+    ,'quickNote.openVault': 'Open Vault in file manager'
+    ,'quickNote.revealInFinder': 'Reveal in file manager'
+    ,'quickNote.locateCurrent': 'Locate current file'
+    ,'quickNote.save': 'Save'
+    ,'quickNote.saved': 'Note saved'
+    ,'quickNote.unsaved': 'Unsaved changes'
+    ,'quickNote.find': 'Find and replace'
+    ,'quickNote.findPlaceholder': 'Find'
+    ,'quickNote.replacePlaceholder': 'Replace with'
+    ,'quickNote.nextMatch': 'Next match'
+    ,'quickNote.replace': 'Replace'
+    ,'quickNote.replaceAll': 'Replace all'
+    ,'quickNote.noMatches': 'No matches found'
+    ,'quickNote.attachment': 'Insert image attachment (or paste from clipboard)'
+    ,'quickNote.clipboardEmpty': 'No usable image in the clipboard'
+    ,'quickNote.export': 'Export selected notes'
+    ,'vault.batch.export': 'Export selected files'
+    ,'http.sendWindow': 'Send to response window'
+    ,'http.openResponse': 'Open response window'
+    ,'image.batch.title': 'Image processing'
+    ,'image.batch.cancelling': 'Cancelling…'
+    ,'image.batch.cancelled': 'Cancelled; completed results kept'
+    ,'image.batch.working': 'Processing…'
+    ,'image.batch.finished': 'Finished'
+    ,'image.batch.summary': 'Processed {completed}/{total}; succeeded {succeeded}; failed {failed}'
+    ,'vault.batch.exported': 'Exported {count} files'
+    ,'vault.batch.selected': '{count} items selected'
+    ,'quickNote.info': 'Document information'
+    ,'quickNote.git': 'Git sync'
+    ,'quickNote.quickReplace': 'Quick replace'
+    ,'quickNote.view.editor': 'Editor'
+    ,'quickNote.view.split': 'Split'
+    ,'quickNote.view.preview': 'Preview'
+    ,'quickNote.syntax': 'Syntax'
+    ,'quickNote.font': 'Font'
+    ,'quickNote.font.system': 'System font'
+    ,'quickNote.font.mono': 'Monospace'
+    ,'quickNote.font.serif': 'Serif'
+    ,'quickNote.fontSize': 'Font size'
+    ,'quickNote.lineSpacing': 'Line spacing'
+    ,'quickNote.wrap': 'Soft wrap'
+    ,'quickNote.hideSidebar': 'Hide notes sidebar'
+    ,'quickNote.showSidebar': 'Show notes sidebar'
+    ,'quickNote.bulletList': 'Bulleted list'
+    ,'quickNote.numberedList': 'Numbered list'
+    ,'quickNote.color': 'Note color'
+    ,'quickNote.select': 'Select or create a note from the left'
+    ,'quickNote.editorLabel': 'Note content'
+    ,'quickNote.confirmDelete': 'Delete “{name}”? Folders must be empty.'
+    ,'quickNote.dialog.createNote': 'New note'
+    ,'quickNote.dialog.createFolder': 'New folder'
+    ,'quickNote.dialog.rename': 'Rename'
+    ,'quickNote.dialog.move': 'Move to folder'
+    ,'quickNote.dialog.name': 'Name'
+    ,'quickNote.dialog.target': 'Target folder'
+    ,'quickNote.dialog.root': 'Vault root'
+    ,'quickNote.create': 'Create'
+    ,'quickNote.apply': 'Apply'
+    ,'quickNote.path': 'Path'
+    ,'quickNote.created': 'Created'
+    ,'quickNote.modified': 'Modified'
+    ,'quickNote.lines': 'Lines'
+    ,'quickNote.words': 'Words'
+    ,'quickNote.characters': 'Characters'
+    ,'quickNote.status': '{lines} lines · {characters} characters'
+    ,'quickNote.preview.empty': 'Choose Markdown syntax to preview formatted content.'
+    ,'quickNote.quick.trim': 'Trim whitespace'
+    ,'quickNote.quick.removeBlankLines': 'Remove blank lines'
+    ,'quickNote.quick.removeTabs': 'Remove tabs'
+    ,'quickNote.quick.scientificToNormal': 'Scientific to decimal'
+    ,'quickNote.quick.normalToScientific': 'Decimal to scientific'
+    ,'quickNote.quick.thousandsToNormal': 'Remove thousands separators'
+    ,'quickNote.quick.normalToThousands': 'Add thousands separators'
+    ,'quickNote.quick.underscoreToCamel': 'Snake case to camel case'
+    ,'quickNote.quick.camelToUnderscore': 'Camel case to snake case'
+    ,'quickNote.quick.uppercase': 'Uppercase'
+    ,'quickNote.quick.lowercase': 'Lowercase'
+    ,'quickNote.quick.linesToComma': 'Lines to comma list'
+    ,'quickNote.quick.linesToSingleQuoted': 'Lines to single-quoted list'
+    ,'quickNote.quick.linesToDoubleQuoted': 'Lines to double-quoted list'
+    ,'quickNote.quick.commaToLines': 'Comma list to lines'
+    ,'quickNote.quick.tabsToLines': 'Tabs to lines'
+    ,'quickNote.quick.clearNewlines': 'Remove newlines'
+    ,'quickNote.quick.deduplicateLines': 'Deduplicate lines'
+    ,'quickNote.quick.deduplicateWithCount': 'Deduplicate with counts'
+    ,'quickNote.quick.escape': 'Escape text'
+    ,'quickNote.quick.unescape': 'Unescape text'
+    ,'quickNote.quick.reverseLines': 'Reverse lines'
+    ,'quickNote.quick.sortAscending': 'Sort lines A–Z'
+    ,'quickNote.quick.sortDescending': 'Sort lines Z–A'
+    ,'quickNote.git.title': 'Quick Note Vault Git'
+    ,'quickNote.git.defaultMessage': 'MooTool Quick Note checkpoint'
+    ,'hardware.title': 'System Information'
+    ,'hardware.tab.system': 'System'
+    ,'hardware.tab.cpu': 'Processor'
+    ,'hardware.tab.memory': 'Memory'
+    ,'hardware.tab.storage': 'Storage'
+    ,'hardware.tab.network': 'Network'
+    ,'hardware.loading': 'Collecting system information…'
+    ,'hardware.empty': 'No information available'
+    ,'hardware.group.operatingSystem': 'Operating System'
+    ,'hardware.group.processor': 'Processor'
+    ,'hardware.group.physicalMemory': 'Physical Memory'
+    ,'hardware.label.platform': 'Platform'
+    ,'hardware.label.distribution': 'Distribution'
+    ,'hardware.label.kernel': 'Kernel'
+    ,'hardware.label.architecture': 'Architecture'
+    ,'hardware.label.hostName': 'Host name'
+    ,'hardware.label.serial': 'Serial'
+    ,'hardware.label.manufacturer': 'Manufacturer'
+    ,'hardware.label.model': 'Model'
+    ,'hardware.label.uptime': 'Uptime'
+    ,'hardware.label.timeZone': 'Time zone'
+    ,'hardware.label.brand': 'Brand'
+    ,'hardware.label.vendor': 'Vendor'
+    ,'hardware.label.family': 'Family'
+    ,'hardware.label.physicalCores': 'Physical cores'
+    ,'hardware.label.logicalCores': 'Logical cores'
+    ,'hardware.label.performanceCores': 'Performance cores'
+    ,'hardware.label.efficiencyCores': 'Efficiency cores'
+    ,'hardware.label.baseSpeed': 'Base speed'
+    ,'hardware.label.maximumSpeed': 'Maximum speed'
+    ,'hardware.label.currentLoad': 'Current load'
+    ,'hardware.label.total': 'Total'
+    ,'hardware.label.used': 'Used'
+    ,'hardware.label.available': 'Available'
+    ,'hardware.label.active': 'Active'
+    ,'hardware.label.usage': 'Usage'
+    ,'hardware.label.swapTotal': 'Swap total'
+    ,'hardware.label.swapUsed': 'Swap used'
+    ,'hardware.label.device': 'Device'
+    ,'hardware.label.type': 'Type'
+    ,'hardware.label.interface': 'Interface'
+    ,'hardware.label.capacity': 'Capacity'
+    ,'hardware.label.filesystem': 'Filesystem'
+    ,'hardware.label.ipv4': 'IPv4'
+    ,'hardware.label.ipv6': 'IPv6'
+    ,'hardware.label.mac': 'MAC'
+    ,'hardware.label.mtu': 'MTU'
+    ,'hardware.label.speed': 'Speed'
+    ,'hardware.label.status': 'Status'
+    ,'hardware.label.received': 'Received'
+    ,'hardware.label.sent': 'Sent'
+    ,'app.nav.messageBoard': 'Message Board'
+    ,'messageBoard.title': 'Message Board'
+    ,'messageBoard.message': 'Message'
+    ,'messageBoard.placeholder': 'Type the message you want to display…'
+    ,'messageBoard.messageHint': 'Line breaks are supported. Type size adjusts automatically to fit.'
+    ,'messageBoard.presets': 'Quick messages'
+    ,'messageBoard.style': 'Layout & color'
+    ,'messageBoard.size': 'Type size'
+    ,'messageBoard.alignment': 'Text alignment'
+    ,'messageBoard.alignLeft': 'Align left'
+    ,'messageBoard.alignCenter': 'Align center'
+    ,'messageBoard.display': 'Present'
+    ,'messageBoard.exitDisplay': 'Exit presentation'
+    ,'messageBoard.exitHint': 'Esc to exit'
+    ,'messageBoard.empty': 'Type a message in the panel'
+    ,'messageBoard.badge': 'Important message'
+    ,'messageBoard.badgeEnglish': 'Message board'
+    ,'messageBoard.footer': 'MooTool · Make important words visible'
+    ,'messageBoard.preset.away': 'Be right back'
+    ,'messageBoard.preset.closed': 'Temporarily closed'
+    ,'messageBoard.preset.rest': 'Closed today'
+    ,'messageBoard.preset.busy': 'Please do not disturb'
+    ,'messageBoard.preset.meeting': 'Meeting in progress'
+    ,'messageBoard.preset.quiet': 'Live now · Please keep quiet'
+    ,'messageBoard.preset.maintenance': 'Maintenance in progress'
+    ,'messageBoard.preset.call': 'Please call if you need me'
+    ,'messageBoard.theme.sunbeam': 'Sunbeam'
+    ,'messageBoard.theme.coral': 'Coral'
+    ,'messageBoard.theme.cobalt': 'Cobalt'
+    ,'messageBoard.theme.forest': 'Forest'
+    ,'messageBoard.theme.paper': 'Paper'
+    ,'messageBoard.theme.midnight': 'Midnight'
+    ,'messageBoard.keepAwake': 'Screen stays awake'
+  },
+  'ja-JP': {
+    'common.toast.copyError': 'エラー情報をコピー',
+    'settings.escapeHidesWindow': 'Esc でウィンドウを隠す',
+    'settings.escapeHidesWindowHint': '初期設定はオンです。独立ツールは元に戻り、HTTP 応答ウィンドウは閉じます。ダイアログ、メニュー、検索が Esc を優先します。',
+    'json.empty.title': 'JSON スニペットから始めましょう',
+    'json.empty.description': '左側のスニペットを選択するか、新規作成・インポートして編集を始めます。元のファイルは変更しません。',
+    'json.empty.import': 'ファイルをインポート',
+    'json.empty.example': 'サンプルから作成',
+    'pdf.status.cancelled': 'キャンセル済み',
+    'pdf.cancelling': 'キャンセル中…',
+    'pdf.openOutput': 'ファイルを開く',
+    'pdf.revealOutput': 'フォルダーに表示',
+    'pdf.copyOutput': 'パスをコピー',
+    'app.nav.filePreview': 'ファイルクイックプレビュー',
+    'filePreview.choose': 'ファイルを選択',
+    'filePreview.previous': '前のファイル',
+    'filePreview.next': '次のファイル',
+    'filePreview.batch': 'このバッチのファイル',
+    'filePreview.empty': 'ファイルをドロップしてプレビュー',
+    'filePreview.hint': 'テキスト、JSON、画像、PDF · 複数ファイルを選択できます',
+    'filePreview.footer': '読み取り専用 · 左右キーで切替 · 選択やドロップでバッチを置換',
+    'filePreview.drop': '離してファイルをプレビュー',
+    'filePreview.batchLimit': '1 回に最大 100 ファイルです。減らして再試行してください。現在のバッチは保持されます。',
+    'filePreview.tooLarge': 'この種類の上限（{limit}）を超えています。小さいファイルを選択してください。',
+    'filePreview.unsupported': 'この形式の内容プレビューは未対応です。他のファイルに切り替えられます。',
+    'filePreview.kind.text': 'テキスト',
+    'filePreview.kind.json': 'JSON',
+    'filePreview.kind.image': '画像',
+    'filePreview.kind.pdf': 'PDF',
+    'filePreview.kind.unsupported': 'その他',
+    'filePreview.encoding': '文字コード',
+    'filePreview.autoEncoding': '自動（UTF-8 / UTF-16 BOM）',
+    'filePreview.wrap': '折り返し',
+    'filePreview.findShortcut': 'ファイル内検索（⌘F / Ctrl+F）',
+    'filePreview.formatJson': 'JSON 整形',
+    'filePreview.invalidJson': '無効な JSON、原文を表示',
+    'filePreview.readOnly': '読み取り専用',
+    'filePreview.text': 'ファイル内容プレビュー',
+    'filePreview.fit': '幅に合わせる',
+    'filePreview.fitImage': 'ウインドウに合わせる',
+    'filePreview.zoomOut': '縮小',
+    'filePreview.zoomIn': '拡大',
+    'filePreview.previousPage': '前のページ',
+    'filePreview.nextPage': '次のページ',
+    'filePreview.page': 'ページ',
+    'filePreview.pdfPage': 'PDF {page} ページ',
+    'filePreview.error.binary': 'バイナリデータのためテキスト表示できません。',
+    'filePreview.error.encoding': 'この文字コードでは読めません。別の文字コードを選択してください。旧形式の中国語は GB18030 をお試しください。',
+    'filePreview.error.tooLarge': 'プレビューの上限を超えています。',
+    'filePreview.error.unreadable': 'ファイルを読めません。再選択してください。',
+    'filePreview.error.image': '画像を表示できません。形式や破損を確認してください。',
+    'filePreview.error.pdf': 'PDF を表示できません。破損を確認してください。',
+    'filePreview.error.password': 'パスワード付き PDF のプレビューは未対応です。',
+    'app.nav.batchRename': '一括リネーム',
+    'batchRename.selectFiles': 'ファイルを選択',
+    'batchRename.conflicts': '競合があるため実行できません。ルールを変更するか競合するファイルの選択を外して再プレビューしてください。',
+    'batchRename.find': '検索テキスト',
+    'batchRename.replacement': '置換後',
+    'batchRename.prefix': '接頭辞',
+    'batchRename.suffix': '接尾辞',
+    'batchRename.caseSensitive': '大文字と小文字を区別',
+    'batchRename.preserveExtension': '拡張子を保持',
+    'batchRename.numbering': '連番を付加',
+    'batchRename.start': '開始番号',
+    'batchRename.width': '桁数',
+    'batchRename.separator': '番号の区切り',
+    'batchRename.preview': '変更をプレビュー',
+    'batchRename.execute': 'リネームを実行',
+    'batchRename.undo': '直前の一括変更を取り消す',
+    'batchRename.recover': '未完了の操作を復元',
+    'batchRename.oldName': '元の名前',
+    'batchRename.newName': '新しい名前',
+    'batchRename.status': '状態',
+    'batchRename.selectAll': 'すべてのファイルを選択',
+    'batchRename.empty': 'ファイルを選択してルールを設定し、新しい名前と競合を確認してください。',
+    'batchRename.counts': '{selected} 件選択 · {changed} 件変更予定',
+    'batchRename.complete': '{count} 件を変更しました。直前の一括変更を取り消せます。',
+    'batchRename.restored': '{count} 件の名前を復元しました。',
+    'batchRename.recoveryHint': '直前の操作が未完了です。「未完了の操作を復元」で再試行してください。復元記録：',
+    'batchRename.help': '通常ファイル最大 500 件 · 文字列置換 · フォルダーの再帰処理なし · ルール変更後は再プレビュー · 次の一括変更成功まで取り消し記録を保持',
+    'batchRename.status.ready': '変更予定',
+    'batchRename.status.unchanged': '変更なし',
+    'batchRename.status.conflict': '競合',
+    'batchRename.issue.invalidName': '無効なファイル名',
+    'batchRename.issue.duplicate': '新しい名前が重複',
+    'batchRename.issue.occupied': '同名ファイルが存在',
+    'batchRename.issue.changed': '移動または置き換え済み',
+    'batchRename.issue.sameFile': '同一ファイルを参照',
+    'batchRename.error.options': 'ルールが無効です。文字列は 120 文字以内、開始番号は 0–1000000、桁数は 1–8。',
+    'batchRename.error.busy': 'ファイル操作中です。しばらくしてから再試行してください。',
+    'batchRename.error.limit': '一度に選択できるのは 500 件までです。',
+    'batchRename.error.file': '既存の通常ファイルを選択してください。フォルダーやシンボリックリンクには対応していません。',
+    'batchRename.error.selection': '選択が無効です。ファイルを選び直してください。',
+    'batchRename.error.recovery': '復元が未完了です。対応表は保持されています。名前の競合を解消して復元を再試行してください。',
+    'batchRename.error.preview': 'プレビューが失効しました。再プレビューしてください。',
+    'batchRename.error.undo': '取り消せる操作がありません。',
+    'batchRename.error.changed': 'ファイルが移動または置き換えられました。操作を停止しました。選択とプレビューをやり直してください。',
+    'batchRename.error.occupied': '移動先の名前が使用中です。そのファイルを上書きせず操作を停止しました。',
+    'batchRename.error.unsupported': 'ハードリンク非対応のファイルシステムか、書き込み権限がありません。元の名前に復元しました。',
+    'batchRename.error.journal': '復元記録を読み取れません。アプリデータ内の file-operations/batch-rename-journal.json を保存して確認してください。',
+    'app.command.section.pinned': 'よく使うアクション',
+    'app.command.section.recent': '最近実行したアクション',
+    'app.command.section.all': 'すべてのアクション',
+    'app.command.section.tools': 'ツール',
+    'app.command.pin': 'よく使うに追加',
+    'app.command.unpin': 'よく使うから削除',
+    'app.command.pinned': 'よく使う',
+    'app.command.clearRecent': '最近の実行履歴を消去',
+    'app.command.preferencesFailed': 'コマンドパレットの設定を読み取り、または保存できませんでした。再試行してください。',
+    'settings.globalShortcut.title': 'グローバルコマンドパレット',
+    'settings.globalShortcut.enable': 'グローバルコマンドパレットのショートカットを有効化',
+    'settings.globalShortcut.description': 'MooTool のバックグラウンド実行中に他のアプリからパレットを開けます。変更後に保存するとすぐに適用されます。',
+    'settings.globalShortcut.combination': 'グローバルショートカットの組み合わせ',
+    'settings.globalShortcut.example': '例：Ctrl+Alt+Space、macOS では Cmd+Shift+Space。既定：macOS は ⌘⇧Space、Windows/Linux は Ctrl+Shift+Space。',
+    'settings.globalShortcut.reset': '既定の組み合わせに戻す',
+    'settings.globalShortcut.retry': '登録を再試行',
+    'settings.globalShortcut.disabled': 'グローバルショートカットは無効です。アプリ内検索やトレイから開けます。',
+    'settings.globalShortcut.registered': 'グローバルショートカットが有効：{shortcut}',
+    'settings.globalShortcut.invalid': 'Ctrl+Alt+Space などの修飾キーとキーの組み合わせを入力してください。Shift のみや単独キーは使用できません。',
+    'settings.globalShortcut.conflict': 'MooTool の検索、設定、編集ショートカットと競合します。別の組み合わせを選んでください。',
+    'settings.globalShortcut.unavailable': '登録できませんでした。システムや他のアプリが使用中の可能性があります。変更するか再試行してください。',
+    'app.command.uuid': 'UUID を生成',
+    'app.command.timestamp': 'タイムスタンプを日時に変換',
+    'app.command.jsonFormat': 'JSON を整形',
+    'app.command.jsonMinify': 'JSON を圧縮',
+    'app.command.base64Encode': 'Base64 エンコード',
+    'app.command.base64Decode': 'Base64 デコード',
+    'app.command.urlEncode': 'URL エンコード',
+    'app.command.urlDecode': 'URL デコード',
+    'app.command.deduplicate': '重複行を削除',
+    'app.command.clipboardText': "クリップボードのプレーンテキスト",
+    'app.command.clipboardHtml': "クリップボードの HTML ソース",
+    'app.command.htmlMarkdown': "リッチテキストを Markdown に変換",
+    'app.command.tableJson': "表を JSON に変換",
+    'app.command.richClipboard': "クリップボードのリッチテキストを読み取りプレビュー",
+    'app.command.fileFormat': "保存ファイル形式",
+    'app.command.save': "ファイルに保存",
+    'app.command.importJson': 'JSON ワークスペースに取り込む',
+    'app.command.importNote': 'クイックノートに取り込む',
+    'app.command.importFailed': '取り込みに失敗しました。もう一度お試しください。',
+    'app.command.saved': "ファイルを保存しました",
+    'app.command.saveFailed': "保存できませんでした。再試行するか、結果をコピーして手動で保存してください。",
+    'app.command.invalidJsonSave': "プレビューは有効な JSON ではありません。別の形式を選ぶか、先に JSON に変換してください。",
+    'app.command.noHtml': "クリップボードに HTML がありません。先にリッチテキストをコピーしてください。",
+    'app.command.invalidTable': "表には見出し行とデータ行が必要です。各行の列数をそろえ、引用符を閉じてください。",
+    'app.command.tableHeaders': "列名は空欄や重複にできません。先頭行を修正してください。",
+    'app.command.tableLimit': "表は最大 200 列、データ 5000 行に対応します。",
+    'app.command.unsupportedTable': "結合セルや入れ子の表には対応していません。通常の表に展開してください。",
+    'app.command.complexHtml': "HTML 構造が複雑すぎます。コピー範囲を小さくしてください。",
+    'app.command.action': 'アクションを実行',
+    'app.command.tool': 'ツールを開く',
+    'app.command.clipboard': 'クリップボードを読み取りプレビュー',
+    'app.command.inline': '入力を処理してプレビュー',
+    'app.command.noInput': '生成してプレビュー',
+    'app.command.preview': '結果プレビュー',
+    'app.command.copy': '結果をコピー',
+    'app.command.copied': '結果をコピーしました',
+    'app.command.back': '検索に戻る',
+    'app.command.hint': '↑ ↓ 選択 · Enter 実行 · Esc 閉じる；uuid / timestamp 1728000000',
+    'app.command.previewHint': 'Enter 結果をコピー · Esc 検索に戻る',
+    'app.command.invalidBase64': '有効な UTF-8 Base64 テキストを入力してください。',
+    'app.command.invalidUrl': 'URL に無効なパーセントエンコードが含まれています。',
+    'app.command.tooLarge': '入力は 100,000 文字以内にしてください。',
+    'app.command.emptyInput': '処理するテキストがありません。コピーするかコマンドの後に入力してください。',
+    'app.command.clipboardFailed': 'クリップボードを読み取れません。コマンドの後にテキストを入力してください。',
+    'app.command.copyFailed': 'コピーに失敗しました。再試行するか結果を手動でコピーしてください。',
+    'common.toast.dismiss': '通知を閉じる',
+    'common.resizePane': 'ペイン幅を調整',
+    'common.loading': '読み込み中…',
+    'common.close': '閉じる',
+    'common.cancel': 'キャンセル',
+    'common.confirm': '操作の確認',
+    'findReplace.find': '検索',
+    'findReplace.findPlaceholder': '検索',
+    'findReplace.replacePlaceholder': '置換文字列',
+    'findReplace.replace': '置換',
+    'findReplace.replaceAll': 'すべて置換',
+    'findReplace.regex': '正規表現を使用',
+    'findReplace.matchCase': '大文字と小文字を区別',
+    'findReplace.wholeWord': '単語単位',
+    'findReplace.foundPrefix': '合計:',
+    'findReplace.replacedPrefix': '置換済み:',
+    'findReplace.previous': '前の一致',
+    'findReplace.next': '次の一致',
+    'findReplace.noMatches': '一致する内容がありません',
+    'findReplace.wrappedToStart': '最後の一致に達したため、最初から続けます',
+    'findReplace.wrappedToEnd': '最初の一致に達したため、最後から続けます',
+    'app.nav.tools': 'ツールナビゲーション',
+    'app.nav.home': 'MooTool',
+    'app.nav.quickNote': 'クイックノート',
+    'app.nav.textDiff': 'テキスト比較',
+    'app.nav.reformat': 'フォーマット',
+    'app.nav.json': 'JSON',
+    'app.nav.java': 'コード実行',
+    'app.nav.ymlProperties': '設定ファイル変換',
+    'app.nav.protobuf': 'Protobuf',
+    'app.nav.variables': '環境変数',
+    'app.nav.host': 'Host',
+    'app.nav.net': 'ネットワーク/IP',
+    'app.nav.uaParse': 'UA 解析',
+    'app.nav.timeConvert': '時刻変換',
+    'app.nav.translation': '翻訳',
+    'app.nav.calculator': '計算機',
+    'app.nav.hardware': 'システム情報',
+    'app.nav.encode': 'エンコード',
+    'app.nav.crypto': '暗号化/ランダム',
+    'app.nav.qrCode': 'QRコード',
+    'app.nav.http': 'HTTP リクエスト',
+    'app.nav.diff': 'テキスト Diff',
+    'app.nav.regex': '正規表現',
+    'app.nav.colorBoard': 'カラーパネル',
+    'app.nav.image': '画像処理',
+    'app.nav.pdf': 'PDF',
+    'app.nav.cron': 'Cron',
+    'app.group.text': 'ノートとテキスト',
+    'app.group.dev': '開発とフォーマット',
+    'app.group.network': 'ネットワークとリクエスト',
+    'app.group.encode': 'エンコードと暗号化',
+    'app.group.daily': 'ユーティリティ',
+    'app.group.system': 'システム',
+    'app.nav.recent': '最近',
+    'app.nav.settings': '設定',
+    'app.nav.search': '検索',
+    'app.nav.collapse': 'サイドバーを折りたたむ',
+    'app.nav.expand': 'サイドバーを展開',
+    'app.nav.manageGroups': 'グループを管理',
+    'app.group.all': 'すべてのツール',
+    'app.group.manage.title': 'ツールグループを管理',
+    'app.group.manage.new': '新しいグループ',
+    'app.group.manage.defaultName': '新しいグループ {number}',
+    'app.group.manage.empty': 'カスタムグループはありません。「新しいグループ」から作成できます。',
+    'app.group.manage.name': 'グループ名',
+    'app.group.manage.tools': 'ツールを選択',
+    'app.group.manage.delete': 'グループを削除',
+    'app.group.manage.deleteConfirm': 'グループ「{name}」を削除しますか？',
+    'app.group.manage.nameRequired': 'グループ名を入力してください。',
+    'app.group.manage.toolRequired': 'ツールを1つ以上選択してください。',
+    'app.group.manage.saveFailed': 'グループを保存できませんでした',
+    'app.recent.empty': '最近使ったツールはありません',
+    'app.search.title': 'コマンドパレット',
+    'app.search.placeholder': 'ツールやアクションを検索、またはコマンドを入力…',
+    'app.search.empty': '一致する機能がありません',
+    'app.search.close': '検索を閉じる',
+    'app.home.website': 'MooTool のホームページを開く',
+    'app.home.tagline': '開発者向けの便利なデスクトップツールセット',
+    'app.home.author': 'Proudly by RememBerBer Zhou Bo',
+    'app.home.about.title': 'MooTool について',
+    'app.home.about.line1': 'MooTool をご利用いただきありがとうございます。「Moo」は作者の娘の愛称です。',
+    'app.home.about.lineDaily': '自分の日常の開発作業を支えるために、MooTool を作り続け、改善し続けています。',
+    'app.home.about.line2': 'Swing で開発する Java 開発者は減りましたが、今でもその開発を楽しんでいます。',
+    'app.home.about.line2Note': 'もっとも、今お使いのものはもう Swing 版ではありません 😛',
+    'app.home.about.line3': '空いた時間を少しずつ、このプロジェクトの開発に注いできました。',
+    'app.home.about.line4': 'Web 上に似たツールが多くある中でも、ひとつの形にすることができました。',
+    'app.home.about.line5': '開発したときと同じくらい、楽しく使っていただければ幸いです。',
+    'app.home.source.title': 'ソースコード',
+    'app.home.help.title': '改善にご協力ください',
+    'app.home.help.issue': '問題やアイデアを共有',
+    'app.home.thanks.title': '謝辞',
+    'app.home.otherWorks.title': 'その他の作品',
+    'app.home.wePush.desc': '一括配信に特化した軽量ツール',
+    'app.home.mooInfo.desc': 'システムとハードウェア情報を表示する OSHI の可視化実装',
+    'app.home.sponsor.title': 'スポンサー',
+    'app.home.sponsor.prompt': 'コーヒーをごちそうする',
+    'app.home.sponsor.tip': 'ご支援ありがとうございます',
+    'app.home.contributors.title': 'コントリビューター',
+    'app.home.contributors.thanks': 'MooTool に貢献してくださった皆さまに感謝します。',
+    'app.placeholder': 'このツールページは JSON ワークベンチの構成で移行します。',
+    'toolWindow.detach': '別ウィンドウで開く',
+    'toolWindow.dock': 'ワークスペースに戻す',
+    'toolWindow.detachTool': '{tool} を別ウィンドウで開く',
+    'toolWindow.dockTool': '{tool} をワークスペースに戻す',
+    'toolWindow.focus': 'ウィンドウを表示',
+    'toolWindow.detachedTitle': '{tool} は別ウィンドウで開いています',
+    'toolWindow.detachedDescription': '別ウィンドウを閉じると、このツールは自動的にここへ戻ります。',
+    'toolWindow.updateNotesTitle': '更新内容を表示しています',
+    'toolWindow.updateNotesDescription': 'マウスポインターを外すと {tool} に戻ります。作業内容はそのまま保持されます。',
+    'pdf.phase.reading': 'PDF を読み込み中',
+    'pdf.phase.processing': 'PDF を処理中',
+    'pdf.phase.saving': 'PDF を保存中',
+    'toolWindow.crashed': 'ツールのページが予期せず終了しました',
+    'toolWindow.recoveryDetail': '自動復旧できませんでした。再読み込みすると保存済みの下書きを復元します。未保存の変更は失われた可能性があります。',
+    'toolWindow.reload': '再読み込み',
+    'toolWindow.invalid': 'このツールウィンドウを開けませんでした。',
+    'settings.title': '設定',
+    'settings.close': '設定を閉じる',
+    'settings.back': 'ワークスペースに戻る',
+    'settings.saveFailed': '設定を保存できませんでした',
+    'settings.language': '言語',
+    'settings.category.general': '一般',
+    'settings.category.appearance': '外観',
+    'settings.category.layout': 'レイアウトと操作',
+    'settings.category.editor': 'エディター',
+    'settings.category.network': 'ネットワーク',
+    'settings.category.data': 'データとバックアップ',
+    'settings.category.vault': 'Vault',
+    'settings.category.runtime': '実行環境',
+    'settings.ai.delete': "削除",
+    'settings.ai.repair': "修復 / 更新",
+    'settings.ai.uninstall': "選択した連携を削除",
+    'settings.ai.removed': "選択した連携を削除しました。クライアントを再読み込みしてください。",
+    'settings.ai.uninstallHint': "選択したクライアントと方式の MooTool 管理内容のみ削除します。他の設定、文書、ユーザーの編集は保持します。",
+    'settings.ai.state.not-installed': "未インストール",
+    'settings.ai.state.installed': "インストール済み",
+    'settings.ai.state.needs-repair': "修復 / 更新が必要",
+    'settings.ai.state.conflict': "ユーザーの編集または設定競合",
+    'settings.ai.dataTitle': "文書の読み取り専用アクセス",
+    'settings.ai.dataHint': "既定はオフです。有効な文書庫の検索・読み取りを許可します。無効化は次回の呼び出しから適用され、保存先変更時は許可を取り消します。",
+    'settings.ai.access.notes': "クイックノートの読み取りを許可",
+    'settings.ai.access.json': "JSON 文書の読み取りを許可",
+    'settings.category.ai': "AI 連携",
+    'settings.ai.title': "AI から MooTool を使う",
+    'settings.ai.description': "Codex、Claude Code、Cursor に MooTool のローカル機能をワンクリックで追加します。",
+    'settings.ai.scope': "JSON、エンコード、日時変換、テキスト比較、ハッシュ、UUID に加え、許可されたクイックノートと JSON 文書を読み取れます。",
+    'settings.ai.client': "AI クライアント",
+    'settings.ai.mode': "連携方法",
+    'settings.ai.skillHint': "Skill は同梱ツールを直接呼び出せます。Node.js の追加インストールは不要です。",
+    'settings.ai.mcpHint': "MCP はクライアントが自動起動するため、MooTool のウィンドウは閉じていても使えます。インストール前に接続をテストし、既存設定を保持してバックアップします。",
+    'settings.ai.install': "ワンクリックでインストール",
+    'settings.ai.installed': "インストール済み",
+    'settings.ai.test': "接続テスト",
+    'settings.ai.refresh': "プレビュー更新",
+    'settings.ai.restart': "完了しました。AI クライアントを再起動するか MCP / Skill を再読み込みしてください。クライアント側で有効化が必要な場合があります。",
+    'settings.ai.backups': "元の設定のバックアップ",
+    'settings.ai.connected': "接続とツール呼び出しを確認しました。{count} 個のツールが利用可能です。",
+    'settings.ai.preview': "インストール先と追加内容",
+    'settings.ai.create': "新規",
+    'settings.ai.update': "統合",
+    'settings.ai.unchanged': "追加済み",
+    'settings.ai.copy': "MCP 設定をコピー（他のクライアント）",
+    'settings.ai.copied': "MCP 設定をコピーしました",
+    'settings.category.tools': 'ツールの既定値',
+    'settings.category.shortcuts': 'ショートカット',
+    'settings.category.about': '情報と更新',
+    'settings.group.application': 'アプリの動作',
+    'settings.group.theme': 'テーマとフォント',
+    'settings.group.navigation': '機能ナビゲーション',
+    'settings.group.editor': '編集',
+    'settings.group.proxy': 'HTTP プロキシ',
+    'settings.group.timeouts': 'タイムアウトとキャンセル',
+    'settings.group.storage': 'データディレクトリ',
+    'settings.group.backup': 'ローカルバックアップ',
+    'settings.backup.all': '完全バックアップ',
+    'settings.backup.database': 'データファイル',
+    'settings.backup.settings': '設定ファイル',
+    'settings.backup.images': '画像ディレクトリ',
+    'settings.backup.export': 'エクスポート',
+    'settings.backup.open': 'フォルダーを開く',
+    'settings.backup.success': 'バックアップをエクスポートしました',
+    'settings.group.migration': '旧版データの移行',
+    'settings.migration.source': 'Java 版データディレクトリ',
+    'settings.migration.scan': 'スキャン',
+    'settings.migration.ready': '{count} 件の移行可能なデータが見つかりました',
+    'settings.migration.databaseFound': 'データベースが見つかりました',
+    'settings.migration.databaseMissing': '旧データベースが見つかりません',
+    'settings.migration.configFound': '設定が見つかりました',
+    'settings.migration.configMissing': '旧設定が見つかりません',
+    'settings.migration.import': '移行を開始',
+    'settings.migration.importing': '移行中…',
+    'settings.migration.confirmTitle': 'Java 版データを移行',
+    'settings.migration.confirmBody': '{count} 件のデータを移行します。MooTool Next は先に完全バックアップを作成し、Java 版の元ファイルは変更しません。',
+    'settings.migration.success': '{count} 件のデータを移行しました',
+    'settings.migration.alreadyMigrated': 'この移行元はすでに移行済みです',
+    'settings.migration.warning.remotes': '旧 Vault のリモートが異なるため、リモート URL は自動統合されません。',
+    'settings.migration.warning.secrets': 'プロキシパスワードと Git Token は移行されません。設定で安全に保存し直してください。',
+    'app.migrationHint.title': 'Java 版データを移行',
+    'app.migrationHint.body': '以前に Java 版 MooTool を使っていた場合、「設定 → データとバックアップ」から履歴データを移行できます。移行しても Java 版の元データは変更・削除されません。',
+    'app.migrationHint.openSettings': '設定を開く',
+    'app.migrationHint.dismiss': '了解',
+    'settings.group.vaultPaths': 'Vault パス',
+    'settings.group.git': 'Git 同期',
+    'settings.group.runtimes': 'ローカル実行環境',
+    'settings.group.toolDefaults': '既定のパラメーター',
+    'settings.group.shortcuts': 'アプリのショートカット',
+    'settings.autoCheckUpdates': '起動時に更新を確認',
+    'settings.autoDownloadUpdates': '新しいバージョンを自動ダウンロード',
+    'settings.startMaximized': '最大化して起動',
+    'settings.trayEnabled': 'システムトレイを有効化',
+    'settings.closeBehavior': 'メインウィンドウを閉じるとき',
+    'settings.close.ask': '毎回確認',
+    'settings.close.hide': '隠す',
+    'settings.close.quit': '終了',
+    'settings.interfaceStyle': 'インターフェーススタイル',
+    'settings.interfaceStyle.modern': 'モダン',
+    'settings.interfaceStyle.quiet': 'クワイエット',
+    'settings.interfaceStyle.hero': 'Hero（NextUI）',
+    'settings.interfaceStyle.smartisan': 'Smartisan OS',
+    'settings.interfaceStyle.miuiV5': 'MIUI V5',
+    'settings.interfaceStyle.claude': 'Claude',
+    'settings.theme': 'カラーモード',
+    'settings.theme.system': 'システム',
+    'settings.windowMaterial': 'ウインドウの質感',
+    'settings.windowMaterial.current': '現在の質感',
+    'settings.windowMaterial.pending': '変更を保存しました。アプリの再起動後に適用されます。',
+    'settings.windowMaterial.reason.accessibility': 'アクセシビリティ設定により不透明にしています',
+    'settings.windowMaterial.reason.platform': 'この OS では不透明になります',
+    'settings.windowMaterial.reason.system-version': 'この macOS ではすりガラスを使用します',
+    'settings.windowMaterial.reason.extension': 'ガラス拡張を利用できないため代替表示を使用中',
+    'settings.windowMaterial.reason.native-failure': 'ネイティブ効果を利用できないため不透明を使用中',
+    'settings.windowMaterial.reason.initializing': 'ウインドウの質感を確認中',
+    'settings.windowMaterial.auto': '自動',
+    'settings.windowMaterial.solid': '不透明',
+    'settings.windowMaterial.vibrancy': 'すりガラス',
+    'settings.windowMaterial.hint': '次回起動時に適用。Liquid Glass は macOS 26 以降が必要です。利用できない場合はすりガラス、他の OS では不透明になります。透明度を下げる設定や高コントラストを優先します。',
+    'settings.theme.light': 'ライト',
+    'settings.theme.dark': 'ダーク',
+    'settings.accentColor': 'アクセントカラー',
+    'settings.fontSize': '全体の文字サイズ',
+    'settings.unifiedBackground': 'ワークスペースの背景を統一',
+    'settings.navigationStyle': 'ナビゲーション形式',
+    'settings.navigation.classic': 'クラシック',
+    'settings.navigation.card': 'カード',
+    'settings.navigation.grouped': 'グループ',
+    'settings.navigation.toolsTitle': 'サイドバーのツール一覧',
+    'settings.navigation.toolsDescription': '「すべてのツール」に表示する項目を選択します。MooTool、検索、最近使ったツール、カスタムグループには影響しません。',
+    'settings.navigation.showAll': 'すべて表示',
+    'settings.navigation.hideAll': 'すべて非表示',
+    'settings.showRecent': '最近使ったツールを表示',
+    'settings.compactNavigation': 'コンパクトナビゲーション',
+    'settings.showSeparators': '区切り線を表示',
+    'settings.hideNavigationTitles': 'ナビゲーションのタイトルを隠す',
+    'settings.sqlDialect': 'SQL 方言',
+    'settings.jsonFontSize': 'JSON の文字サイズ',
+    'settings.quickNoteFontSize': 'クイックノートの文字サイズ',
+    'settings.softWrap': 'エディターで折り返す',
+    'settings.proxyEnabled': 'HTTP プロキシを使用',
+    'settings.proxyHost': 'Host',
+    'settings.proxyPort': 'ポート',
+    'settings.proxyUsername': 'ユーザー名',
+    'settings.proxyPassword': 'パスワード',
+    'settings.requestTimeout': 'HTTP タイムアウト（ミリ秒）',
+    'settings.translationTimeout': '翻訳タイムアウト（ミリ秒）',
+    'settings.dataDirectory': 'データ保存場所',
+    'settings.quickNoteVault': 'クイックノート Vault',
+    'settings.jsonVault': 'JSON Vault',
+    'settings.gitRemote': 'リモートリポジトリ',
+    'settings.gitUsername': 'Git ユーザー名',
+    'settings.gitToken': 'Git 個人トークン',
+    'settings.autoCommit': 'Git チェックポイントを自動作成',
+    'settings.autoCommitIdleSeconds': '編集アイドル後に保存（秒）',
+    'settings.autoCommitInactiveSeconds': 'ウィンドウ非アクティブ後に保存（秒）',
+    'settings.autoPullMinutes': '自動 pull 間隔（分）',
+    'settings.hideGitignoredFiles': '.gitignore 対象ファイルを隠す',
+    'settings.runtime.detect': '再検出',
+    'settings.runtime.notFound': '見つかりません',
+    'settings.runtime.auto': 'システムから自動検出',
+    'settings.runtime.path': 'パス',
+    'settings.qrCodeSize': 'QR コードサイズ',
+    'settings.qrErrorCorrection': 'QR 誤り訂正レベル',
+    'settings.randomStringLength': 'ランダム文字列の長さ',
+    'settings.exportDirectory': '既定の出力先',
+    'settings.translationProvider': '既定の翻訳サービス',
+    'settings.translationSource': '既定の翻訳元言語',
+    'settings.translationTarget': '既定の翻訳先言語',
+    'settings.shortcut.search': 'ツールを検索',
+    'settings.shortcut.settings': '設定を開く',
+    'settings.chooseDirectory': 'ディレクトリを選択',
+    'settings.version': 'バージョン {version}',
+    'settings.update.check': 'アップデートを確認',
+    'settings.update.checking': '確認中…',
+    'settings.update.latest': '現在のバージョンは最新です',
+    'settings.update.available': '新しいバージョン {version} があります',
+    'settings.update.failed': 'アップデートを確認できませんでした。後でもう一度お試しください。',
+    'settings.update.target': '{product} · {platform}/{architecture}',
+    'settings.update.download': 'アップデートをダウンロード',
+    'settings.update.downloading': 'バックグラウンドでダウンロード中 {percent}%',
+    'settings.update.ready': 'バージョン {version} の準備ができました',
+    'settings.update.whatsNew': '更新内容',
+    'settings.update.installRestart': 'インストールして再起動',
+    'settings.update.manualInstall': 'ダウンロード済みです。DMG を開いてインストールしてください',
+    'settings.update.openDownloaded': 'DMG を開く',
+    'settings.update.downloadFailed': 'アップデートのダウンロードに失敗しました。後でもう一度お試しください。',
+    'settings.update.installFailed': 'アップデートのインストールを開始できませんでした。後でもう一度お試しください。',
+    'settings.update.noDownload': 'このデバイスに対応するインストーラーはまだありません。リリースページをご確認ください。',
+    'settings.update.openRelease': 'リリースページを開く',
+    'settings.update.project': 'プロジェクトページ',
+    'settings.secret.stored': '安全に保存済み',
+    'settings.secret.saved': '機密情報を安全に保存しました',
+    'settings.secret.save': '保存',
+    'settings.secret.clear': '消去',
+    'settings.secret.unavailable': 'システムの安全なストレージを利用できません',
+    'history.title': '履歴',
+    'history.search': '履歴を検索…',
+    'history.empty': '履歴はありません',
+    'history.clearAll': 'すべて消去',
+    'history.confirmClear': 'このツールの履歴をすべて消去しますか？',
+    'history.copyInput': '入力をコピー',
+    'history.copyOutput': '出力をコピー',
+    'history.delete': '履歴を削除',
+    'json.title': 'JSON ワークベンチ',
+    'json.editor.label': 'JSON エディター',
+    'json.valid.idle': 'JSON 入力待ち',
+    'json.valid.ok': '有効な JSON · {type}',
+    'json.valid.error': 'JSON の解析に失敗しました',
+    'json.error.empty': 'JSON を入力してください',
+    'json.error.notString': '現在の内容は JSON 文字列ではありません',
+    'json.error.duplicateKeys': '重複したキーがあります：{paths}',
+    'json.error.emptyXml': 'XML を入力してください',
+    'json.error.emptyPath': 'JSON Path を入力してください',
+    'json.error.objectRequired': 'この操作には JSON Object が必要です',
+    'json.error.emptyJavaBean': 'JavaBean クラスコードを入力してください',
+    'json.error.noJavaFields': '変換できる Java フィールドが見つかりません',
+    'json.action.format': '整形',
+    'json.action.compress': '圧縮',
+    'json.font': 'フォント',
+    'json.action.wrap': '自動折り返しを有効にする',
+    'json.action.nowrap': '自動折り返しを無効にする',
+    'json.action.copy': 'コピー',
+    'json.action.copied': 'コピー済み',
+    'json.action.clear': 'クリア',
+    'json.action.find': '検索',
+    'json.action.import': '読み込み',
+    'json.action.export': '書き出し',
+    'json.action.history': '履歴',
+    'json.action.more': 'その他のツール',
+    'json.action.escape': 'JSON 文字列へエスケープ',
+    'json.action.unescape': 'JSON 文字列を復元',
+    'json.action.escapeText': '文字列をエスケープ',
+    'json.action.unescapeText': '文字列をアンエスケープ',
+    'json.action.jsonToXml': 'JSON から XML',
+    'json.action.xmlToJson': 'XML から JSON',
+    'json.action.beanToJson': 'JavaBean から JSON',
+    'json.action.jsonToBean': 'JSON から JavaBean',
+    'json.action.swap': 'Key / Value 入れ替え',
+    'json.notice.formatted': '整形しました',
+    'json.notice.compressed': '圧縮しました',
+    'json.notice.copied': 'クリップボードにコピーしました',
+    'json.notice.copyFailed': 'コピーに失敗しました',
+    'json.notice.failed': '処理に失敗しました',
+    'json.notice.escaped': 'JSON 文字列に変換しました',
+    'json.notice.unescaped': 'JSON 文字列を復元しました',
+    'json.notice.imported': 'ファイルを読み込みました',
+    'json.notice.exported': 'ファイルを書き出しました',
+    'json.notice.pathApplied': 'JSON Path を適用しました',
+    'json.notice.noMatches': '一致する内容はありません',
+    'json.panel.actions': '操作',
+    'json.panel.result': '結果',
+    'json.panel.format': 'フォーマット設定',
+    'json.panel.convert': '変換',
+    'json.panel.jsonPath': 'JSON Path',
+    'json.format.indent': 'インデント空白数',
+    'json.format.sortKeys': 'Object Key をソート',
+    'json.format.ignoreCase': 'ソートと重複検査で大文字小文字を無視',
+    'json.format.duplicateKeys': 'フォーマット前に重複 Key を検査',
+    'json.format.apply': 'カスタム整形を適用',
+    'json.find.placeholder': 'JSON 内を検索…',
+    'json.find.matches': '{count} 件',
+    'json.find.next': '次の一致',
+    'json.find.close': '検索を閉じる',
+    'json.path.placeholder': '例: $.store.book[*].title',
+    'json.path.query': '検索',
+    'json.path.pick': 'ビジュアル選択',
+    'json.pathPicker.title': 'JSON Path を選択',
+    'json.pathPicker.use': 'このパスを使用',
+    'json.pathPicker.path': 'パス',
+    'json.pathPicker.preview': '値のプレビュー',
+    'json.dialog.input': '入力',
+    'json.dialog.output': '出力',
+    'json.dialog.run': '変換',
+    'json.dialog.className': 'ルートクラス名',
+    'json.dialog.useOutput': '出力を使用',
+    'json.vault.title': 'JSON Vault',
+    'json.vault.new': '新規スニペット',
+    'json.vault.save': 'スニペットを保存',
+    'json.vault.delete': 'スニペットを削除',
+    'json.vault.refresh': 'Vault を更新',
+    'json.vault.empty': 'JSON スニペットはありません',
+    'json.vault.fileName': 'ファイル名または相対パス',
+    'json.vault.fileNameHint': '例: drafts/request.json',
+    'json.vault.create': '作成',
+    'json.vault.saved': 'スニペットを保存しました',
+    'json.vault.created': 'スニペットを作成しました',
+    'json.vault.deleted': 'スニペットを削除しました',
+    'json.vault.confirmDelete': '「{name}」を削除しますか？',
+    'json.vault.confirmDiscard': '現在のスニペットに未保存の変更があります。破棄しますか？'
+    ,'json.vault.newFolder': '新規フォルダー'
+    ,'json.vault.expandAll': 'すべて展開'
+    ,'json.vault.collapseAll': 'すべて折りたたむ'
+    ,'json.vault.defaultFolder': '新規フォルダー'
+    ,'json.vault.folderName': 'フォルダーの相対パス'
+    ,'json.vault.folderCreated': 'フォルダーを作成しました'
+    ,'json.vault.rename': '名前を変更'
+    ,'json.vault.renameName': '新しい名前'
+    ,'json.vault.renamed': '項目の名前を変更しました'
+    ,'json.vault.move': '移動'
+    ,'json.vault.moveTo': '移動先フォルダー'
+    ,'json.vault.moved': '項目を移動しました'
+    ,'json.vault.duplicate': 'スニペットを複製'
+    ,'json.vault.duplicated': 'スニペットのコピーを作成しました'
+    ,'json.vault.openFolder': 'ファイルマネージャーで Vault を開く'
+    ,'json.vault.revealInFinder': 'ファイルマネージャーで表示'
+    ,'json.vault.locateCurrent': '現在のファイルを表示'
+    ,'json.vault.sort': '並び順'
+    ,'json.vault.sortName': '名前順'
+    ,'json.vault.sortModified': '更新日時順'
+    ,'json.vault.more': 'その他の Vault 操作'
+    ,'json.vault.root': 'Vault ルート'
+    ,'json.git.title': 'JSON Vault Git'
+    ,'json.git.open': 'Git パネルを開く'
+    ,'json.git.unavailable': 'Git コマンドが見つかりません'
+    ,'json.git.noRepo': 'この Vault はまだ Git リポジトリではありません'
+    ,'json.git.init': 'Git を初期化'
+    ,'json.git.refresh': '更新'
+    ,'json.git.fetch': 'Fetch'
+    ,'json.git.pull': 'Pull'
+    ,'json.git.push': 'Push'
+    ,'json.git.branch': 'ブランチ {branch}'
+    ,'json.git.sync': '↑{ahead} ↓{behind}'
+    ,'json.git.remote': 'リモートリポジトリ'
+    ,'json.git.remotePlaceholder': 'https://... または git@host:repo.git'
+    ,'json.git.saveRemote': 'リモート URL を保存'
+    ,'json.git.removeRemote': 'リモートを削除'
+    ,'json.git.changes': '未コミットの変更'
+    ,'json.git.history': 'コミット履歴'
+    ,'json.git.emptyChanges': '作業ツリーはクリーンです'
+    ,'json.git.emptyHistory': 'コミットはありません'
+    ,'json.git.diff': '変更詳細'
+    ,'json.git.noDiff': '変更またはコミットを選択して Diff を表示'
+    ,'json.git.diffFile': '変更ファイル'
+    ,'json.git.diffBefore': '変更前'
+    ,'json.git.diffAfter': '変更後'
+    ,'json.git.diffBinary': 'バイナリファイルは内容を比較できません'
+    ,'json.git.diffTooLarge': 'ファイルが大きすぎるため比較をプレビューできません'
+    ,'json.git.commitMessage': 'コミットメッセージ'
+    ,'json.git.defaultMessage': 'MooTool JSON checkpoint'
+    ,'json.git.commit': 'すべての変更をコミット'
+    ,'json.git.conflict': '競合'
+    ,'json.git.done': 'Git 操作が完了しました'
+    ,'json.git.discard': '変更を破棄'
+    ,'json.git.confirmDiscard': '「{path}」のローカル変更を破棄しますか？この操作は元に戻せません。'
+    ,'json.git.abortMerge': 'マージ / リベースを中止'
+    ,'json.git.confirmAbort': '現在のマージまたはリベースを中止し、操作前の状態に戻しますか？'
+    ,'json.git.continueOperation': 'マージ / リベースを続行'
+    ,'json.git.useOurs': 'ローカル版を使用'
+    ,'json.git.useTheirs': 'リモート版を使用'
+    ,'time.title': '時刻変換'
+    ,'time.current': '現在時刻'
+    ,'time.timestamp': 'Unix タイムスタンプ'
+    ,'time.localTime': 'ローカル時刻'
+    ,'time.timezone': 'タイムゾーン'
+    ,'time.unit.second': '秒 (s)'
+    ,'time.unit.millisecond': 'ミリ秒 (ms)'
+    ,'time.toLocal': 'ローカル時刻に変換'
+    ,'time.toTimestamp': 'タイムスタンプに変換'
+    ,'time.copy': 'コピー'
+    ,'time.clock': '全画面時計'
+    ,'time.history': '履歴'
+    ,'time.formatHint': '形式: yyyy-MM-dd HH:mm:ss'
+    ,'time.error.timestamp': '有効な Unix タイムスタンプを入力してください'
+    ,'time.error.localTime': 'yyyy-MM-dd HH:mm:ss 形式の時刻を入力してください'
+    ,'time.notice.toLocal': '{zone} の時刻に変換しました'
+    ,'time.notice.toTimestamp': 'Unix タイムスタンプに変換しました'
+    ,'time.notice.copied': 'コピーしました'
+    ,'time.clock.close': '全画面時計を閉じる'
+    ,'common.action.copy': 'コピー'
+    ,'common.action.paste': '貼り付け'
+    ,'common.action.clear': 'クリア'
+    ,'common.action.history': '履歴'
+    ,'common.action.swap': '入れ替え'
+    ,'common.action.apply': '適用'
+    ,'common.action.save': '保存'
+    ,'common.action.delete': '削除'
+    ,'common.input': '入力'
+    ,'common.output': '出力'
+    ,'common.result': '結果'
+    ,'common.name': '名前'
+    ,'common.description': '説明'
+    ,'common.yes': 'はい'
+    ,'common.no': 'いいえ'
+    ,'common.error.process': '処理に失敗しました: {message}'
+    ,'favorite.title': 'お気に入り'
+    ,'favorite.add': '現在の内容をお気に入りに追加'
+    ,'favorite.empty': 'お気に入りはありません'
+    ,'favorite.namePlaceholder': 'お気に入り名'
+    ,'favorite.saved': 'お気に入りを保存しました'
+    ,'favorite.deleted': 'お気に入りを削除しました'
+    ,'favorite.folder': 'フォルダ'
+    ,'favorite.folderName': 'フォルダ名を入力'
+    ,'favorite.newFolder': '新規フォルダ'
+    ,'favorite.renameFolder': 'フォルダ名を変更'
+    ,'favorite.deleteFolder': 'フォルダを削除'
+    ,'favorite.deleteFolderConfirm': '「{name}」とその中のすべての色を削除しますか？'
+    ,'favorite.duplicateFolder': '同じ名前のフォルダがすでに存在します'
+    ,'encode.title': 'エンコード / デコード'
+    ,'encode.tab.unicode': 'Native / Unicode'
+    ,'encode.tab.url': 'URL 変換'
+    ,'encode.tab.hex': 'Native / 16進数'
+    ,'encode.tab.ascii': 'Native / ASCII'
+    ,'encode.native': 'Native テキスト'
+    ,'encode.unicode': 'Unicode テキスト'
+    ,'encode.url': 'URL 元テキスト'
+    ,'encode.encoded': 'エンコード結果'
+    ,'encode.hex': '16進数'
+    ,'encode.ascii': 'ASCII'
+    ,'encode.toUnicode': 'Unicode へ'
+    ,'encode.fromUnicode': 'Native へ'
+    ,'encode.urlEncode': 'URL エンコード'
+    ,'encode.urlDecode': 'URL デコード'
+    ,'encode.toHex': 'Hex へ'
+    ,'encode.fromHex': 'テキストへ'
+    ,'encode.toAscii': 'ASCII へ'
+    ,'encode.fromAscii': 'テキストへ'
+    ,'encode.charset': '文字コード'
+    ,'encode.asciiDecimal': '10進数'
+    ,'encode.asciiHex': '16進数'
+    ,'ua.title': 'UA 解析'
+    ,'ua.input': 'User-Agent 入力'
+    ,'ua.preset': 'プリセット UA を選択…'
+    ,'ua.parse': '解析'
+    ,'ua.browser': 'ブラウザー'
+    ,'ua.browserVersion': 'ブラウザー版'
+    ,'ua.engine': 'レンダリングエンジン'
+    ,'ua.engineVersion': 'エンジン版'
+    ,'ua.os': 'OS'
+    ,'ua.osVersion': 'OS バージョン'
+    ,'ua.deviceType': 'デバイス種別'
+    ,'ua.deviceBrand': 'デバイスブランド'
+    ,'ua.deviceModel': 'デバイスモデル'
+    ,'ua.mobile': 'モバイル'
+    ,'ua.bot': 'クローラー / Bot'
+    ,'ua.empty': 'User-Agent を入力してください'
+    ,'ua.unknown': '不明'
+    ,'calculator.title': '計算機'
+    ,'calculator.arithmetic': '四則演算'
+    ,'calculator.expression': '式'
+    ,'calculator.calculate': '計算'
+    ,'calculator.base': '進数変換'
+    ,'calculator.baseHint': '整数と小数に対応（例：A.F → 10.9375）。0x / 0b 接頭辞も使用できます。変換先の基数で有限小数になる値のみ変換できます。'
+    ,'calculator.float': 'IEEE 754 浮動小数点：HEX → DEC'
+    ,'calculator.floatFormat': '浮動小数点形式'
+    ,'calculator.float32': '32 ビット（単精度）'
+    ,'calculator.float64': '64 ビット（倍精度）'
+    ,'calculator.byteOrder': 'バイト順'
+    ,'calculator.bigEndian': 'ビッグエンディアン（上位バイトから）'
+    ,'calculator.littleEndian': 'リトルエンディアン（下位バイトから）'
+    ,'calculator.floatHint': '{digits} 桁の16進数を入力してください。0x 接頭辞やバイト間の空白も使用できます。例：32 ビット・ビッグエンディアンの 3F800000 → 1.0。'
+    ,'calculator.decimal': '10進数'
+    ,'calculator.hex': '16進数'
+    ,'calculator.binary': '2進数'
+    ,'calculator.number': '数値演算'
+    ,'calculator.first': '値 1'
+    ,'calculator.second': '値 2'
+    ,'calculator.gcd': '最大公約数'
+    ,'calculator.lcm': '最小公倍数'
+    ,'calculator.calculateGcd': '最大公約数を計算'
+    ,'calculator.calculateLcm': '最小公倍数を計算'
+    ,'calculator.n': 'n'
+    ,'calculator.m': 'm'
+    ,'calculator.permutation': '順列 A(n,m)'
+    ,'calculator.combination': '組合せ C(n,m)'
+    ,'calculator.history': '計算履歴'
+    ,'regex.title': '正規表現'
+    ,'regex.tab.test': 'マッチテスト'
+    ,'regex.tab.common': 'よく使う正規表現'
+    ,'regex.expression': '正規表現'
+    ,'regex.source': 'テストテキスト'
+    ,'regex.matches': '{count} 件一致'
+    ,'regex.noMatches': '一致なし'
+    ,'regex.flag.global': 'グローバル'
+    ,'regex.flag.ignoreCase': '大文字小文字を無視'
+    ,'regex.flag.multiline': '複数行'
+    ,'regex.flag.dotAll': 'ドットで改行に一致'
+    ,'regex.invalid': '無効な正規表現: {message}'
+    ,'regex.common.phone': '中国本土の携帯番号'
+    ,'regex.common.email': 'メールアドレス'
+    ,'regex.common.domain': 'ドメイン名'
+    ,'regex.common.chinese': '漢字'
+    ,'regex.common.integer': '整数'
+    ,'regex.common.color': 'カラーコード'
+    ,'regex.common.ipv4': 'IPv4 アドレス'
+    ,'regex.common.account': 'アカウント名'
+    ,'regex.common.htmlId': 'HTML id 属性'
+    ,'regex.common.jpg': 'JPG 画像 URL'
+    ,'regex.common.magnet': 'マグネットリンク'
+    ,'regex.common.alnum': '英字と数字'
+    ,'regex.common.len3to20': '3〜20 文字'
+    ,'regex.common.letters26': '英字'
+    ,'regex.common.wordUnderscore': '英数字またはアンダースコア'
+    ,'regex.common.cnEnNum': '中国語、英数字、アンダースコア'
+    ,'regex.common.noSpecial': '特殊文字を含まない'
+    ,'regex.common.positiveInt': '正の整数'
+    ,'regex.common.negativeInt': '負の整数'
+    ,'regex.common.nonNegativeInt': '非負整数'
+    ,'regex.common.float': '浮動小数点数'
+    ,'cron.title': 'Cron 式'
+    ,'cron.expression': 'Cron 式'
+    ,'cron.builder': '式ビルダー'
+    ,'cron.second': '秒'
+    ,'cron.minute': '分'
+    ,'cron.hour': '時'
+    ,'cron.day': '日'
+    ,'cron.month': '月'
+    ,'cron.week': '曜日'
+    ,'cron.year': '年（任意）'
+    ,'cron.parse': '実行時刻を解析'
+    ,'cron.nextRuns': '次の 10 回'
+    ,'cron.humanReadable': '自然言語'
+    ,'cron.preset': 'よく使う式'
+    ,'cron.everyMinute': '毎分'
+    ,'cron.everyHour': '毎時'
+    ,'cron.everyDay': '毎日午前0時'
+    ,'cron.weekdays': '平日午前9時'
+    ,'cron.invalid': 'Cron を解析できません: {message}'
+    ,'diff.title': 'テキスト比較'
+    ,'diff.sideBySide': '並列表示'
+    ,'diff.unified': 'Unified 表示'
+    ,'diff.left': '元のテキスト'
+    ,'diff.right': '新しいテキスト'
+    ,'diff.compare': '比較'
+    ,'diff.ignoreWhitespace': '空白差分を無視'
+    ,'diff.realtime': 'リアルタイム比較'
+    ,'diff.copy': '差分をコピー'
+    ,'diff.previous': '前の差分'
+    ,'diff.next': '次の差分'
+    ,'diff.summary': '追加 {added} · 削除 {removed} · 変更 {changed}'
+    ,'diff.identical': '両方のテキストは同一です'
+    ,'diff.highlightMode': 'ハイライトモード'
+    ,'diff.highlightBoth': '二重ハイライト'
+    ,'diff.highlightCharacters': '文字のみ'
+    ,'diff.highlightLines': '行のみ'
+    ,'diff.displayMode': '表示モード'
+    ,'diff.unifiedPanel': '統一差分形式'
+    ,'diff.status.ready': '準備完了'
+    ,'diff.status.enterText': '比較するテキストを入力してください'
+    ,'diff.status.characterComplete': '文字差分 {count} 件'
+    ,'diff.status.complete': '比較完了、{count} 件の差分があります'
+    ,'diff.status.cleared': 'クリアしました'
+    ,'diff.status.swapped': 'テキストを入れ替えました'
+    ,'diff.status.copied': '差分結果をクリップボードにコピーしました'
+    ,'diff.status.noCopy': 'コピーできる差分結果がありません'
+    ,'diff.status.navigation': '差分 {current}/{total} へ移動'
+    ,'config.title': '設定ファイル変換'
+    ,'config.tab.convert': 'YAML / Properties'
+    ,'config.tab.validate': 'YAML 検証'
+    ,'config.properties': 'Properties'
+    ,'config.yaml': 'YAML'
+    ,'config.toYaml': 'YAML へ'
+    ,'config.toProperties': 'Properties へ'
+    ,'config.validate': '検証'
+    ,'config.format': '整形'
+    ,'config.valid': 'YAML は有効です'
+    ,'config.invalid': '無効な YAML: {message}'
+    ,'common.action.format': '整形'
+    ,'common.export': 'エクスポート'
+    ,'common.help': 'ヘルプ'
+    ,'common.import': 'インポート'
+    ,'common.processing': '処理中…'
+    ,'common.rename': '名前を変更'
+    ,'common.save': '保存'
+    ,'common.saved': '保存しました'
+    ,'reformat.title': 'フォーマット'
+    ,'reformat.tab.text': 'テキスト'
+    ,'reformat.tab.file': 'ファイル'
+    ,'reformat.type': '種類'
+    ,'reformat.indent': 'インデント'
+    ,'reformat.input': '整形する内容'
+    ,'reformat.chooseFile': 'ファイルを選択'
+    ,'reformat.noFile': 'ファイルが選択されていません'
+    ,'reformat.original': '元の内容'
+    ,'reformat.result': '整形結果'
+    ,'reformat.formatted': '整形が完了しました'
+    ,'reformat.historySummary': '{type} フォーマット'
+    ,'crypto.title': '暗号化 / ランダム'
+    ,'crypto.tab.symmetric': '共通鍵暗号'
+    ,'crypto.tab.asymmetric': '公開鍵暗号'
+    ,'crypto.tab.digest': 'ダイジェスト'
+    ,'crypto.tab.base': 'Base64 / Base32'
+    ,'crypto.tab.random': 'ランダム生成'
+    ,'crypto.algorithm': 'アルゴリズム'
+    ,'crypto.key': 'キー'
+    ,'crypto.keyHint': 'アルゴリズムに合う長さのキーを入力してください'
+    ,'crypto.aesKeyHint': 'AES キーは UTF-8 で 16、24、32 バイトです。切り詰めや補完は行いません。'
+    ,'crypto.legacyAes': '旧 Electron のキー処理（復号のみ）'
+    ,'crypto.plainText': '平文'
+    ,'crypto.cipherText': '暗号文'
+    ,'crypto.cipherOrSignature': '暗号文 / 署名'
+    ,'crypto.encrypt': '暗号化'
+    ,'crypto.decrypt': '復号'
+    ,'crypto.generateKeyPair': 'キーペアを生成'
+    ,'crypto.keyGenerated': 'キーペアを生成しました'
+    ,'crypto.publicKey': '公開鍵'
+    ,'crypto.privateKey': '秘密鍵'
+    ,'crypto.publicEncrypt': '公開鍵で暗号化'
+    ,'crypto.privateDecrypt': '秘密鍵で復号'
+    ,'crypto.privateEncrypt': '秘密鍵で暗号化'
+    ,'crypto.publicDecrypt': '公開鍵で復号'
+    ,'crypto.rsaOnly': 'この操作は RSA のみ対応しています'
+    ,'crypto.sign': '署名'
+    ,'crypto.verify': '検証'
+    ,'crypto.verified': '署名を検証しました'
+    ,'crypto.notVerified': '署名の検証に失敗しました'
+    ,'crypto.digest': 'ダイジェスト計算'
+    ,'crypto.fileDigest': 'ファイルダイジェスト'
+    ,'crypto.textDigest': 'テキストダイジェスト'
+    ,'crypto.digestInput': '入力'
+    ,'crypto.digestResult': 'ダイジェスト結果'
+    ,'crypto.encode': 'エンコード'
+    ,'crypto.decode': 'デコード'
+    ,'crypto.length': '長さ'
+    ,'crypto.generate': '生成'
+    ,'crypto.random.uuid': 'UUID'
+    ,'crypto.random.digits': 'ランダム数字'
+    ,'crypto.random.string': 'ランダム文字列'
+    ,'crypto.random.password': 'ランダムパスワード'
+    ,'color.title': 'カラーボード'
+    ,'color.select': '色を選択'
+    ,'color.inputColor': '色を入力'
+    ,'color.picker': '画面から採色'
+    ,'color.pickerOverlayHint': 'マウスを動かして色を確認し、クリックで選択'
+    ,'color.pickerOverlayKeys': 'Esc または右クリックでキャンセル'
+    ,'color.freePick': 'カラーピッカー'
+    ,'color.eyeDropperUnavailable': 'このシステムでは画面からの採色を利用できません'
+    ,'color.format': '形式'
+    ,'color.code': 'カラーコード'
+    ,'color.current': '現在の色'
+    ,'color.favorite': 'お気に入りに追加'
+    ,'color.favorites': 'お気に入り'
+    ,'color.favoriteDialog': '色を保存'
+    ,'color.compare': '比較色'
+    ,'color.operation.invert': '反転'
+    ,'color.operation.intersect': '交差'
+    ,'color.operation.add': '加算'
+    ,'color.operation.difference': '差分'
+    ,'color.operation.average': '平均'
+    ,'color.operation.swap': '入れ替え'
+    ,'color.themeColors': 'テーマカラー'
+    ,'color.theme': 'テーマ'
+    ,'color.theme.default': 'デフォルト'
+    ,'color.theme.theme1': 'テーマ1'
+    ,'color.theme.theme2': 'テーマ2'
+    ,'color.theme.theme3': 'テーマ3'
+    ,'color.theme.theme4': 'テーマ4'
+    ,'color.theme.theme5': 'テーマ5'
+    ,'color.theme.china': '中国色'
+    ,'color.standardColors': '標準色'
+    ,'color.shiftHint': 'Shift を押しながら比較色を選択します。'
+    ,'qrcode.title': 'QR コード'
+    ,'qrcode.tab.generate': '生成'
+    ,'qrcode.tab.recognize': '認識'
+    ,'qrcode.tab.history': '履歴'
+    ,'qrcode.content': 'QR コードの内容'
+    ,'qrcode.size': 'サイズ'
+    ,'qrcode.correction': '誤り訂正レベル'
+    ,'qrcode.logo': '中央ロゴ'
+    ,'qrcode.chooseLogo': 'ロゴを選択'
+    ,'qrcode.level.L': 'L · 約 7%'
+    ,'qrcode.level.M': 'M · 約 15%'
+    ,'qrcode.level.Q': 'Q · 約 25%'
+    ,'qrcode.level.H': 'H · 約 30%'
+    ,'qrcode.generate': 'QR コードを生成'
+    ,'qrcode.generated': 'QR コードを生成しました'
+    ,'qrcode.preview': 'QR プレビュー'
+    ,'qrcode.chooseImage': 'QR 画像を選択'
+    ,'qrcode.fromClipboard': 'クリップボードから読込'
+    ,'qrcode.clipboard': 'クリップボード画像'
+    ,'qrcode.clipboardEmpty': 'クリップボードに画像がありません'
+    ,'qrcode.recognize': 'QR コードを認識'
+    ,'qrcode.recognized': 'QR コードを認識しました'
+    ,'qrcode.sourceImage': '認識する画像'
+    ,'qrcode.result': '認識結果'
+    ,'qrcode.history.generate': 'QR コード生成'
+    ,'qrcode.history.recognize': 'QR コード認識'
+    ,'protobuf.title': 'Protobuf'
+    ,'protobuf.tab.json': 'JSON / Binary'
+    ,'protobuf.tab.wire': 'Wire 解析'
+    ,'protobuf.tab.convert': 'Hex / Base64'
+    ,'protobuf.definition': 'Proto 定義'
+    ,'protobuf.message': 'メッセージ型'
+    ,'protobuf.binaryFormat': 'バイナリ形式'
+    ,'protobuf.toBinary': 'Binary へ'
+    ,'protobuf.toJson': 'JSON へ'
+    ,'protobuf.binary': 'バイナリ内容'
+    ,'protobuf.wireInput': 'Wire データ'
+    ,'protobuf.decode': '解析'
+    ,'protobuf.wireOutput': 'Wire フィールド'
+    ,'protobuf.hexToBase64': 'Hex から Base64'
+    ,'protobuf.base64ToHex': 'Base64 から Hex'
+    ,'protobuf.history.jsonToBinary': 'JSON から Binary'
+    ,'protobuf.history.binaryToJson': 'Binary から JSON'
+    ,'protobuf.history.format': 'Proto を整形'
+    ,'protobuf.history.wire': 'Wire を解析'
+    ,'protobuf.history.hexToBase64': 'Hex から Base64'
+    ,'protobuf.history.base64ToHex': 'Base64 から Hex'
+    ,'pdf.title': 'PDF'
+    ,'pdf.tab.split': 'PDF 分割'
+    ,'pdf.tab.merge': 'PDF 結合'
+    ,'pdf.addTask': '分割タスクを追加'
+    ,'pdf.addFile': 'PDF を追加'
+    ,'pdf.startSplit': '分割開始'
+    ,'pdf.startMerge': '結合開始'
+    ,'pdf.selectTask': '分割タスクを選択してください'
+    ,'pdf.selectTwo': 'PDF を 2 件以上選択してください'
+    ,'pdf.confirmSplit': '選択した PDF を分割しますか？'
+    ,'pdf.splitComplete': '分割完了、{count} ページを出力しました'
+    ,'pdf.mergeComplete': '結合完了、全 {count} ページ'
+    ,'pdf.fileName': 'ファイル名'
+    ,'pdf.pageRange': '対象ページ'
+    ,'pdf.mergeRange': '結合ページ'
+    ,'pdf.rule': '分割ルール'
+    ,'pdf.customRule': '出力ページ'
+    ,'pdf.progress': '状態'
+    ,'pdf.output': '最近の出力'
+    ,'pdf.empty': 'PDF タスクがありません'
+    ,'pdf.pages': 'ページ'
+    ,'pdf.select': '選択'
+    ,'pdf.rule.odd': '奇数ページ'
+    ,'pdf.rule.even': '偶数ページ'
+    ,'pdf.rule.custom': 'カスタム'
+    ,'pdf.status.ready': '待機中'
+    ,'pdf.status.running': '処理中'
+    ,'pdf.status.done': '完了'
+    ,'pdf.status.error': '失敗'
+    ,'pdf.helpSplitTitle': 'PDF 分割ヘルプ'
+    ,'pdf.helpMergeTitle': 'PDF 結合ヘルプ'
+    ,'pdf.help.split1': '一度に最大 20 件の PDF 分割タスクを追加できます。'
+    ,'pdf.help.split2': 'ページ範囲は 1-5、8、10-12 のように指定できます。'
+    ,'pdf.help.split3': '奇数、偶数、またはカスタム出力ページを選択できます。'
+    ,'pdf.help.split4': '出力ファイルには既定で _split.pdf が付きます。'
+    ,'pdf.help.merge1': 'PDF を 2 件以上選択して結合します。'
+    ,'pdf.help.merge2': '一覧順とページ範囲に従って結合します。'
+    ,'pdf.help.merge3': '現在は暗号化されていない PDF のみ対応します。'
+    ,'image.title': '画像アシスタント'
+    ,'image.ocr.component.title': "文字認識コンポーネントをダウンロード"
+    ,'image.ocr.component.intro': "初回は約 {size} MiB の文字認識コンポーネントのダウンロードと再起動が必要です。その後はオフラインで利用できます。"
+    ,'image.ocr.component.download': "ダウンロード"
+    ,'image.ocr.component.downloading': "ダウンロード中…"
+    ,'image.ocr.component.progress': "ダウンロードと検証中：{percent}%。この画面を閉じても続行します。"
+    ,'image.ocr.component.ready': "ダウンロードと検証が完了しました。編集中の内容を保存してから再起動してください。"
+    ,'image.ocr.component.error': "ダウンロードまたは検証に失敗しました。ネットワークと空き容量を確認して再試行してください。"
+    ,'image.ocr.component.restart': "今すぐ再起動"
+    ,'image.ocr.component.later': "後で再起動"
+    ,'image.ocr.title': "文字認識"
+    ,'image.ocr.capture': "画面の文字を認識"
+    ,'image.ocr.captureSource': "キャプチャ範囲"
+    ,'image.ocr.language': "認識言語"
+    ,'image.ocr.language.auto': "自動（中国語/英語）"
+    ,'image.ocr.language.multilingual': "自動（簡体字/繁体字/英語/日本語）"
+    ,'image.ocr.language.zh-Hans': "簡体字中国語"
+    ,'image.ocr.language.zh-Hant': "繁体字中国語"
+    ,'image.ocr.language.en-US': "英語"
+    ,'image.ocr.language.ja-JP': "日本語"
+    ,'image.ocr.local': "この端末でオフライン処理"
+    ,'image.ocr.result': "認識結果"
+    ,'image.ocr.intro': "言語を選んで認識を開始し、結果を編集、コピー、保存できます。"
+    ,'image.ocr.review': "画像と照合してください。再認識すると現在の文字が置き換わります。"
+    ,'image.ocr.start': "認識を開始"
+    ,'image.ocr.again': "再認識"
+    ,'image.ocr.working': "ローカルで認識中…システムの初期化には時間がかかる場合があります。いつでもキャンセルできます。"
+    ,'image.ocr.complete': "認識が完了しました。結果を編集できます。"
+    ,'image.ocr.empty': "文字が見つかりません。鮮明な画像か別の言語を試してください。"
+    ,'image.ocr.cancelled': "認識をキャンセルしました"
+    ,'image.ocr.copy': "文字をコピー"
+    ,'image.ocr.copied': "文字をコピーしました"
+    ,'image.ocr.save': "文字を保存"
+    ,'image.ocr.metadata': "{count} 行 · {time} ms"
+    ,'image.ocr.engine.vision': "macOS Vision"
+    ,'image.ocr.engine.ppocr': "PP-OCRv6 small"
+    ,'image.ocr.unavailable.platform': "このシステムではオフライン文字認識をまだ利用できません。"
+    ,'image.ocr.unavailable.component': "文字認識コンポーネントを利用できません。アプリを更新または再インストールしてください。"
+    ,'image.ocr.unavailable.system': "文字認識には macOS 13 以降が必要です。"
+    ,'image.ocr.error.input': "画像データが無効です。画像を選び直してください。"
+    ,'image.ocr.error.tooLarge': "画像が大きすぎます。各辺 16384 px、総画素数 3200 万、PNG データ 32 MiB が上限です。"
+    ,'image.ocr.error.tooComplex': "文字領域が多すぎるか、行が長すぎます。認識範囲を小さくしてください。"
+    ,'image.ocr.error.unavailable': "文字認識を利用できません。後で再試行してください。"
+    ,'image.ocr.error.language': "このシステムは選択した認識言語に対応していません。別の言語を選んでください。"
+    ,'image.ocr.error.busy': "別の認識処理が実行中です。少し待って再試行してください。"
+    ,'image.ocr.error.cancelled': "認識をキャンセルしました。"
+    ,'image.ocr.error.timeout': "認識がタイムアウトしました。画像範囲を小さくして再試行してください。"
+    ,'image.ocr.error.failed': "認識に失敗しました。再試行するか別の画像を選んでください。"
+    ,'image.screenshot': 'スクリーンショット'
+    ,'image.fromClipboard': 'クリップボード'
+    ,'image.import': '画像をインポート'
+    ,'image.fromBase64': 'Base64 からインポート'
+    ,'image.compress': '圧縮'
+    ,'image.resize': "サイズ変更"
+    ,'image.resize.title': "画像のサイズを一括変更"
+    ,'image.resize.preset': "サイズプリセット"
+    ,'image.resize.small': "小"
+    ,'image.resize.medium': "中"
+    ,'image.resize.large': "大"
+    ,'image.resize.custom': "カスタム"
+    ,'image.resize.width': "幅（px）"
+    ,'image.resize.height': "高さ（px）"
+    ,'image.resize.auto': "自動"
+    ,'image.resize.dimensionsHint': "片方を空欄にすると元画像の比率で計算します。少なくとも一方に 1〜16384 の整数を入力してください。"
+    ,'image.resize.mode': "変更モード"
+    ,'image.resize.fit': "比率を維持して収める"
+    ,'image.resize.fill': "中央を切り抜いて埋める"
+    ,'image.resize.stretch': "引き伸ばす"
+    ,'image.resize.formatAuto': "JPEG 元画像は JPEG、その他は PNG"
+    ,'image.resize.shrinkOnly': "縮小のみ（拡大しない）"
+    ,'image.resize.fitHint': "比率を維持し、画像全体を指定枠に収めます。出力が指定サイズより小さくなる場合があります。"
+    ,'image.resize.fillHint': "比率を維持して指定枠を埋め、はみ出す部分を中央から切り抜きます。"
+    ,'image.resize.stretchHint': "指定サイズに直接変更するため、元画像の比率が変わる場合があります。"
+    ,'image.resize.shrinkFillHint': "縮小のみの場合、拡大を防ぐため指定枠も縮小します。各画像のプレビューを確認してください。"
+    ,'image.resize.libraryHint': "画像ライブラリ内のコピーを処理します。元画像を残す場合は同名出力に連番を付け、上書きはライブラリ内だけに適用します。"
+    ,'image.resize.preview': "出力サイズのプレビュー"
+    ,'image.resize.file': "ファイル"
+    ,'image.resize.source': "元のサイズ"
+    ,'image.resize.output': "出力サイズ"
+    ,'image.resize.invalid': "少なくとも一方に 1〜16384 の整数を入力してください。"
+    ,'image.resize.tooLarge': "出力が大きすぎます。各辺は最大 16384 px、総画素数は最大 3200 万です。"
+    ,'image.watermark': '透かし'
+    ,'image.toSvg': 'SVG に変換'
+    ,'image.copy': '画像をコピー'
+    ,'image.toBase64': 'Base64 へ'
+    ,'image.toggleList': '画像一覧の表示切替'
+    ,'image.library': '画像ライブラリ'
+    ,'image.empty': '画像ライブラリは空です'
+    ,'image.select': '画像を選択'
+    ,'image.emptyPreview': '画像を選択またはインポートしてください'
+    ,'image.zoomIn': '拡大'
+    ,'image.zoomOut': '縮小'
+    ,'image.original': '元のサイズ'
+    ,'image.fit': 'ウィンドウに合わせる'
+    ,'image.base64Import': 'Base64 画像をインポート'
+    ,'image.base64Export': '画像 Base64'
+    ,'image.compressTitle': '画像を圧縮'
+    ,'image.watermarkTitle': '透かしを追加'
+    ,'image.svgTitle': '画像を SVG に変換'
+    ,'image.svgStart': '変換開始'
+    ,'image.svgPreset': '画像タイプ'
+    ,'image.svgPreset.poster': 'ロゴ / イラスト'
+    ,'image.svgPreset.photo': '写真'
+    ,'image.svgPreset.bw': '白黒線画'
+    ,'image.svgColors': '最大色数'
+    ,'image.svgDetail': 'パスの詳細度'
+    ,'image.svgDetail.low': '低（ファイルを小さく）'
+    ,'image.svgDetail.medium': '中'
+    ,'image.svgDetail.high': '高（元画像に近く）'
+    ,'image.svgSpeckle': '無視する小領域のピクセル数'
+    ,'image.svgHint': 'ビットマップを埋め込まず、編集可能なベクターパスを生成します。変換はこの端末上で完結します。ロゴ、アイコン、イラストに最適です。'
+    ,'image.svgComplete': '{count} 枚の画像を {path} に変換しました'
+    ,'image.startProcess': '処理開始'
+    ,'image.selectedCount': '{count} 枚の画像を選択中'
+    ,'image.quality': '品質'
+    ,'image.scale': 'サイズ比率'
+    ,'image.outputFormat': '出力形式'
+    ,'image.format.auto': '元の形式を維持'
+    ,'image.watermarkText': '透かし文字'
+    ,'image.opacity': '透明度'
+    ,'image.position': '位置'
+    ,'image.fontSize': '文字サイズ'
+    ,'image.color': '色'
+    ,'image.diagonal': '透かし文字を傾ける'
+    ,'image.outputMode': '出力方法'
+    ,'image.keepOriginal': '元画像を残して新規作成'
+    ,'image.overwrite': '元画像を上書き'
+    ,'image.position.bottom-right': '右下'
+    ,'image.position.bottom-left': '左下'
+    ,'image.position.top-right': '右上'
+    ,'image.position.top-left': '左上'
+    ,'image.position.center': '中央'
+    ,'image.position.tile': 'タイル'
+    ,'image.font.auto': '自動'
+    ,'image.font.small': '小'
+    ,'image.font.medium': '中'
+    ,'image.font.large': '大'
+    ,'image.crop.x': 'X'
+    ,'image.crop.y': 'Y'
+    ,'image.crop.width': '幅'
+    ,'image.crop.height': '高さ'
+    ,'image.captureOverlayHint': 'ドラッグして撮影範囲を選択'
+    ,'image.captureOverlayKeys': 'Enter で確定 · Esc または右クリックでキャンセル'
+    ,'image.captureConfirm': 'スクリーンショットを確定'
+    ,'image.saveCapture': 'スクリーンショットを保存'
+    ,'image.clipboardEmpty': 'クリップボードに画像がありません'
+    ,'image.imported': '画像をインポートしました'
+    ,'image.captureUnavailable': 'キャプチャ可能な画面がありません'
+    ,'image.saveName': '保存名'
+    ,'image.renamePrompt': '新しい画像名を入力'
+    ,'image.confirmDelete': '選択した {count} 枚の画像を削除しますか？'
+    ,'image.exported': '{directory} にエクスポートしました'
+    ,'image.processComplete': '{count} 枚の画像を処理しました'
+    ,'common.new': '新規'
+    ,'common.add': '追加'
+    ,'common.stop': '停止'
+    ,'common.refresh': '更新'
+    ,'common.search': '検索'
+    ,'common.searchContent': '本文を検索'
+    ,'common.convert': '変換'
+    ,'http.title': 'HTTP リクエスト'
+    ,'http.untitled': '無題のリクエスト'
+    ,'http.urlRequired': 'リクエスト URL を入力してください'
+    ,'http.saveName': 'リクエスト名'
+    ,'http.confirmDelete': 'このリクエストを削除しますか？'
+    ,'http.curlPrompt': 'cURL コマンドを貼り付け'
+    ,'http.savedEmpty': '保存済みリクエストはありません'
+    ,'http.noUrl': 'URL 未設定'
+    ,'http.importCurl': 'cURL をインポート'
+    ,'http.copyCurl': 'cURL としてコピー'
+    ,'http.method': 'メソッド'
+    ,'http.send': '送信'
+    ,'http.timeout': 'タイムアウト（ミリ秒）'
+    ,'http.timeoutHint': 'リクエストタイムアウト、範囲 1000–120000 ミリ秒'
+    ,'http.find': '検索'
+    ,'http.tab.params': 'Params'
+    ,'http.tab.headers': 'Headers'
+    ,'http.tab.cookies': 'Cookies'
+    ,'http.tab.body': 'Body'
+    ,'http.bodyType': 'Body タイプ'
+    ,'http.response.body': 'レスポンス Body'
+    ,'http.response.headers': 'レスポンス Headers'
+    ,'http.response.cookies': 'レスポンス Cookies'
+    ,'http.responseEmpty': 'リクエストを送信するとレスポンスが表示されます'
+    ,'http.name': 'Name'
+    ,'http.value': 'Value'
+    ,'http.domain': 'Domain'
+    ,'http.path': 'Path'
+    ,'http.expires': 'Expires'
+    ,'http.enabled': '有効'
+    ,'http.addEntry': '項目を追加'
+    ,'http.history': 'HTTP リクエスト履歴'
+    ,'http.error.ABORTED': 'リクエストをキャンセルしました'
+    ,'http.error.TIMEOUT': 'リクエストがタイムアウトしました'
+    ,'http.error.NETWORK': 'ネットワークリクエストに失敗しました'
+    ,'http.error.INVALID_REQUEST': 'リクエストが無効です'
+    ,'http.error.RESPONSE_TOO_LARGE': 'レスポンスが 10 MB を超えています'
+    ,'translation.title': '翻訳'
+    ,'translation.tab.translate': '翻訳'
+    ,'translation.tab.words': '単語帳'
+    ,'translation.tab.history': '履歴'
+    ,'translation.exchange': '言語とテキストを交換'
+    ,'translation.provider': '翻訳サービス'
+    ,'translation.copy': '翻訳をコピー'
+    ,'translation.splitIdentifiers': '識別子を分割'
+    ,'translation.translateNow': '翻訳'
+    ,'translation.namingFormat': '命名形式'
+    ,'translation.copyName': '名前をコピー'
+    ,'translation.namingHint': '短い語句を英語に翻訳すると名前をコピーできます'
+    ,'translation.deeplHint': 'DeepL はご自身の API Key を使用し、Free / Pro を自動判別します。「翻訳」で送信します。失敗時に他のサービスへ切り替えません。'
+    ,'translation.configureDeepL': 'DeepL API Key 設定'
+    ,'translation.error.DEEPL_KEY_REQUIRED': '設定 → ツールの既定値で DeepL API Key を保存してください。'
+    ,'translation.error.DEEPL_INVALID_KEY': 'DeepL API Key が無効です。設定で更新してください。'
+    ,'translation.error.DEEPL_QUOTA_EXCEEDED': 'DeepL の翻訳利用枠を超えました。'
+    ,'translation.error.DEEPL_RATE_LIMITED': 'DeepL のリクエスト制限に達しました。後で再試行してください。'
+    ,'translation.error.DEEPL_UNSUPPORTED_LANGUAGE': 'DeepL は選択した言語に対応していません。言語またはサービスを変更してください。'
+    ,'translation.error.DEEPL_EMPTY_RESPONSE': 'DeepL から有効な翻訳が返されませんでした。再試行してください。'
+    ,'translation.saveWord': '単語帳に保存'
+    ,'translation.savedWord': '単語帳に保存しました'
+    ,'translation.sourcePlaceholder': '翻訳するテキストを入力'
+    ,'translation.targetPlaceholder': '翻訳結果'
+    ,'translation.translating': '翻訳中…'
+    ,'translation.fallback': '代替サービスを使用'
+    ,'translation.sourceLanguage': '翻訳元言語'
+    ,'translation.targetLanguage': '翻訳先言語'
+    ,'translation.apply': '翻訳に適用'
+    ,'translation.retranslate': '再翻訳'
+    ,'translation.confirmDeleteWord': 'この単語を削除しますか？'
+    ,'translation.searchWords': '単語、翻訳、メモを検索'
+    ,'translation.remark': 'メモ（任意）'
+    ,'translation.wordEmpty': '単語を選択または作成してください'
+    ,'translation.searchHistory': '原文、翻訳、言語を検索'
+    ,'translation.lang.auto': '自動検出'
+    ,'translation.lang.zh-CN': '中国語（簡体字）'
+    ,'translation.lang.en': '英語'
+    ,'translation.lang.yue': '広東語'
+    ,'translation.lang.wyw': '漢文'
+    ,'translation.lang.jp': '日本語'
+    ,'translation.lang.kor': '韓国語'
+    ,'translation.lang.fra': 'フランス語'
+    ,'translation.lang.spa': 'スペイン語'
+    ,'translation.lang.th': 'タイ語'
+    ,'translation.lang.ara': 'アラビア語'
+    ,'translation.lang.ru': 'ロシア語'
+    ,'translation.lang.pt': 'ポルトガル語'
+    ,'translation.lang.de': 'ドイツ語'
+    ,'translation.lang.it': 'イタリア語'
+    ,'translation.lang.el': 'ギリシャ語'
+    ,'translation.lang.nl': 'オランダ語'
+    ,'translation.lang.pl': 'ポーランド語'
+    ,'translation.lang.bul': 'ブルガリア語'
+    ,'translation.lang.est': 'エストニア語'
+    ,'translation.lang.dan': 'デンマーク語'
+    ,'translation.lang.fin': 'フィンランド語'
+    ,'translation.lang.cs': 'チェコ語'
+    ,'translation.lang.rom': 'ルーマニア語'
+    ,'translation.lang.slo': 'スロベニア語'
+    ,'translation.lang.swe': 'スウェーデン語'
+    ,'translation.lang.hu': 'ハンガリー語'
+    ,'translation.lang.cht': '中国語（繁体字）'
+    ,'translation.lang.vie': 'ベトナム語'
+    ,'host.title': 'Host'
+    ,'host.contextMenu': 'Host プロファイル操作'
+    ,'host.discardChanges': '未保存の変更を破棄しますか？'
+    ,'host.untitled': '無題の Host'
+    ,'host.namePrompt': 'Host プロファイル名'
+    ,'host.confirmDelete': 'この Host プロファイルを削除しますか？'
+    ,'host.confirmApply': 'システムの hosts ファイルに書き込みますか？管理者権限が要求される場合があります。'
+    ,'host.applied': 'システム hosts を更新しました'
+    ,'host.applying': '適用中…'
+    ,'host.apply': 'Host を切り替え'
+    ,'host.empty': 'Host プロファイルはありません'
+    ,'host.import': 'Host をインポート'
+    ,'host.export': 'Host をエクスポート'
+    ,'host.profileName': 'プロファイル名'
+    ,'host.current': '現在のシステム hosts'
+    ,'host.find': '検索と置換'
+    ,'host.findPlaceholder': '検索'
+    ,'host.replacePlaceholder': '置換文字列'
+    ,'host.replace': '置換'
+    ,'host.replaceAll': 'すべて置換'
+    ,'host.content': 'Host 内容'
+    ,'host.placeholder': 'hosts ファイルの内容を入力'
+    ,'host.writable': '現在のユーザーで書き込み可能'
+    ,'host.requiresPrivilege': '書き込みには管理者権限が必要です'
+    ,'net.title': 'ネットワーク/IP'
+    ,'net.running': '実行中…'
+    ,'net.noOutput': 'コマンドは出力なしで完了しました'
+    ,'net.outputPlaceholder': 'ネットワークコマンドの結果がここに表示されます'
+    ,'net.ipv4Long': 'IPv4 と Long の変換'
+    ,'net.ping': 'PING'
+    ,'net.ipRangeScan': 'IP 範囲の到達確認'
+    ,'net.ipRangePlaceholder': '例: 192.168.10'
+    ,'net.ipRangeHint': '.1 から .254 を確認し、Ping に応答した IP のみ表示します'
+    ,'net.portScan': 'TCP ポートスキャン'
+    ,'net.portScanTargetPlaceholder': '対象 IP またはホスト名'
+    ,'net.portScanPortsPlaceholder': '空欄で一般的なポート'
+    ,'net.portScanHint': 'SSH、MySQL などの一般的なサービスを識別します。22,80,3306 または 1-1024 も指定可能（最大 4096）'
+    ,'net.scan': 'スキャン'
+    ,'net.resolve': 'ホスト名から IP を取得'
+    ,'net.resolveAction': '解決'
+    ,'net.whois': 'WHOIS 検索'
+    ,'net.query': '検索'
+    ,'net.dns': 'DNS'
+    ,'net.flushDns': 'DNS キャッシュを消去'
+    ,'net.localAddresses': 'ローカル IP アドレス'
+    ,'net.error.ABORTED': 'コマンドを停止しました'
+    ,'net.error.TIMEOUT': 'コマンドがタイムアウトしました'
+    ,'net.error.PERMISSION': '権限が拒否されました'
+    ,'net.error.UNSUPPORTED': '現在のシステムでは使用できません'
+    ,'net.error.COMMAND_FAILED': 'コマンドに失敗しました'
+    ,'net.error.INVALID_TARGET': '対象が無効です'
+    ,'variables.title': '環境変数'
+    ,'variables.tab.environment': 'システム環境変数'
+    ,'variables.tab.runtime': 'Electron ランタイムプロパティ'
+    ,'variables.key': 'キー'
+    ,'variables.value': '値'
+    ,'variables.count': '{count} / {total} 件を表示'
+    ,'variables.scope': '範囲'
+    ,'variables.scope.user': 'ユーザー'
+    ,'variables.scope.system': 'システム'
+    ,'variables.scope.process': '現在のプロセス'
+    ,'variables.scopeHint.user': 'このユーザーに保存され、新しく起動するターミナルとアプリに反映されます'
+    ,'variables.scopeHint.system': 'システム全体に保存され、管理者の承認が必要な場合があります'
+    ,'variables.scopeHint.process': '現在の環境をすべて表示し、編集内容をユーザーまたはシステムに保存できます'
+    ,'variables.targetScope': '保存先'
+    ,'variables.add': '追加'
+    ,'variables.edit': '編集'
+    ,'variables.addTitle': '環境変数を追加'
+    ,'variables.editTitle': '環境変数を編集'
+    ,'variables.applyHint': '保存すると OS の設定が直接更新されます。実行中のアプリは通常、再起動後に新しい値を読み込みます。'
+    ,'variables.confirmDelete': '環境変数「{key}」を削除しますか？'
+    ,'variables.saved': '環境変数を更新しました'
+    ,'variables.deleted': '環境変数を削除しました'
+    ,'variables.empty': '変数がありません。「追加」から作成できます。'
+    ,'runtime.title': 'コード実行'
+    ,'runtime.tab.java': 'Java / Groovy'
+    ,'runtime.tab.python': 'Python'
+    ,'runtime.tab.node': 'Node.js'
+    ,'runtime.mode.java': 'Java'
+    ,'runtime.mode.groovy': 'Groovy'
+    ,'runtime.detect': 'ランタイムを検出'
+    ,'runtime.detected': '{count} 個のランタイムを検出しました'
+    ,'runtime.missing': '{name} が見つかりません'
+    ,'runtime.format': '整形'
+    ,'runtime.run': '実行'
+    ,'runtime.stop': '停止'
+    ,'runtime.clear': '出力をクリア'
+    ,'runtime.history': '実行履歴'
+    ,'runtime.editor': 'コードエディター'
+    ,'runtime.output': 'コンソール出力'
+    ,'runtime.ready': 'コードを実行すると結果が表示されます'
+    ,'runtime.running': '{name} を実行中…'
+    ,'runtime.completed': '実行が完了しました'
+    ,'runtime.failed': '実行に失敗しました'
+    ,'runtime.cancelled': '実行を停止しました'
+    ,'runtime.timeout': '実行がタイムアウトしました'
+    ,'runtime.truncated': '出力が 2 MB を超えたため停止しました'
+    ,'runtime.command': 'コマンド'
+    ,'runtime.exitCode': '終了コード {code}'
+    ,'runtime.duration': '{duration} ms'
+    ,'runtime.configure': '設定で {name} ランタイムのパスを指定してください'
+    ,'runtime.openSettings': 'ランタイム設定を開く'
+    ,'runtime.options': '実行オプション'
+    ,'runtime.arguments': 'プログラム引数'
+    ,'runtime.argumentsPlaceholder': '--name "Moo Tool"'
+    ,'runtime.workingDirectory': '作業ディレクトリ'
+    ,'runtime.defaultWorkingDirectory': '分離された一時ディレクトリを使用'
+    ,'quickNote.title': 'クイックノート'
+    ,'quickNote.search': 'ノートを検索…'
+    ,'quickNote.searchContent': '本文を検索'
+    ,'quickNote.sort': '並び順'
+    ,'quickNote.sort.name': '名前'
+    ,'quickNote.sort.modified': '更新日時'
+    ,'quickNote.sort.created': '作成日時'
+    ,'quickNote.empty': '一致するノートはありません'
+    ,'quickNote.newNote': '新規ノート'
+    ,'quickNote.newFolder': '新規フォルダー'
+    ,'quickNote.expandAll': 'すべて展開'
+    ,'quickNote.collapseAll': 'すべて折りたたむ'
+    ,'quickNote.rename': '名前を変更'
+    ,'quickNote.move': '移動'
+    ,'quickNote.duplicate': '複製'
+    ,'quickNote.delete': '削除'
+    ,'quickNote.openVault': 'ファイルマネージャーで Vault を開く'
+    ,'quickNote.revealInFinder': 'ファイルマネージャーで表示'
+    ,'quickNote.locateCurrent': '現在のファイルを表示'
+    ,'quickNote.save': '保存'
+    ,'quickNote.saved': 'ノートを保存しました'
+    ,'quickNote.unsaved': '未保存の変更があります'
+    ,'quickNote.find': '検索と置換'
+    ,'quickNote.findPlaceholder': '検索'
+    ,'quickNote.replacePlaceholder': '置換文字列'
+    ,'quickNote.nextMatch': '次の一致'
+    ,'quickNote.replace': '置換'
+    ,'quickNote.replaceAll': 'すべて置換'
+    ,'quickNote.noMatches': '一致する内容がありません'
+    ,'quickNote.attachment': '画像を添付（クリップボードから貼り付け可能）'
+    ,'quickNote.clipboardEmpty': 'クリップボードに利用可能な画像がありません'
+    ,'quickNote.export': '選択したノートをエクスポート'
+    ,'vault.batch.export': '選択したファイルをエクスポート'
+    ,'http.sendWindow': '送信して応答ウィンドウを開く'
+    ,'http.openResponse': '応答ウィンドウを開く'
+    ,'image.batch.title': '画像処理の進捗'
+    ,'image.batch.cancelling': 'キャンセル中…'
+    ,'image.batch.cancelled': 'キャンセル済み（完了した結果は保持）'
+    ,'image.batch.working': '処理中…'
+    ,'image.batch.finished': '完了'
+    ,'image.batch.summary': '処理 {completed}/{total}、成功 {succeeded}、失敗 {failed}'
+    ,'vault.batch.exported': '{count} ファイルをエクスポートしました'
+    ,'vault.batch.selected': '{count} 件を選択中'
+    ,'quickNote.info': '文書情報'
+    ,'quickNote.git': 'Git 同期'
+    ,'quickNote.quickReplace': 'クイック置換'
+    ,'quickNote.view.editor': '編集'
+    ,'quickNote.view.split': '分割'
+    ,'quickNote.view.preview': 'プレビュー'
+    ,'quickNote.syntax': '構文'
+    ,'quickNote.font': 'フォント'
+    ,'quickNote.font.system': 'システムフォント'
+    ,'quickNote.font.mono': '等幅フォント'
+    ,'quickNote.font.serif': 'セリフ体'
+    ,'quickNote.fontSize': '文字サイズ'
+    ,'quickNote.lineSpacing': '行間隔'
+    ,'quickNote.wrap': '自動折り返し'
+    ,'quickNote.hideSidebar': 'ノートのサイドバーを非表示'
+    ,'quickNote.showSidebar': 'ノートのサイドバーを表示'
+    ,'quickNote.bulletList': '箇条書き'
+    ,'quickNote.numberedList': '番号付きリスト'
+    ,'quickNote.color': 'ノートの色'
+    ,'quickNote.select': '左側からノートを選択または作成してください'
+    ,'quickNote.editorLabel': 'ノート本文'
+    ,'quickNote.confirmDelete': '「{name}」を削除しますか？フォルダーは空である必要があります。'
+    ,'quickNote.dialog.createNote': '新規ノート'
+    ,'quickNote.dialog.createFolder': '新規フォルダー'
+    ,'quickNote.dialog.rename': '名前を変更'
+    ,'quickNote.dialog.move': 'フォルダーへ移動'
+    ,'quickNote.dialog.name': '名前'
+    ,'quickNote.dialog.target': '移動先フォルダー'
+    ,'quickNote.dialog.root': 'Vault ルート'
+    ,'quickNote.create': '作成'
+    ,'quickNote.apply': '適用'
+    ,'quickNote.path': 'パス'
+    ,'quickNote.created': '作成日時'
+    ,'quickNote.modified': '更新日時'
+    ,'quickNote.lines': '行数'
+    ,'quickNote.words': '単語数'
+    ,'quickNote.characters': '文字数'
+    ,'quickNote.status': '{lines} 行 · {characters} 文字'
+    ,'quickNote.preview.empty': 'Markdown 構文を選択すると書式付き内容をプレビューできます。'
+    ,'quickNote.quick.trim': '前後の空白を削除'
+    ,'quickNote.quick.removeBlankLines': '空行を削除'
+    ,'quickNote.quick.removeTabs': 'Tab を削除'
+    ,'quickNote.quick.scientificToNormal': '指数表記を通常表記へ'
+    ,'quickNote.quick.normalToScientific': '通常表記を指数表記へ'
+    ,'quickNote.quick.thousandsToNormal': '桁区切りを削除'
+    ,'quickNote.quick.normalToThousands': '桁区切りを追加'
+    ,'quickNote.quick.underscoreToCamel': 'スネークケースをキャメルケースへ'
+    ,'quickNote.quick.camelToUnderscore': 'キャメルケースをスネークケースへ'
+    ,'quickNote.quick.uppercase': '大文字に変換'
+    ,'quickNote.quick.lowercase': '小文字に変換'
+    ,'quickNote.quick.linesToComma': '改行をカンマへ'
+    ,'quickNote.quick.linesToSingleQuoted': '改行を単一引用符リストへ'
+    ,'quickNote.quick.linesToDoubleQuoted': '改行を二重引用符リストへ'
+    ,'quickNote.quick.commaToLines': 'カンマを改行へ'
+    ,'quickNote.quick.tabsToLines': 'Tab を改行へ'
+    ,'quickNote.quick.clearNewlines': '改行を削除'
+    ,'quickNote.quick.deduplicateLines': '行を重複排除'
+    ,'quickNote.quick.deduplicateWithCount': '行を重複排除して集計'
+    ,'quickNote.quick.escape': 'テキストをエスケープ'
+    ,'quickNote.quick.unescape': 'エスケープを解除'
+    ,'quickNote.quick.reverseLines': '行順を反転'
+    ,'quickNote.quick.sortAscending': '行を昇順に並べ替え'
+    ,'quickNote.quick.sortDescending': '行を降順に並べ替え'
+    ,'quickNote.git.title': 'クイックノート Vault Git'
+    ,'quickNote.git.defaultMessage': 'MooTool クイックノート チェックポイント'
+    ,'hardware.title': 'システム情報'
+    ,'hardware.tab.system': 'システム'
+    ,'hardware.tab.cpu': 'プロセッサ'
+    ,'hardware.tab.memory': 'メモリ'
+    ,'hardware.tab.storage': 'ストレージ'
+    ,'hardware.tab.network': 'ネットワーク'
+    ,'hardware.loading': 'システム情報を収集中…'
+    ,'hardware.empty': '表示できる情報がありません'
+    ,'hardware.group.operatingSystem': 'オペレーティングシステム'
+    ,'hardware.group.processor': 'プロセッサ'
+    ,'hardware.group.physicalMemory': '物理メモリ'
+    ,'hardware.label.platform': 'プラットフォーム'
+    ,'hardware.label.distribution': 'ディストリビューション'
+    ,'hardware.label.kernel': 'カーネル'
+    ,'hardware.label.architecture': 'アーキテクチャ'
+    ,'hardware.label.hostName': 'ホスト名'
+    ,'hardware.label.serial': 'シリアル番号'
+    ,'hardware.label.manufacturer': 'メーカー'
+    ,'hardware.label.model': 'モデル'
+    ,'hardware.label.uptime': '稼働時間'
+    ,'hardware.label.timeZone': 'タイムゾーン'
+    ,'hardware.label.brand': 'ブランド'
+    ,'hardware.label.vendor': 'ベンダー'
+    ,'hardware.label.family': 'ファミリー'
+    ,'hardware.label.physicalCores': '物理コア'
+    ,'hardware.label.logicalCores': '論理コア'
+    ,'hardware.label.performanceCores': '高性能コア'
+    ,'hardware.label.efficiencyCores': '高効率コア'
+    ,'hardware.label.baseSpeed': '基本速度'
+    ,'hardware.label.maximumSpeed': '最大速度'
+    ,'hardware.label.currentLoad': '現在の負荷'
+    ,'hardware.label.total': '合計'
+    ,'hardware.label.used': '使用済み'
+    ,'hardware.label.available': '利用可能'
+    ,'hardware.label.active': 'アクティブ'
+    ,'hardware.label.usage': '使用率'
+    ,'hardware.label.swapTotal': 'スワップ合計'
+    ,'hardware.label.swapUsed': 'スワップ使用量'
+    ,'hardware.label.device': 'デバイス'
+    ,'hardware.label.type': 'タイプ'
+    ,'hardware.label.interface': 'インターフェース'
+    ,'hardware.label.capacity': '容量'
+    ,'hardware.label.filesystem': 'ファイルシステム'
+    ,'hardware.label.ipv4': 'IPv4'
+    ,'hardware.label.ipv6': 'IPv6'
+    ,'hardware.label.mac': 'MAC'
+    ,'hardware.label.mtu': 'MTU'
+    ,'hardware.label.speed': '速度'
+    ,'hardware.label.status': '状態'
+    ,'hardware.label.received': '受信'
+    ,'hardware.label.sent': '送信'
+    ,'app.nav.messageBoard': 'メッセージボード'
+    ,'messageBoard.title': 'メッセージボード'
+    ,'messageBoard.message': 'メッセージ'
+    ,'messageBoard.placeholder': '表示するメッセージを入力…'
+    ,'messageBoard.messageHint': '改行に対応し、文字サイズは表示領域に合わせて自動調整されます。'
+    ,'messageBoard.presets': 'よく使うメッセージ'
+    ,'messageBoard.style': 'レイアウトとカラー'
+    ,'messageBoard.size': '文字サイズ'
+    ,'messageBoard.alignment': '文字揃え'
+    ,'messageBoard.alignLeft': '左揃え'
+    ,'messageBoard.alignCenter': '中央揃え'
+    ,'messageBoard.display': 'プレゼン表示'
+    ,'messageBoard.exitDisplay': 'プレゼンを終了'
+    ,'messageBoard.exitHint': 'Esc で終了'
+    ,'messageBoard.empty': '左のパネルにメッセージを入力'
+    ,'messageBoard.badge': '大切なお知らせ'
+    ,'messageBoard.badgeEnglish': 'Message board'
+    ,'messageBoard.footer': 'MooTool · 大切な言葉をもっと見やすく'
+    ,'messageBoard.preset.away': '少し離れます、すぐ戻ります'
+    ,'messageBoard.preset.closed': '一時休業中'
+    ,'messageBoard.preset.rest': '本日休業'
+    ,'messageBoard.preset.busy': '取り込み中です'
+    ,'messageBoard.preset.meeting': '会議中'
+    ,'messageBoard.preset.quiet': '配信中・お静かにお願いします'
+    ,'messageBoard.preset.maintenance': 'メンテナンス中'
+    ,'messageBoard.preset.call': 'ご用の方はお電話ください'
+    ,'messageBoard.theme.sunbeam': 'サンビーム'
+    ,'messageBoard.theme.coral': 'コーラル'
+    ,'messageBoard.theme.cobalt': 'コバルト'
+    ,'messageBoard.theme.forest': 'フォレスト'
+    ,'messageBoard.theme.paper': 'ペーパー'
+    ,'messageBoard.theme.midnight': 'ミッドナイト'
+    ,'messageBoard.keepAwake': '画面を常時表示'
+  }
+} as const

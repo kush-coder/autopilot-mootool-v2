@@ -1,0 +1,98 @@
+import { mkdtempSync, rmSync, symlinkSync, writeFileSync } from 'node:fs'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
+import { afterEach, describe, expect, it } from 'vitest'
+import { JsonVaultRepository } from '../../electron/main/jsonVaultRepository'
+
+const tempDirectories: string[] = []
+
+afterEach(() => {
+  for (const directory of tempDirectories.splice(0)) rmSync(directory, { recursive: true, force: true })
+})
+
+function createRepository(): JsonVaultRepository {
+  const directory = mkdtempSync(join(tmpdir(), 'mootool-vault-'))
+  tempDirectories.push(directory)
+  return new JsonVaultRepository(directory)
+}
+
+describe('JsonVaultRepository', () => {
+  it('creates nested snippets, lists them as a tree, reads, and deletes them', async () => {
+    const repository = createRepository()
+    const saved = await repository.save({ relativePath: 'drafts/request', content: '{"ok":true}' })
+    expect(saved.relativePath).toBe('drafts/request.json')
+    expect((await repository.read(saved.relativePath)).content).toBe('{"ok":true}')
+    expect(await repository.list()).toMatchObject([{
+      name: 'drafts',
+      kind: 'directory',
+      children: [{ name: 'request.json', kind: 'file', relativePath: 'drafts/request.json' }]
+    }])
+    await repository.delete(saved.relativePath)
+    expect((await repository.list())[0]?.children).toEqual([])
+  })
+
+  it('creates imported snippets with unique names while retaining exact content and existing files', async () => {
+    const repository = createRepository()
+    const existing = await repository.createDefault()
+    const content = '{\n  "imported": true\n}'
+    const imported = await repository.createDefault(content)
+    const repeated = await repository.createDefault(content)
+    expect(new Set([existing.relativePath, imported.relativePath, repeated.relativePath]).size).toBe(3)
+    expect((await repository.read(existing.relativePath)).content).toBe('{}')
+    expect((await repository.read(imported.relativePath)).content).toBe(content)
+    expect((await repository.read(repeated.relativePath)).content).toBe(content)
+  })
+
+  it('rejects traversal, hidden paths, and non-JSON reads', async () => {
+    const repository = createRepository()
+    await expect(repository.save({ relativePath: '../outside.json', content: '{}' })).rejects.toThrow('Invalid Vault path')
+    await expect(repository.save({ relativePath: '.hidden/data.json', content: '{}' })).rejects.toThrow('Invalid Vault path')
+    await expect(repository.read('/tmp/outside.json')).rejects.toThrow('Invalid Vault path')
+  })
+
+  it('creates, renames, moves, duplicates, and deletes folders and snippets', async () => {
+    const repository = createRepository()
+    await repository.createFolder('drafts')
+    await repository.createFolder('archive')
+    const source = await repository.save({ relativePath: 'drafts/request', content: '{"ok":true}' })
+    const renamed = await repository.renameEntry({ relativePath: source.relativePath, name: 'response.json' })
+    expect(renamed).toBe('drafts/response.json')
+    const moved = await repository.moveEntry({ relativePath: renamed, targetDirectory: 'archive' })
+    expect(moved).toBe('archive/response.json')
+    const copy = await repository.duplicate(moved)
+    expect(copy.relativePath).toBe('archive/response Copy.json')
+    await repository.delete(copy.relativePath)
+    await repository.delete('archive')
+    expect((await repository.list()).map((node) => node.name)).toEqual(['drafts'])
+  })
+
+  it('filters gitignored entries, sorts by modification time, and rejects symlinks', async () => {
+    const directory = mkdtempSync(join(tmpdir(), 'mootool-vault-'))
+    tempDirectories.push(directory)
+    const repository = new JsonVaultRepository(directory)
+    writeFileSync(join(directory, '.gitignore'), 'ignored.json\n')
+    writeFileSync(join(directory, 'ignored.json'), '{}')
+    await repository.save({ relativePath: 'older.json', content: '{"order":1}' })
+    await new Promise((resolve) => setTimeout(resolve, 15))
+    await repository.save({ relativePath: 'newer.json', content: '{"order":2}' })
+    expect((await repository.list({ hideIgnored: true, sort: 'modified' })).map((node) => node.name)).toEqual(['newer.json', 'older.json'])
+    symlinkSync(join(directory, 'newer.json'), join(directory, 'linked.json'))
+    await expect(repository.read('linked.json')).rejects.toThrow('Symbolic links')
+  })
+
+  it('searches file paths and optionally searches JSON contents while preserving parent folders', async () => {
+    const repository = createRepository()
+    await repository.save({ relativePath: 'requests/by-name.json', content: '{"marker":"ordinary"}' })
+    await repository.save({ relativePath: 'archive/content-only.json', content: '{"marker":"needle-value"}' })
+
+    expect(await repository.list({ keyword: 'by-name', includeContent: false })).toMatchObject([{
+      name: 'requests',
+      children: [{ name: 'by-name.json' }]
+    }])
+    expect(await repository.list({ keyword: 'needle-value', includeContent: false })).toEqual([])
+    expect(await repository.list({ keyword: 'NEEDLE-VALUE', includeContent: true })).toMatchObject([{
+      name: 'archive',
+      children: [{ name: 'content-only.json' }]
+    }])
+  })
+})

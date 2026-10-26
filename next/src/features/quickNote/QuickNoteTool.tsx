@@ -1,0 +1,1355 @@
+import { useVaultSelection } from '@/shared/vaultSelection'
+import DOMPurify from 'dompurify'
+import {
+  Check,
+  ChevronDown,
+  Columns2,
+  Eye,
+  FilePenLine,
+  FilePlus2,
+  FolderOpen,
+  FolderPlus,
+  FoldVertical,
+  GitBranch,
+  ImagePlus,
+  List,
+  ListOrdered,
+  LocateFixed,
+  PanelLeftClose,
+  PanelLeftOpen,
+  Replace,
+  Save,
+  Search,
+  Trash2,
+  UnfoldVertical,
+  WandSparkles,
+  WrapText,
+  X
+} from 'lucide-react'
+import { marked } from 'marked'
+import { useCallback, useEffect, useEffectEvent, useLayoutEffect, useMemo, useReducer, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
+import { useSettings } from '@/features/settings/SettingsProvider'
+import { VaultGitDialog } from '@/features/json/VaultGitDialog'
+import { Dialog } from '@/shared/components/Dialog'
+import { FindReplaceBar } from '@/shared/components/FindReplaceBar'
+import { FontSelect } from '@/shared/components/FontSelect'
+import { ResizableColumns } from '@/shared/components/ResizableColumns'
+import { WorkspaceDragZone } from '@/shared/components/ToolPage'
+import { Tooltip } from '@/shared/components/Tooltip'
+import type { CodeEditorViewState } from '@/shared/components/codeEditorViewState'
+import { formatCodeEditorContent } from '@/shared/components/codeEditorFormatting'
+import { resolveTextCodeEditorLanguage } from '@/shared/components/codeEditorLanguage'
+import {
+  defaultFindReplaceOptions,
+  findAllMatches,
+  findNextMatch,
+  findNextMatchWithWrap,
+  replaceAllMatches,
+  replaceCurrentMatch,
+  type FindReplaceOptions
+} from '@/shared/components/findReplace'
+import { useToolActivity } from '@/shared/components/ToolActivity'
+import type { QuickNoteAttachment, QuickNoteFile, QuickNoteMetadata, QuickNoteNode, QuickNoteSort } from '@/shared/contracts/quickNote'
+import type { VaultGitAction } from '@/shared/contracts/vaultGit'
+import { useToast } from '@/shared/feedback/ToastProvider'
+import { useFocusOnWindowActivate } from '@/shared/hooks/useFocusOnWindowActivate'
+import { useVaultWorkspace } from '@/shared/hooks/useVaultWorkspace'
+import { useI18n } from '@/shared/i18n/I18nProvider'
+import type { MessageKey } from '@/shared/i18n/messages'
+import { isFormatShortcut } from '@/shared/utils/formatShortcut'
+import { cssFontFamily } from '@/shared/fonts/systemFonts'
+import {
+  collectDirectoryPaths,
+  ensureAncestorsExpanded,
+  resolveExpandedPaths,
+  type VaultTreeExpandMode
+} from '@/shared/vaultTreeExpand'
+import { QuickNoteCodeEditor, type QuickNoteCodeEditorHandle } from './QuickNoteCodeEditor'
+import {
+  clipboardContainsImage,
+  clipboardImageFile,
+  dataTransferContainsFiles,
+  imageFilesFromDataTransfer,
+  prepareMarkdownImageInsertion,
+  readFileAsDataUrl,
+  type TextSelection
+} from './quickNoteAttachments'
+import { QuickNoteTree } from './QuickNoteTree'
+import { quickReplaceActionIds, runQuickReplace, type QuickReplaceActionId } from './quickReplace'
+
+type ViewMode = 'editor' | 'split' | 'preview'
+type EntryKind = '' | 'file' | 'directory'
+type ActionDialogMode = 'createNote' | 'createFolder' | 'rename' | 'move' | 'delete' | null
+
+type QuickNoteState = {
+  vaultRootKey: string
+  nodes: QuickNoteNode[]
+  selectedPath: string
+  selectedKind: EntryKind
+  note: QuickNoteFile | null
+  content: string
+  expanded: Set<string>
+  query: string
+  includeContent: boolean
+  sort: QuickNoteSort
+  treeOpen: boolean
+  quickReplaceOpen: boolean
+  findOpen: boolean
+  findText: string
+  replaceText: string
+  findOptions: FindReplaceOptions
+  replacedCount: number
+  viewMode: ViewMode
+  actionMode: ActionDialogMode
+  actionValue: string
+  gitOpen: boolean
+  infoOpen: boolean
+  busy: boolean
+  metadataDirty: boolean
+  gitChangeCount: number
+}
+
+type QueuedAttachmentInsertion = {
+  notePath: string
+  sourceSelection: TextSelection
+  caret: number
+}
+
+const initialState: QuickNoteState = {
+  vaultRootKey: '',
+  nodes: [],
+  selectedPath: '',
+  selectedKind: '',
+  note: null,
+  content: '',
+  expanded: new Set(),
+  query: '',
+  includeContent: true,
+  sort: 'modified',
+  treeOpen: true,
+  quickReplaceOpen: false,
+  findOpen: false,
+  findText: '',
+  replaceText: '',
+  findOptions: defaultFindReplaceOptions,
+  replacedCount: 0,
+  viewMode: 'editor',
+  actionMode: null,
+  actionValue: '',
+  gitOpen: false,
+  infoOpen: false,
+  busy: false,
+  metadataDirty: false,
+  gitChangeCount: 0
+}
+
+let quickNoteSessionState: QuickNoteState | null = null
+let quickNoteEditorViewState: CodeEditorViewState | undefined
+let quickNoteTreeScrollTop = 0
+let quickNoteFindIndex = 0
+let quickNoteNeedsExpandPreference = quickNoteSessionState === null
+
+function createQuickNoteState(): QuickNoteState {
+  const source = quickNoteSessionState ?? initialState
+  if (quickNoteSessionState) quickNoteNeedsExpandPreference = false
+  return {
+    ...source,
+    findOptions: source.findOptions ?? defaultFindReplaceOptions,
+    replacedCount: source.replacedCount ?? 0,
+    expanded: new Set(source.expanded),
+    busy: false
+  }
+}
+
+function updateState(state: QuickNoteState, patch: Partial<QuickNoteState>): QuickNoteState {
+  const next = { ...state, ...patch }
+  quickNoteSessionState = { ...next, expanded: new Set(next.expanded), busy: false }
+  return next
+}
+
+const syntaxOptions = [
+  ['text/plain', 'Text'],
+  ['text/markdown', 'Markdown'],
+  ['application/json', 'JSON'],
+  ['text/java', 'Java'],
+  ['text/javascript', 'JavaScript'],
+  ['text/typescript', 'TypeScript'],
+  ['text/python', 'Python'],
+  ['text/html', 'HTML'],
+  ['text/xml', 'XML'],
+  ['text/yaml', 'YAML'],
+  ['text/sql', 'SQL']
+] as const
+
+const noteColors = [
+  ['default', 'var(--text-muted)'],
+  ['coral', '#d97868'],
+  ['yellow', '#c99535'],
+  ['green', '#4e9275'],
+  ['blue', '#4f83cc'],
+  ['purple', '#8a72b5'],
+  ['red', '#c96761']
+] as const
+
+const lineSpacingOptions = [1, 1.2, 1.4, 1.6, 1.8, 2] as const
+
+function NoteColorPicker({ value, disabled, label, onChange }: { value?: string; disabled: boolean; label: string; onChange: (color: string) => void }) {
+  const toolActive = useToolActivity()
+  const triggerRef = useRef<HTMLButtonElement>(null)
+  const menuRef = useRef<HTMLDivElement>(null)
+  const [open, setOpen] = useState(false)
+  const [position, setPosition] = useState({ left: 0, top: 0 })
+  const current = noteColors.find(([id]) => id === value) ?? noteColors[0]
+
+  const updatePosition = useCallback(() => {
+    const trigger = triggerRef.current
+    if (!trigger) return
+    const rect = trigger.getBoundingClientRect()
+    const menuWidth = 146
+    const menuHeight = 80
+    setPosition({
+      left: Math.max(8, Math.min(rect.left, window.innerWidth - menuWidth - 8)),
+      top: rect.bottom + menuHeight + 6 <= window.innerHeight ? rect.bottom + 6 : rect.top - menuHeight - 6
+    })
+  }, [])
+
+  useEffect(() => {
+    if (!open || !toolActive) return
+    updatePosition()
+    const focusFrame = window.requestAnimationFrame(() => {
+      menuRef.current?.querySelector<HTMLElement>('[aria-checked="true"]')?.focus()
+    })
+    const closeOutside = (event: PointerEvent) => {
+      const target = event.target as Node
+      if (!triggerRef.current?.contains(target) && !menuRef.current?.contains(target)) setOpen(false)
+    }
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== 'Escape') return
+      setOpen(false)
+      triggerRef.current?.focus()
+    }
+    document.addEventListener('pointerdown', closeOutside)
+    document.addEventListener('keydown', handleKeyDown)
+    window.addEventListener('resize', updatePosition)
+    window.addEventListener('scroll', updatePosition, true)
+    return () => {
+      window.cancelAnimationFrame(focusFrame)
+      document.removeEventListener('pointerdown', closeOutside)
+      document.removeEventListener('keydown', handleKeyDown)
+      window.removeEventListener('resize', updatePosition)
+      window.removeEventListener('scroll', updatePosition, true)
+    }
+  }, [open, toolActive, updatePosition])
+
+  return (
+    <>
+      <Tooltip content={label}>
+        <button
+          ref={triggerRef}
+          className="quick-note-color-trigger"
+          type="button"
+          aria-label={label}
+          aria-haspopup="menu"
+          aria-expanded={open}
+          data-color={current[0]}
+          disabled={disabled}
+          onClick={() => setOpen((currentOpen) => !currentOpen)}
+        >
+          <span className="quick-note-color-trigger__swatch" style={{ background: current[1] }} />
+          <ChevronDown size={12} />
+        </button>
+      </Tooltip>
+      {open && toolActive && createPortal(
+        <div ref={menuRef} className="quick-note-color-menu" role="menu" aria-label={label} style={position}>
+          {noteColors.map(([id, color]) => {
+            const active = current[0] === id
+            return (
+              <button
+                className={active ? 'quick-note-color-option quick-note-color-option--active' : 'quick-note-color-option'}
+                type="button"
+                role="menuitemradio"
+                aria-label={`${label} ${id}`}
+                aria-checked={active}
+                title={`${label} ${id}`}
+                key={id}
+                onClick={() => {
+                  onChange(id)
+                  setOpen(false)
+                  triggerRef.current?.focus()
+                }}
+              >
+                <span className="quick-note-color-option__swatch" style={{ background: color }}>
+                  {active && <Check size={12} strokeWidth={3} />}
+                </span>
+              </button>
+            )
+          })}
+        </div>,
+        document.body
+      )}
+    </>
+  )
+}
+
+export function QuickNoteTool() {
+  const toolActive = useToolActivity()
+  const { t } = useI18n()
+  const { settings, updateSettings } = useSettings()
+  const toast = useToast()
+  const editorRef = useRef<QuickNoteCodeEditorHandle>(null)
+  const treeScrollRef = useRef<HTMLDivElement>(null)
+  const [locatePath, setLocatePath] = useState('')
+  const findIndexRef = useRef(quickNoteFindIndex)
+  const [findFocusRequest, requestFindFocus] = useReducer((value: number) => value + 1, 0)
+  const [state, dispatch] = useReducer(updateState, undefined, createQuickNoteState)
+  const selectedNotePathRef = useRef(state.note?.relativePath ?? '')
+  const documentRevisionRef = useRef(0)
+  const update = useCallback((patch: Partial<QuickNoteState>) => {
+    if ('note' in patch) selectedNotePathRef.current = patch.note?.relativePath ?? ''
+    if ('note' in patch || 'content' in patch || 'metadataDirty' in patch) documentRevisionRef.current += 1
+    dispatch(patch)
+  }, [])
+  const latestStateRef = useRef(state)
+  const saveQueueRef = useRef<Promise<void>>(Promise.resolve())
+  const attachmentInsertionQueueRef = useRef<Promise<QueuedAttachmentInsertion | null>>(Promise.resolve(null))
+  const pendingAttachmentInsertionsRef = useRef(0)
+  const treeExpandModeRef = useRef(settings.vault.quickNoteTreeExpandMode)
+  const dirty = state.note !== null && (state.content !== state.note.content || state.metadataDirty)
+  latestStateRef.current = state
+  treeExpandModeRef.current = settings.vault.quickNoteTreeExpandMode
+  const selection = useVaultSelection(state.nodes, state.expanded, state.selectedPath)
+  const selectedNotePath = state.note?.relativePath ?? ''
+  const { ready: workspaceReady } = useVaultWorkspace('quickNote', window.mootool.openQuickNoteWorkspace, selectedNotePath,
+    (rootKey) => {
+      if (state.vaultRootKey === rootKey) return
+      update({ nodes: [], selectedPath: '', selectedKind: '', note: null, content: '', query: '', metadataDirty: false, busy: true })
+      quickNoteNeedsExpandPreference = true
+    },
+    ({ file: note }, rootKey) => {
+      if (state.vaultRootKey !== rootKey || state.note?.relativePath !== note.relativePath) {
+        update({ vaultRootKey: rootKey, selectedPath: note.relativePath, selectedKind: 'file', note, content: note.content, metadataDirty: false, busy: false, query: '',
+          expanded: ensureAncestorsExpanded(state.expanded, note.relativePath) })
+      } else update({ vaultRootKey: rootKey, busy: false, query: '' })
+    }, async (path) => {
+      update({ query: '', viewMode: 'editor' })
+      await selectNode({ relativePath: path, name: path, kind: 'file' })
+      await loadTree()
+    })
+  const metadataSignature = JSON.stringify(state.note?.metadata ?? {})
+  const directories = useMemo(() => collectDirectoryPaths(state.nodes), [state.nodes])
+  const stats = useMemo(() => documentStats(state.content), [state.content])
+  const attachmentPaths = useMemo(() => extractAttachmentPaths(state.content), [state.content])
+  const attachmentKey = attachmentPaths.join('\n')
+  const [attachmentUrls, setAttachmentUrls] = useReducer(
+    (current: Record<string, string>, next: Record<string, string>) => ({ ...current, ...next }),
+    {}
+  )
+  const previewHtml = useMemo(() => renderPreview(state.content, state.note?.metadata.syntax, attachmentUrls), [attachmentUrls, state.content, state.note?.metadata.syntax])
+  const previewMarkup = useMemo(() => ({ __html: previewHtml }), [previewHtml])
+
+  useFocusOnWindowActivate(
+    () => editorRef.current?.focus(),
+    toolActive
+      && Boolean(state.note)
+      && state.viewMode === 'editor'
+      && !state.findOpen
+      && !state.actionMode
+      && !state.infoOpen
+      && !state.gitOpen
+  )
+
+  const scrollSelectedIntoView = useCallback((path = latestStateRef.current.selectedPath) => {
+    if (!path || !treeScrollRef.current) return
+    const row = treeScrollRef.current.querySelector(`[data-path="${CSS.escape(path)}"]`)
+    row?.scrollIntoView({ block: 'nearest' })
+    quickNoteTreeScrollTop = treeScrollRef.current.scrollTop
+  }, [])
+
+  const applyTreeExpandMode = useCallback((mode: VaultTreeExpandMode, nodes: QuickNoteNode[], selectedPath: string) => {
+    return resolveExpandedPaths(collectDirectoryPaths(nodes), mode, selectedPath)
+  }, [])
+
+  useLayoutEffect(() => {
+    if (state.treeOpen && treeScrollRef.current) treeScrollRef.current.scrollTop = quickNoteTreeScrollTop
+  }, [state.nodes, state.treeOpen])
+
+  const loadTree = useCallback(async (): Promise<QuickNoteNode[]> => {
+    const nodes = await window.mootool.listQuickNotes({
+      keyword: state.query,
+      includeContent: state.includeContent,
+      sort: state.sort,
+      hideIgnored: settings.vault.hideGitignoredFiles
+    })
+    update({ nodes })
+    return nodes
+  }, [settings.vault.hideGitignoredFiles, state.includeContent, state.query, state.sort])
+
+  const reloadCurrentNoteFromDisk = useCallback(async (): Promise<void> => {
+    const path = state.note?.relativePath
+    if (!path) return
+    const revisionBeforeRead = documentRevisionRef.current
+    try {
+      const note = await window.mootool.readQuickNote(path)
+      if (selectedNotePathRef.current !== path || documentRevisionRef.current !== revisionBeforeRead) return
+      update({
+        selectedPath: note.relativePath,
+        selectedKind: 'file',
+        note,
+        content: note.content,
+        metadataDirty: false,
+        expanded: ensureAncestorsExpanded(latestStateRef.current.expanded, note.relativePath)
+      })
+    } catch {
+      if (selectedNotePathRef.current !== path || documentRevisionRef.current !== revisionBeforeRead) return
+      try {
+        const { file: note } = await window.mootool.openQuickNoteWorkspace()
+        if (selectedNotePathRef.current !== path || documentRevisionRef.current !== revisionBeforeRead) return
+        update({ selectedPath: note.relativePath, selectedKind: 'file', note, content: note.content, metadataDirty: false,
+          expanded: ensureAncestorsExpanded(latestStateRef.current.expanded, note.relativePath) })
+      } catch (error) { toast.error(errorMessage(error)) }
+    }
+  }, [state.note?.relativePath])
+
+  const refreshGitChangeCount = useCallback(async (): Promise<void> => {
+    try {
+      const status = await window.mootool.getQuickNoteGitStatus()
+      update({ gitChangeCount: status.changes.length })
+    } catch {
+      update({ gitChangeCount: 0 })
+    }
+  }, [])
+
+  const reloadAfterTreeLoad = useEffectEvent(async () => {
+    if (!dirty) await reloadCurrentNoteFromDisk()
+  })
+
+  useEffect(() => {
+    if (!workspaceReady) return
+    let cancelled = false
+    void loadTree().then(async (nodes) => {
+      if (cancelled) return
+      let selectedPath = latestStateRef.current.selectedPath
+      if (selectedPath) {
+        await reloadAfterTreeLoad()
+        selectedPath = latestStateRef.current.selectedPath
+      }
+      if (cancelled) return
+      if (quickNoteNeedsExpandPreference) {
+        quickNoteNeedsExpandPreference = false
+        update({ expanded: applyTreeExpandMode(treeExpandModeRef.current, nodes, selectedPath) })
+      } else {
+        const nextExpanded = ensureAncestorsExpanded(latestStateRef.current.expanded, selectedPath)
+        if (nextExpanded.size !== latestStateRef.current.expanded.size
+          || [...nextExpanded].some((path) => !latestStateRef.current.expanded.has(path))) {
+          update({ expanded: nextExpanded })
+        }
+      }
+      window.requestAnimationFrame(() => scrollSelectedIntoView())
+    }).catch((error) => toast.error(errorMessage(error)))
+    return () => { cancelled = true }
+  }, [applyTreeExpandMode, loadTree, scrollSelectedIntoView, toast, workspaceReady])
+
+  useEffect(() => {
+    if (!toolActive || !state.treeOpen || !state.selectedPath) return
+    const nextExpanded = ensureAncestorsExpanded(latestStateRef.current.expanded, state.selectedPath)
+    if (nextExpanded.size !== latestStateRef.current.expanded.size
+      || [...nextExpanded].some((path) => !latestStateRef.current.expanded.has(path))) {
+      update({ expanded: nextExpanded })
+    }
+    const frame = window.requestAnimationFrame(() => scrollSelectedIntoView(state.selectedPath))
+    return () => window.cancelAnimationFrame(frame)
+  }, [scrollSelectedIntoView, state.selectedPath, state.treeOpen, toolActive])
+
+  useEffect(() => {
+    if (!locatePath || state.query) return
+    if (locatePath !== selectedNotePath) { setLocatePath(''); return }
+    const row = treeScrollRef.current?.querySelector<HTMLButtonElement>(`[data-path="${CSS.escape(locatePath)}"]`)
+    if (!row) return
+    selection.select(locatePath, { ctrlKey: false, metaKey: false, shiftKey: false })
+    row.focus({ preventScroll: true })
+    scrollSelectedIntoView(locatePath)
+    setLocatePath('')
+  }, [locatePath, scrollSelectedIntoView, selectedNotePath, state.expanded, state.nodes, state.query])
+
+  useEffect(() => window.mootool.onQuickNoteVaultChange(() => {
+    if (!workspaceReady) return
+    void loadTree()
+    if (!dirty) void reloadCurrentNoteFromDisk()
+    void refreshGitChangeCount()
+  }), [dirty, loadTree, refreshGitChangeCount, reloadCurrentNoteFromDisk, workspaceReady])
+
+  useEffect(() => {
+    if (!toolActive) return
+    void refreshGitChangeCount()
+    const timer = window.setInterval(() => { void refreshGitChangeCount() }, 5_000)
+    return () => window.clearInterval(timer)
+  }, [refreshGitChangeCount, toolActive])
+
+  useEffect(() => {
+    void window.mootool.setQuickNoteEditorDirty(dirty)
+  }, [dirty])
+
+  const persistSnapshotOnIdle = useEffectEvent((snapshot: { relativePath: string; content: string; metadata: QuickNoteMetadata; metadataSignature: string }) => {
+    void persistSnapshot(snapshot, false)
+  })
+
+  useEffect(() => {
+    if (!workspaceReady || !dirty || !selectedNotePath) return
+    const snapshot = {
+      relativePath: selectedNotePath,
+      content: state.content,
+      metadata: JSON.parse(metadataSignature) as QuickNoteMetadata,
+      metadataSignature
+    }
+    const timer = window.setTimeout(() => persistSnapshotOnIdle(snapshot), 250)
+    return () => window.clearTimeout(timer)
+  }, [dirty, metadataSignature, selectedNotePath, state.content, workspaceReady])
+
+  useEffect(() => {
+    if (!attachmentKey) return
+    const missing = attachmentPaths.filter((path) => !attachmentUrls[path])
+    if (!missing.length) return
+    let cancelled = false
+    void Promise.all(missing.map(async (path) => [path, await window.mootool.readQuickNoteAttachment(path)] as const))
+      .then((entries) => { if (!cancelled) setAttachmentUrls(Object.fromEntries(entries)) })
+      .catch(() => undefined)
+    return () => { cancelled = true }
+  }, [attachmentKey, attachmentPaths, attachmentUrls])
+
+  useEffect(() => {
+    if (!toolActive) return
+    const handleShortcut = (event: KeyboardEvent) => {
+      if (!(event.metaKey || event.ctrlKey)) return
+      if (event.key.toLocaleLowerCase() === 's') {
+        event.preventDefault()
+        void saveCurrent()
+      } else if (!event.shiftKey && !event.altKey && (event.key.toLocaleLowerCase() === 'f' || event.key.toLocaleLowerCase() === 'r')) {
+        event.preventDefault()
+        openFindReplace()
+      }
+    }
+    window.addEventListener('keydown', handleShortcut)
+    return () => window.removeEventListener('keydown', handleShortcut)
+  })
+
+  async function saveCurrent(showToast = true): Promise<QuickNoteFile | null> {
+    if (!state.note) return null
+    if (showToast) update({ busy: true })
+    return persistSnapshot({
+      relativePath: state.note.relativePath,
+      content: state.content,
+      metadata: { ...state.note.metadata },
+      metadataSignature: JSON.stringify(state.note.metadata)
+    }, showToast)
+  }
+
+  async function persistSnapshot(
+    snapshot: { relativePath: string; content: string; metadata: QuickNoteMetadata; metadataSignature: string },
+    showToast: boolean
+  ): Promise<QuickNoteFile | null> {
+    let savedNote: QuickNoteFile | null = null
+    const operation = saveQueueRef.current.catch(() => undefined).then(async () => {
+      const note = await window.mootool.saveQuickNote({
+        relativePath: snapshot.relativePath,
+        content: snapshot.content,
+        metadata: snapshot.metadata
+      })
+      savedNote = note
+      const current = latestStateRef.current
+      if (current.note?.relativePath === snapshot.relativePath) {
+        const metadataUnchanged = JSON.stringify(current.note.metadata) === snapshot.metadataSignature
+        update({
+          note: metadataUnchanged ? note : { ...note, metadata: current.note.metadata },
+          content: current.content,
+          busy: showToast ? false : current.busy,
+          metadataDirty: !metadataUnchanged
+        })
+      } else if (showToast) {
+        update({ busy: false })
+      }
+      await loadTree()
+      await refreshGitChangeCount()
+      if (showToast) toast.success(t('quickNote.saved'))
+    })
+    saveQueueRef.current = operation.then(() => undefined, () => undefined)
+    try {
+      await operation
+      return savedNote
+    } catch (error) {
+      if (showToast) update({ busy: false })
+      toast.error(errorMessage(error))
+      return null
+    }
+  }
+
+  async function prepareGitAction(action: VaultGitAction): Promise<boolean> {
+    if (!dirty) return true
+    if (action === 'pull' || action === 'continue-operation') return Boolean(await saveCurrent(false))
+    return true
+  }
+
+  async function refreshAfterGitAction(): Promise<void> {
+    await Promise.all([loadTree(), reloadCurrentNoteFromDisk(), refreshGitChangeCount()])
+  }
+
+  async function selectNode(node: QuickNoteNode): Promise<QuickNoteFile | null> {
+    if (node.kind === 'directory') {
+      if (dirty) await saveCurrent(false)
+      update({ selectedPath: node.relativePath, selectedKind: 'directory', note: null, content: '', metadataDirty: false })
+      return null
+    }
+    if (node.relativePath === state.note?.relativePath) return state.note
+    if (dirty && !await saveCurrent(false)) return null
+    update({ busy: true })
+    try {
+      const note = await window.mootool.readQuickNote(node.relativePath)
+      update({ selectedPath: note.relativePath, selectedKind: 'file', note, content: note.content, busy: false, metadataDirty: false })
+      return note
+    } catch (error) {
+      update({ busy: false })
+      toast.error(errorMessage(error))
+      return null
+    }
+  }
+
+  function toggleDirectory(path: string): void {
+    const expanded = new Set(state.expanded)
+    if (expanded.has(path)) expanded.delete(path)
+    else expanded.add(path)
+    update({ expanded })
+  }
+
+  function setTreeExpandMode(mode: VaultTreeExpandMode): void {
+    const expanded = applyTreeExpandMode(mode, state.nodes, state.selectedPath)
+    update({ expanded })
+    void updateSettings({ vault: { quickNoteTreeExpandMode: mode } })
+    window.requestAnimationFrame(() => scrollSelectedIntoView(state.selectedPath))
+  }
+
+  function openAction(mode: Exclude<ActionDialogMode, null>): void {
+    const defaultValue = mode === 'rename'
+      ? state.note?.metadata.title ?? directoryLeaf(state.selectedPath)
+      : mode === 'move'
+        ? parentDirectory(state.selectedPath)
+        : ''
+    update({ actionMode: mode, actionValue: defaultValue })
+  }
+
+  async function openTreeAction(node: QuickNoteNode, mode: 'rename' | 'move' | 'delete'): Promise<void> {
+    if (node.kind === 'directory') {
+      if (dirty && !await saveCurrent(false)) return
+      update({
+        selectedPath: node.relativePath,
+        selectedKind: 'directory',
+        note: null,
+        content: '',
+        actionMode: mode,
+        actionValue: mode === 'rename' ? directoryLeaf(node.relativePath) : mode === 'move' ? parentDirectory(node.relativePath) : ''
+      })
+      return
+    }
+    if (node.relativePath !== state.note?.relativePath && dirty && !await saveCurrent(false)) return
+    try {
+      const note = node.relativePath === state.note?.relativePath ? state.note : await window.mootool.readQuickNote(node.relativePath)
+      update({
+        selectedPath: node.relativePath,
+        selectedKind: 'file',
+        note,
+        content: note.content,
+        metadataDirty: false,
+        actionMode: mode,
+        actionValue: mode === 'rename' ? note.metadata.title : mode === 'move' ? parentDirectory(node.relativePath) : ''
+      })
+    } catch (error) {
+      toast.error(errorMessage(error))
+    }
+  }
+
+  async function runActionDialog(): Promise<void> {
+    const mode = state.actionMode
+    if (!mode) return
+    update({ busy: true })
+    try {
+      if (mode === 'createNote') {
+        const note = await window.mootool.createQuickNote({
+          title: state.actionValue,
+          parentPath: selectedDirectory(state.selectedPath, state.selectedKind),
+          fontName: settings.editor.quickNoteFontName,
+          fontSize: settings.editor.quickNoteFontSize,
+          lineWrap: settings.editor.softWrap
+        })
+        update({ actionMode: null, actionValue: '', selectedPath: note.relativePath, selectedKind: 'file', note, content: note.content, busy: false, metadataDirty: false })
+        await loadTree()
+        return
+      }
+      if (mode === 'createFolder') {
+        const parent = selectedDirectory(state.selectedPath, state.selectedKind)
+        const path = [parent, state.actionValue.trim()].filter(Boolean).join('/')
+        const created = await window.mootool.createQuickNoteFolder(path)
+        const expanded = new Set(state.expanded).add(parent).add(created)
+        await loadTree()
+        update({ actionMode: null, actionValue: '', selectedPath: created, selectedKind: 'directory', note: null, content: '', expanded, busy: false, metadataDirty: false })
+        return
+      }
+      if (mode === 'rename') {
+        const nextPath = await window.mootool.renameQuickNoteEntry({ relativePath: state.selectedPath, name: state.actionValue })
+        await loadTree()
+        if (state.selectedKind === 'file') {
+          const note = await window.mootool.readQuickNote(nextPath)
+          update({ actionMode: null, selectedPath: nextPath, note, content: note.content, busy: false, metadataDirty: false })
+        } else {
+          update({ actionMode: null, selectedPath: nextPath, busy: false })
+        }
+        return
+      }
+      if (mode === 'move') {
+        const nextPath = await window.mootool.moveQuickNoteEntry({ relativePath: state.selectedPath, targetDirectory: state.actionValue })
+        await loadTree()
+        if (state.selectedKind === 'file') {
+          const note = await window.mootool.readQuickNote(nextPath)
+          update({ actionMode: null, selectedPath: nextPath, note, content: note.content, busy: false, metadataDirty: false })
+        } else {
+          update({ actionMode: null, selectedPath: nextPath, busy: false })
+        }
+        return
+      }
+      await window.mootool.deleteQuickNoteEntry(state.selectedPath)
+      const { file: note } = await window.mootool.openQuickNoteWorkspace()
+      update({ actionMode: null, selectedPath: note.relativePath, selectedKind: 'file', note, content: note.content, busy: false, metadataDirty: false, query: '' })
+      await loadTree()
+    } catch (error) {
+      update({ busy: false })
+      toast.error(errorMessage(error))
+    }
+  }
+
+  async function duplicateNote(node: QuickNoteNode): Promise<void> {
+    const paths = selection.filesFor(node.relativePath)
+    if (!paths.length || (dirty && !await saveCurrent(false))) return
+    let last: QuickNoteFile | null = null
+    const failures: string[] = []
+    for (const path of paths) {
+      try { last = await window.mootool.duplicateQuickNote(path) }
+      catch (error) { failures.push(`${path}: ${errorMessage(error)}`) }
+    }
+    try { await loadTree() } catch (error) { failures.push(errorMessage(error)) }
+    if (last) update({ selectedPath: last.relativePath, selectedKind: 'file', note: last, content: last.content, metadataDirty: false })
+    if (failures.length) toast.error(failures.join('\n'))
+  }
+
+  async function moveTreeEntry(node: Pick<QuickNoteNode, 'relativePath' | 'kind'>, targetDirectory: string): Promise<void> {
+    const affectsSelection = state.selectedPath === node.relativePath || (node.kind === 'directory' && state.selectedPath.startsWith(`${node.relativePath}/`))
+    if (affectsSelection && dirty && !await saveCurrent(false)) return
+    try {
+      const nextPath = await window.mootool.moveQuickNoteEntry({ relativePath: node.relativePath, targetDirectory })
+      const nextSelectedPath = affectsSelection ? `${nextPath}${state.selectedPath.slice(node.relativePath.length)}` : state.selectedPath
+      const expanded = new Set([...state.expanded].map((path) => path === node.relativePath || path.startsWith(`${node.relativePath}/`)
+        ? `${nextPath}${path.slice(node.relativePath.length)}`
+        : path))
+      await loadTree()
+      if (affectsSelection && state.selectedKind === 'file') {
+        const note = await window.mootool.readQuickNote(nextSelectedPath)
+        update({ selectedPath: nextSelectedPath, note, content: note.content, expanded, metadataDirty: false })
+      } else {
+        update({ selectedPath: nextSelectedPath, expanded })
+      }
+      toast.success(t('quickNote.move'))
+    } catch (error) {
+      toast.error(errorMessage(error))
+    }
+  }
+
+  async function importAttachment(): Promise<void> {
+    if (!state.note) return
+    try {
+      const attachment = await window.mootool.importQuickNoteAttachment()
+      if (!attachment) return
+      insertAttachment(attachment)
+    } catch (error) {
+      toast.error(errorMessage(error))
+    }
+  }
+
+  async function importDataTransferAttachment(
+    selection: TextSelection,
+    file: File | null,
+    expectedNotePath: string
+  ): Promise<number | null> {
+    if (latestStateRef.current.note?.relativePath !== expectedNotePath) return null
+    try {
+      const attachment = await window.mootool.importQuickNoteClipboardAttachment(file ? await readFileAsDataUrl(file) : undefined)
+      if (!attachment) {
+        toast.error(t('quickNote.clipboardEmpty'))
+        return null
+      }
+      if (latestStateRef.current.note?.relativePath !== expectedNotePath) return null
+      return insertAttachment(attachment, selection)
+    } catch (error) {
+      toast.error(errorMessage(error))
+      return null
+    }
+  }
+
+  function enqueueDataTransferAttachment(selection: TextSelection, file: File | null): void {
+    const notePath = latestStateRef.current.note?.relativePath
+    if (!notePath) return
+    const followsPendingInsertion = pendingAttachmentInsertionsRef.current > 0
+    pendingAttachmentInsertionsRef.current += 1
+    const operation = attachmentInsertionQueueRef.current.catch(() => null).then(async (previous) => {
+      try {
+        const continuesAtSameSelection = followsPendingInsertion
+          && previous?.notePath === notePath
+          && previous.sourceSelection.start === selection.start
+          && previous.sourceSelection.end === selection.end
+        const targetSelection = continuesAtSameSelection
+          ? { start: previous.caret, end: previous.caret }
+          : selection
+        const caret = await importDataTransferAttachment(targetSelection, file, notePath)
+        return caret === null ? null : { notePath, sourceSelection: selection, caret }
+      } finally {
+        pendingAttachmentInsertionsRef.current -= 1
+      }
+    })
+    attachmentInsertionQueueRef.current = operation
+  }
+
+  async function exportNote(node: QuickNoteNode): Promise<void> {
+    const paths = selection.filesFor(node.relativePath)
+    if (!paths.length || (dirty && !await saveCurrent(false))) return
+    try {
+      const count = await window.mootool.exportVaultFiles('quickNote', paths)
+      if (count !== null) toast.success(t('vault.batch.exported', { count: String(count) }))
+    } catch (error) { toast.error(errorMessage(error)) }
+  }
+
+  async function showDocumentInfo(node: QuickNoteNode): Promise<void> {
+    if (node.kind !== 'file') return
+    if (await selectNode(node)) update({ infoOpen: true })
+  }
+
+  function insertAttachment(
+    attachment: QuickNoteAttachment,
+    requestedSelection?: TextSelection
+  ): number {
+    const editor = editorRef.current
+    const current = latestStateRef.current
+    const content = current.content
+    const selection = requestedSelection ?? editor?.getSelection() ?? { start: content.length, end: content.length }
+    const insertion = prepareMarkdownImageInsertion(content, selection, attachment.markdown)
+    const note = current.note
+    const nextContent = `${content.slice(0, insertion.start)}${insertion.text}${content.slice(insertion.end)}`
+    const patch: Partial<QuickNoteState> = {
+      content: nextContent,
+      ...(note && note.metadata.syntax !== 'text/markdown'
+        ? { note: { ...note, metadata: { ...note.metadata, syntax: 'text/markdown' } }, metadataDirty: true }
+        : {})
+    }
+    setAttachmentUrls({ [attachment.relativePath]: attachment.dataUrl })
+    latestStateRef.current = { ...current, ...patch }
+    editor?.setValueAndSelection(nextContent, insertion.caret, insertion.caret)
+    update(patch)
+    return insertion.caret
+  }
+
+  function prefixSelectedLines(prefix: 'bullet' | 'numbered'): void {
+    const editor = editorRef.current
+    const selection = editor?.getSelection()
+    const start = selection?.start ?? 0
+    const end = selection?.end ?? state.content.length
+    const lineStart = state.content.lastIndexOf('\n', Math.max(0, start - 1)) + 1
+    const nextLine = state.content.indexOf('\n', end)
+    const lineEnd = nextLine < 0 ? state.content.length : nextLine
+    const selected = state.content.slice(lineStart, lineEnd)
+    const transformed = selected.split('\n').map((line, index) => `${prefix === 'bullet' ? '- ' : `${index + 1}. `}${line}`).join('\n')
+    update({ content: `${state.content.slice(0, lineStart)}${transformed}${state.content.slice(lineEnd)}` })
+  }
+
+  async function formatCurrent(): Promise<void> {
+    if (!state.note) return
+    try {
+      update({
+        content: await formatCodeEditorContent(state.content, state.note.metadata.syntax, {
+          tabWidth: 4,
+          sqlDialect: settings.editor.sqlDialect
+        })
+      })
+    } catch (error) {
+      toast.error(errorMessage(error))
+    }
+  }
+
+  function patchMetadata(patch: Partial<QuickNoteMetadata>): void {
+    if (!state.note) return
+    update({ note: { ...state.note, metadata: { ...state.note.metadata, ...patch } }, metadataDirty: true })
+    if (patch.fontName !== undefined) {
+      void updateSettings({ editor: { quickNoteFontName: patch.fontName || settings.editor.quickNoteFontName } })
+    }
+  }
+
+  function openFindReplace(): void {
+    if (!state.note) return
+    const selection = editorRef.current?.getSelection()
+    const selected = selection && selection.end > selection.start
+      ? state.content.slice(selection.start, selection.end)
+      : undefined
+    findIndexRef.current = 0
+    quickNoteFindIndex = 0
+    update({
+      findOpen: true,
+      replacedCount: 0,
+      ...(selected !== undefined ? { findText: selected } : {})
+    })
+    requestFindFocus()
+  }
+
+  function findAround(forward: boolean): void {
+    if (!state.findText) return
+    const selection = editorRef.current?.getSelection()
+    const fromIndex = forward
+      ? (selection?.end ?? findIndexRef.current)
+      : (selection?.start ?? findIndexRef.current)
+    const result = findNextMatchWithWrap(state.content, state.findText, state.findOptions, fromIndex, forward)
+    if (!result) {
+      toast.info(t('findReplace.noMatches'))
+      return
+    }
+    const { match, wrapped } = result
+    if (wrapped) toast.info(t(forward ? 'findReplace.wrappedToStart' : 'findReplace.wrappedToEnd'))
+    findIndexRef.current = forward ? match.end : match.start
+    quickNoteFindIndex = findIndexRef.current
+    editorRef.current?.selectRange(match.start, match.end)
+  }
+
+  function replaceCurrent(all: boolean): void {
+    if (!state.findText) return
+    if (all) {
+      const result = replaceAllMatches(state.content, state.findText, state.replaceText, state.findOptions)
+      if (result.count === 0) toast.info(t('findReplace.noMatches'))
+      else update({ content: result.content, replacedCount: result.count })
+      return
+    }
+    const result = replaceCurrentMatch(
+      state.content,
+      state.findText,
+      state.replaceText,
+      state.findOptions,
+      editorRef.current?.getSelection() ?? null
+    )
+    if (!result.replaced) {
+      toast.info(t('findReplace.noMatches'))
+      return
+    }
+    update({ content: result.content, replacedCount: state.replacedCount + 1 })
+    findIndexRef.current = result.nextFrom
+    quickNoteFindIndex = result.nextFrom
+    const findText = state.findText
+    const findOptions = state.findOptions
+    requestAnimationFrame(() => {
+      const match = findNextMatch(result.content, findText, findOptions, result.nextFrom, true)
+      if (match) {
+        findIndexRef.current = match.end
+        quickNoteFindIndex = match.end
+        editorRef.current?.selectRange(match.start, match.end)
+      }
+    })
+  }
+
+  function applyQuickReplace(action: QuickReplaceActionId): void {
+    const editor = editorRef.current
+    const selection = editor?.getSelection()
+    const start = selection?.start ?? 0
+    const end = selection?.end ?? 0
+    const hasSelection = end > start
+    const source = hasSelection ? state.content.slice(start, end) : state.content
+    try {
+      const transformed = runQuickReplace(source, action)
+      update({ content: hasSelection ? `${state.content.slice(0, start)}${transformed}${state.content.slice(end)}` : transformed })
+    } catch (error) {
+      toast.error(errorMessage(error))
+    }
+  }
+
+  const currentName = state.note?.metadata.title ?? directoryLeaf(state.selectedPath)
+  const quickNoteColumns = 1 + Number(state.treeOpen) + Number(state.quickReplaceOpen)
+  const quickNoteSizes = state.treeOpen
+    ? state.quickReplaceOpen ? [220, 560, 218] : [220, 780]
+    : state.quickReplaceOpen ? [780, 218] : [1]
+  const quickNoteMinimums = state.treeOpen
+    ? state.quickReplaceOpen ? [170, 320, 170] : [170, 320]
+    : state.quickReplaceOpen ? [320, 170] : [320]
+  return (
+    <section className="tool-page quick-note-tool">
+      <h1 className="visually-hidden">{t('quickNote.title')}</h1>
+
+      <div className={['quick-note-stage', state.treeOpen ? '' : 'quick-note-layout--tree-closed', state.quickReplaceOpen ? 'quick-note-layout--replace-open' : ''].filter(Boolean).join(' ')}>
+        <ResizableColumns
+          className="quick-note-layout"
+          columns={quickNoteColumns}
+          defaultSizes={quickNoteSizes}
+          minPaneWidths={quickNoteMinimums}
+          minimumWidth={quickNoteColumns === 3 ? 820 : 620}
+          storageKey={`quick-note-${state.treeOpen ? 'tree' : 'no-tree'}-${state.quickReplaceOpen ? 'replace' : 'no-replace'}`}
+        >
+          {state.treeOpen && (
+            <aside className="quick-note-sidebar">
+              <div className="quick-note-search">
+                <Search size={14} />
+                <input aria-label={t('quickNote.search')} placeholder={t('quickNote.search')} value={state.query} onChange={(event) => update({ query: event.target.value })} />
+              </div>
+              <div className="quick-note-list-controls">
+                <label><input type="checkbox" checked={state.includeContent} onChange={(event) => update({ includeContent: event.target.checked })} />{t('quickNote.searchContent')}</label>
+                <select aria-label={t('quickNote.sort')} value={state.sort} onChange={(event) => update({ sort: event.target.value as QuickNoteSort })}>
+                  <option value="modified">{t('quickNote.sort.modified')}</option>
+                  <option value="created">{t('quickNote.sort.created')}</option>
+                  <option value="name">{t('quickNote.sort.name')}</option>
+                </select>
+              </div>
+              <div className="quick-note-tree-actions">
+                <IconButton label={t('quickNote.newNote')} icon={FilePlus2} onClick={() => openAction('createNote')} />
+                <IconButton label={t('quickNote.newFolder')} icon={FolderPlus} onClick={() => openAction('createFolder')} />
+                <IconButton label={t('quickNote.save')} icon={Save} disabled={!state.note || state.busy} active={dirty} onClick={() => { void saveCurrent() }} />
+                <IconButton label={t('quickNote.delete')} icon={Trash2} disabled={!state.selectedPath || selection.paths.length > 1} onClick={() => openAction('delete')} />
+                <IconButton label={t('quickNote.git')} icon={GitBranch} badge={state.gitChangeCount} onClick={() => update({ gitOpen: true })} />
+                <IconButton
+                  label={settings.vault.quickNoteTreeExpandMode === 'expandAll' ? t('quickNote.collapseAll') : t('quickNote.expandAll')}
+                  icon={settings.vault.quickNoteTreeExpandMode === 'expandAll' ? FoldVertical : UnfoldVertical}
+                  onClick={() => setTreeExpandMode(settings.vault.quickNoteTreeExpandMode === 'expandAll' ? 'collapseAll' : 'expandAll')}
+                />
+                <IconButton label={t('quickNote.locateCurrent')} icon={LocateFixed} disabled={!state.note} onClick={() => {
+                  if (!selectedNotePath) return
+                  update({ query: '', selectedPath: selectedNotePath, selectedKind: 'file', expanded: ensureAncestorsExpanded(state.expanded, selectedNotePath) })
+                  setLocatePath(selectedNotePath)
+                }} />
+              </div>
+              {selection.paths.length > 1 && <div className="vault-panel__selection">{t('vault.batch.selected', { count: String(selection.paths.length) })}</div>}
+              <div ref={treeScrollRef} className="quick-note-tree-scroll" onScroll={(event) => { quickNoteTreeScrollTop = event.currentTarget.scrollTop }}>
+                {state.nodes.length
+                  ? <QuickNoteTree nodes={state.nodes} selectedPath={state.selectedPath} selectedPaths={selection.paths} onContextSelect={selection.context} expanded={state.expanded} onSelect={(node, gesture) => { if (selection.select(node.relativePath, gesture)) void selectNode(node) }} onToggle={toggleDirectory} onMove={(node, targetDirectory) => { void moveTreeEntry(node, targetDirectory) }} onRenameRequest={(node) => { void openTreeAction(node, 'rename') }} onMoveRequest={(node) => { void openTreeAction(node, 'move') }} onDuplicateRequest={(node) => { void duplicateNote(node) }} onExportRequest={(node) => { void exportNote(node) }} onInfoRequest={(node) => { void showDocumentInfo(node) }} onDeleteRequest={(node) => { void openTreeAction(node, 'delete') }} onRevealRequest={(node) => { void window.mootool.revealQuickNoteEntry(node.relativePath).catch((error) => toast.error(errorMessage(error))) }} onGitRequest={() => update({ gitOpen: true })} renameLabel={t('quickNote.rename')} moveLabel={t('quickNote.move')} duplicateLabel={t('quickNote.duplicate')} exportLabel={t('quickNote.export')} infoLabel={t('quickNote.info')} deleteLabel={t('quickNote.delete')} revealLabel={t('quickNote.revealInFinder')} gitLabel={t('quickNote.git')} />
+                  : <div className="quick-note-empty">{t('quickNote.empty')}</div>}
+              </div>
+            </aside>
+          )}
+
+          <section className="quick-note-editor-shell">
+            <div className="quick-note-toolbar">
+              <IconButton label={state.treeOpen ? t('quickNote.hideSidebar') : t('quickNote.showSidebar')} icon={state.treeOpen ? PanelLeftClose : PanelLeftOpen} onClick={() => update({ treeOpen: !state.treeOpen })} />
+              <div className="quick-note-view-switch segmented glass-control" role="tablist" aria-label={t('quickNote.title')}>
+                {([
+                  { id: 'editor', icon: FilePenLine },
+                  { id: 'split', icon: Columns2 },
+                  { id: 'preview', icon: Eye }
+                ] as const).map(({ id, icon: ViewIcon }) => (
+                  <button
+                    className={state.viewMode === id ? 'segmented__item segmented__item--active' : 'segmented__item'}
+                    type="button"
+                    role="tab"
+                    aria-label={t(`quickNote.view.${id}` as MessageKey)}
+                    aria-selected={state.viewMode === id}
+                    title={t(`quickNote.view.${id}` as MessageKey)}
+                    key={id}
+                    onClick={() => update({ viewMode: id })}
+                  >
+                    <ViewIcon size={15} />
+                  </button>
+                ))}
+              </div>
+              <span className="quick-note-toolbar__divider" aria-hidden="true" />
+              <NoteColorPicker key={state.note?.relativePath ?? 'empty'} value={state.note?.metadata.color} disabled={!state.note} label={t('quickNote.color')} onChange={(color) => patchMetadata({ color })} />
+              <select className="quick-note-syntax" aria-label={t('quickNote.syntax')} disabled={!state.note} value={state.note?.metadata.syntax ?? 'text/plain'} onChange={(event) => patchMetadata({ syntax: event.target.value })}>
+                {syntaxOptions.map(([value, label]) => <option value={value} key={value}>{label}</option>)}
+              </select>
+              <FontSelect
+                className="quick-note-font-select"
+                ariaLabel={t('quickNote.font')}
+                disabled={!state.note}
+                value={state.note?.metadata.fontName ?? ''}
+                emptyLabel={t('quickNote.font.system')}
+                labels={{ 'ui-monospace': t('quickNote.font.mono') }}
+                onChange={(fontName) => patchMetadata({ fontName })}
+              />
+              <input className="quick-note-font-size" aria-label={t('quickNote.fontSize')} type="number" min={8} max={48} disabled={!state.note} value={state.note?.metadata.fontSize ?? settings.editor.quickNoteFontSize} onChange={(event) => patchMetadata({ fontSize: Number(event.target.value) })} />
+              <select className="quick-note-line-spacing" aria-label={t('quickNote.lineSpacing')} title={t('quickNote.lineSpacing')} disabled={!state.note} value={state.note?.metadata.lineSpacing ?? 1} onChange={(event) => patchMetadata({ lineSpacing: Number(event.target.value) })}>
+                {lineSpacingOptions.map((value) => <option value={value} key={value}>{value.toFixed(1)}×</option>)}
+              </select>
+              <IconButton label={t(state.note?.metadata.lineWrap ? 'json.action.nowrap' : 'json.action.wrap')} icon={WrapText} active={state.note?.metadata.lineWrap} disabled={!state.note} onClick={() => patchMetadata({ lineWrap: !state.note?.metadata.lineWrap })} />
+              <IconButton label={t('common.action.format')} icon={WandSparkles} disabled={!state.note || !state.content.trim()} onClick={() => { void formatCurrent() }} />
+              <IconButton label={t('quickNote.bulletList')} icon={List} disabled={!state.note} onClick={() => prefixSelectedLines('bullet')} />
+              <IconButton label={t('quickNote.numberedList')} icon={ListOrdered} disabled={!state.note} onClick={() => prefixSelectedLines('numbered')} />
+              <WorkspaceDragZone className="quick-note-toolbar__drag-zone" />
+              <IconButton label={t('quickNote.find')} icon={Search} disabled={!state.note} active={state.findOpen} onClick={() => { if (state.findOpen) update({ findOpen: false }); else openFindReplace() }} />
+              <IconButton label={t('quickNote.attachment')} icon={ImagePlus} disabled={!state.note} onClick={() => { void importAttachment() }} />
+              <IconButton label={t('quickNote.quickReplace')} icon={Replace} active={state.quickReplaceOpen} onClick={() => update({ quickReplaceOpen: !state.quickReplaceOpen })} />
+              <IconButton label={t('quickNote.openVault')} icon={FolderOpen} onClick={() => { void window.mootool.openQuickNoteVault() }} />
+            </div>
+
+            {state.findOpen && (
+              <FindReplaceBar
+                className="quick-note-find-bar"
+                focusRequest={findFocusRequest}
+                findText={state.findText}
+                replaceText={state.replaceText}
+                options={state.findOptions}
+                matchCount={findAllMatches(state.content, state.findText, state.findOptions).length}
+                replacedCount={state.replacedCount}
+                onFindTextChange={(findText) => { findIndexRef.current = 0; quickNoteFindIndex = 0; update({ findText, replacedCount: 0 }) }}
+                onReplaceTextChange={(replaceText) => update({ replaceText })}
+                onOptionsChange={(findOptions) => { findIndexRef.current = 0; quickNoteFindIndex = 0; update({ findOptions, replacedCount: 0 }) }}
+                onFind={() => findAround(true)}
+                onFindPrevious={() => findAround(false)}
+                onFindNext={() => findAround(true)}
+                onReplace={() => replaceCurrent(false)}
+                onReplaceAll={() => replaceCurrent(true)}
+                onClose={() => update({ findOpen: false, replacedCount: 0 })}
+              />
+            )}
+
+            {state.note ? (
+              <ResizableColumns
+                className={`quick-note-content quick-note-content--${state.viewMode}`}
+                columns={state.viewMode === 'split' ? 2 : 1}
+                defaultSizes={state.viewMode === 'split' ? [1, 1] : [1]}
+                minPaneWidths={state.viewMode === 'split' ? [260, 260] : [260]}
+                storageKey="quick-note-editor-preview"
+              >
+                {state.viewMode !== 'preview' && (
+                  <div className="quick-note-editor-pane">
+                    <QuickNoteCodeEditor
+                      ref={editorRef}
+                      value={state.content}
+                      language={resolveTextCodeEditorLanguage(state.note.metadata.syntax)}
+                      wrap={state.note.metadata.lineWrap}
+                      fontFamily={cssFontFamily(state.note.metadata.fontName)}
+                      fontSize={state.note.metadata.fontSize}
+                      lineHeight={1.65 * state.note.metadata.lineSpacing}
+                      searchQuery={state.findOpen ? state.findText : ''}
+                      searchOptions={state.findOptions}
+                      ariaLabel={t('quickNote.editorLabel')}
+                      initialViewState={quickNoteEditorViewState}
+                      onChange={(content) => update({ content })}
+                      onDragOver={(event) => {
+                        const dataTransfer = event.dataTransfer
+                        if (!dataTransfer || (!clipboardContainsImage(dataTransfer) && !dataTransferContainsFiles(dataTransfer))) return
+                        event.preventDefault()
+                        dataTransfer.dropEffect = 'copy'
+                      }}
+                      onDrop={(event) => {
+                        const dataTransfer = event.dataTransfer
+                        const files = imageFilesFromDataTransfer(dataTransfer)
+                        if (files.length === 0) {
+                          if (dataTransferContainsFiles(dataTransfer)) event.preventDefault()
+                          return
+                        }
+                        event.preventDefault()
+                        const position = editorRef.current?.getPositionAtCoordinates(event.clientX, event.clientY)
+                        const selection = position === null || position === undefined
+                          ? editorRef.current?.getSelection() ?? { start: state.content.length, end: state.content.length }
+                          : { start: position, end: position }
+                        for (const file of files) enqueueDataTransferAttachment(selection, file)
+                      }}
+                      onPaste={(event) => {
+                        if (!clipboardContainsImage(event.clipboardData)) return
+                        const file = clipboardImageFile(event.clipboardData)
+                        event.preventDefault()
+                        enqueueDataTransferAttachment(
+                          editorRef.current?.getSelection() ?? { start: state.content.length, end: state.content.length },
+                          file
+                        )
+                      }}
+                      onKeyDown={(event) => {
+                        if (isFormatShortcut(event)) {
+                          event.preventDefault()
+                          void formatCurrent()
+                        }
+                      }}
+                      onViewStateChange={(viewState) => { quickNoteEditorViewState = viewState }}
+                    />
+                  </div>
+                )}
+                {state.viewMode !== 'editor' && (
+                  <article className="quick-note-preview" style={{ fontFamily: cssFontFamily(state.note.metadata.fontName) }} dangerouslySetInnerHTML={previewMarkup} />
+                )}
+              </ResizableColumns>
+            ) : <div className="quick-note-select-empty">{t('quickNote.select')}</div>}
+
+            <footer className="quick-note-statusbar">
+              <span>{(state.note?.relativePath ?? state.selectedPath) || t('quickNote.select')}</span>
+              <span>{dirty ? t('quickNote.unsaved') : state.note ? t('quickNote.saved') : ''}</span>
+              <span>{t('quickNote.status', { lines: String(stats.lines), characters: String(stats.characters) })}</span>
+            </footer>
+          </section>
+
+          {state.quickReplaceOpen && (
+            <aside className="quick-replace-panel">
+              <header><strong>{t('quickNote.quickReplace')}</strong><button className="icon-ghost" type="button" aria-label={t('common.close')} onClick={() => update({ quickReplaceOpen: false })}><X size={14} /></button></header>
+              <div className="quick-replace-actions">
+                {quickReplaceActionIds.map((action) => <button type="button" key={action} disabled={!state.note} onClick={() => applyQuickReplace(action)}>{t(`quickNote.quick.${action}` as MessageKey)}</button>)}
+              </div>
+            </aside>
+          )}
+        </ResizableColumns>
+      </div>
+
+      <ActionDialog
+        mode={state.actionMode}
+        value={state.actionValue}
+        currentName={currentName}
+        selectedPath={state.selectedPath}
+        directories={directories}
+        busy={state.busy}
+        onChange={(actionValue) => update({ actionValue })}
+        onClose={() => update({ actionMode: null })}
+        onSubmit={() => { void runActionDialog() }}
+      />
+      <DocumentInfoDialog open={state.infoOpen} note={state.note} stats={stats} onClose={() => update({ infoOpen: false })} />
+      <VaultGitDialog
+        scope="quickNote"
+        open={state.gitOpen}
+        onClose={() => update({ gitOpen: false })}
+        beforeWorkingTreeChange={prepareGitAction}
+        onVaultChange={refreshAfterGitAction}
+      />
+    </section>
+  )
+}
+
+type IconButtonProps = {
+  label: string
+  icon: typeof Save
+  disabled?: boolean
+  active?: boolean
+  badge?: number
+  onClick: () => void
+}
+
+function IconButton({ label, icon: Icon, disabled, active, badge = 0, onClick }: IconButtonProps) {
+  return (
+    <Tooltip content={badge > 0 ? `${label} (${badge})` : label} side="bottom">
+      <button className={active ? 'quick-note-icon-button quick-note-icon-button--active' : 'quick-note-icon-button'} type="button" aria-label={badge > 0 ? `${label} (${badge})` : label} disabled={disabled} onClick={onClick}>
+        <Icon size={14} />
+        {badge > 0 && <span className="vault-git-badge">{badge > 99 ? '99+' : badge}</span>}
+      </button>
+    </Tooltip>
+  )
+}
+
+type ActionDialogProps = {
+  mode: ActionDialogMode
+  value: string
+  currentName: string
+  selectedPath: string
+  directories: string[]
+  busy: boolean
+  onChange: (value: string) => void
+  onClose: () => void
+  onSubmit: () => void
+}
+
+function ActionDialog({ mode, value, currentName, selectedPath, directories, busy, onChange, onClose, onSubmit }: ActionDialogProps) {
+  const { t } = useI18n()
+  const titleKey: MessageKey = mode === 'createNote'
+    ? 'quickNote.dialog.createNote'
+    : mode === 'createFolder'
+      ? 'quickNote.dialog.createFolder'
+      : mode === 'rename'
+        ? 'quickNote.dialog.rename'
+        : mode === 'move'
+          ? 'quickNote.dialog.move'
+          : 'quickNote.delete'
+  return (
+    <Dialog
+      title={t(titleKey)}
+      open={mode !== null}
+      onClose={onClose}
+      footer={(
+        <>
+          <button className="dialog-button" type="button" onClick={onClose}>{t('common.cancel')}</button>
+          <button className={mode === 'delete' ? 'dialog-button dialog-button--danger' : 'dialog-button dialog-button--primary'} type="button" disabled={busy || (mode !== 'delete' && !value.trim())} onClick={onSubmit}>
+            {mode === 'delete' ? t('quickNote.delete') : mode === 'createNote' || mode === 'createFolder' ? t('quickNote.create') : t('quickNote.apply')}
+          </button>
+        </>
+      )}
+    >
+      {mode === 'delete' ? <p className="quick-note-confirm">{t('quickNote.confirmDelete', { name: currentName })}</p> : mode === 'move' ? (
+        <label className="dialog-field">
+          <span>{t('quickNote.dialog.target')}</span>
+          <select value={value} onChange={(event) => onChange(event.target.value)}>
+            <option value="">{t('quickNote.dialog.root')}</option>
+            {directories.filter((path) => path !== selectedPath && !path.startsWith(`${selectedPath}/`)).map((path) => <option value={path} key={path}>{path}</option>)}
+          </select>
+        </label>
+      ) : (
+        <label className="dialog-field">
+          <span>{t('quickNote.dialog.name')}</span>
+          <input autoFocus value={value} onChange={(event) => onChange(event.target.value)} onKeyDown={(event) => { if (event.key === 'Enter' && value.trim()) onSubmit() }} />
+        </label>
+      )}
+    </Dialog>
+  )
+}
+
+function DocumentInfoDialog({ open, note, stats, onClose }: { open: boolean; note: QuickNoteFile | null; stats: ReturnType<typeof documentStats>; onClose: () => void }) {
+  const { t } = useI18n()
+  const rows = note ? [
+    [t('quickNote.path'), note.relativePath],
+    [t('quickNote.created'), formatDate(note.metadata.createdAt)],
+    [t('quickNote.modified'), formatDate(note.metadata.modifiedAt)],
+    [t('quickNote.lines'), String(stats.lines)],
+    [t('quickNote.words'), String(stats.words)],
+    [t('quickNote.characters'), String(stats.characters)]
+  ] : []
+  return (
+    <Dialog title={t('quickNote.info')} open={open} onClose={onClose} footer={<button className="dialog-button" type="button" onClick={onClose}>{t('common.close')}</button>}>
+      <dl className="quick-note-info">{rows.map(([label, value]) => <div key={label}><dt>{label}</dt><dd>{value}</dd></div>)}</dl>
+    </Dialog>
+  )
+}
+
+function selectedDirectory(path: string, kind: EntryKind): string {
+  return kind === 'directory' ? path : parentDirectory(path)
+}
+
+function parentDirectory(path: string): string {
+  const index = path.lastIndexOf('/')
+  return index < 0 ? '' : path.slice(0, index)
+}
+
+function directoryLeaf(path: string): string {
+  return path.slice(path.lastIndexOf('/') + 1)
+}
+
+function documentStats(content: string): { lines: number; words: number; characters: number } {
+  const trimmed = content.trim()
+  return {
+    lines: content ? content.split(/\r?\n/).length : 0,
+    words: trimmed ? trimmed.split(/\s+/).length : 0,
+    characters: content.length
+  }
+}
+
+function extractAttachmentPaths(content: string): string[] {
+  const matches = content.matchAll(/(?:\(|src=["'])(attachments\/[A-Za-z0-9_.-]+)(?:\)|["'])/g)
+  return [...new Set([...matches].map((match) => match[1]))]
+}
+
+function renderPreview(content: string, syntax: string | undefined, attachmentUrls: Record<string, string>): string {
+  if (syntax !== 'text/markdown') {
+    return DOMPurify.sanitize(`<pre>${escapeHtml(content)}</pre>`)
+  }
+  let source = content
+  for (const [path, url] of Object.entries(attachmentUrls)) source = source.replaceAll(path, url)
+  return DOMPurify.sanitize(marked.parse(source, { async: false }) as string)
+}
+
+function formatDate(value: string): string {
+  const date = new Date(value)
+  return Number.isNaN(date.getTime()) ? value : date.toLocaleString()
+}
+
+function escapeHtml(value: string): string {
+  return value.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;')
+}
+
+function errorMessage(error: unknown): string {
+  return error instanceof Error ? error.message : String(error)
+}

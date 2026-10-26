@@ -1,0 +1,214 @@
+{
+  "name": "mootool-next",
+  "desktopName": "com.rememberber.mootool.next.electron.desktop",
+  "version": "1.3.5",
+  "private": true,
+  "description": "MooTool rewritten with Electron, Vite, React, and TypeScript.",
+  "license": "MIT",
+  "author": {
+    "name": "Zhou Bo",
+    "email": "rememberber@163.com"
+  },
+  "homepage": "https://github.com/rememberber/MooTool",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/rememberber/MooTool.git"
+  },
+  "main": "out/main/index.js",
+  "scripts": {
+    "postinstall": "node scripts/install-electron.mjs",
+    "electron:install": "node scripts/install-electron.mjs",
+    "dev": "npm run build:native-ocr && npm run prepare:preview-pdf && electron-vite dev",
+    "build": "npm run build:native-ocr && npm run prepare:preview-pdf && tsc --noEmit && electron-vite build",
+    "package": "npm run build && electron-builder",
+    "package:mac": "npm run build && electron-builder --mac dmg --publish never",
+    "package:win": "npm run build && electron-builder --win nsis portable --publish never",
+    "package:linux": "npm run build && electron-builder --linux AppImage deb --publish never",
+    "preview": "electron-vite preview",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:e2e": "npm run build && playwright test",
+    "check": "npm run typecheck && npm run test && npm run build",
+    "build:native-ocr": "node scripts/build-native-ocr.mjs",
+    "ocr:prepare": "node scripts/prepare-ocr-resources.mjs",
+    "prepare:preview-pdf": "node scripts/prepare-preview-pdf.mjs"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.30.0",
+    "@visioncortex/vtracer": "1.0.0-alpha.3",
+    "buffer": "^6.0.3",
+    "diff": "^9.0.0",
+    "electron-store": "^11.0.2",
+    "electron-updater": "^6.8.9",
+    "fast-xml-parser": "^5.10.1",
+    "iconv-lite": "^0.7.3",
+    "ignore": "^7.0.6",
+    "jsonc-parser": "^3.3.1",
+    "jsonpath-plus": "^10.4.0",
+    "luxon": "^3.7.2",
+    "pdf-lib": "^1.17.1",
+    "smol-toml": "^1.8.0",
+    "systeminformation": "^5.33.1",
+    "undici": "^8.9.0",
+    "yaml": "^2.9.0",
+    "zod": "^4.6.4"
+  },
+  "devDependencies": {
+    "@codemirror/autocomplete": "^6.20.3",
+    "@codemirror/commands": "^6.10.4",
+    "@codemirror/lang-html": "^6.4.11",
+    "@codemirror/lang-java": "^6.0.2",
+    "@codemirror/lang-javascript": "^6.2.5",
+    "@codemirror/lang-json": "^6.0.2",
+    "@codemirror/lang-markdown": "^6.5.1",
+    "@codemirror/lang-python": "^6.2.1",
+    "@codemirror/lang-sql": "^6.10.0",
+    "@codemirror/lang-xml": "^6.1.0",
+    "@codemirror/lang-yaml": "^6.1.3",
+    "@codemirror/language": "^6.12.4",
+    "@codemirror/state": "^6.7.1",
+    "@codemirror/view": "^6.43.7",
+    "@lezer/highlight": "^1.2.3",
+    "@playwright/test": "^1.62.0",
+    "@prettier/plugin-xml": "^3.4.2",
+    "@types/crypto-js": "^4.2.2",
+    "@types/luxon": "^3.7.2",
+    "@types/node": "^26.1.2",
+    "@types/node-forge": "^1.3.14",
+    "@types/qrcode": "^1.5.6",
+    "@types/react": "^19.2.17",
+    "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-react": "^5.2.0",
+    "@zxing/browser": "^0.2.1",
+    "@zxing/library": "^0.23.0",
+    "cron-parser": "^5.6.2",
+    "cronstrue": "^3.24.0",
+    "crypto-js": "^4.2.0",
+    "dompurify": "^3.4.12",
+    "electron": "^43.2.0",
+    "electron-builder": "^26.15.3",
+    "electron-vite": "^5.0.0",
+    "hi-base32": "^0.5.1",
+    "lucide-react": "^1.27.0",
+    "marked": "^18.0.7",
+    "node-forge": "^1.4.0",
+    "pdfjs-dist": "6.4.299",
+    "prettier": "^3.9.6",
+    "prettier-plugin-java": "^2.10.3",
+    "protobufjs": "^8.7.1",
+    "qrcode": "^1.5.4",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8",
+    "sm-crypto": "^0.5.3",
+    "sql-formatter": "^15.8.2",
+    "typescript": "^7.0.2",
+    "ua-parser-js": "^2.0.10",
+    "vite": "^7.3.6",
+    "vitest": "^4.1.10",
+    "zustand": "^5.0.14"
+  },
+  "build": {
+    "appId": "com.rememberber.mootool.next.electron",
+    "productName": "MooTool",
+    "artifactName": "MooTool-Next-Electron-${version}-${os}-${arch}.${ext}",
+    "publish": [
+      {
+        "provider": "generic",
+        "url": "https://github.com/rememberber/MooTool/releases/download/next-electron-v${version}"
+      }
+    ],
+    "asar": true,
+    "beforePack": "./scripts/prepare-ocr-package.cjs",
+    "directories": {
+      "buildResources": "resources",
+      "output": "dist"
+    },
+    "files": [
+      "out/**/*",
+      "!out/native/**/*",
+      "!out/ocr/**/*",
+      "!out/ocr-cache/**/*",
+      "package.json",
+      "!out/optional-components/**/*"
+    ],
+    "extraResources": [
+      {
+        "from": "resources/tray-icon.png",
+        "to": "tray-icon.png"
+      },
+      {
+        "from": "resources/ocr",
+        "to": "ocr-licenses"
+      }
+    ],
+    "mac": {
+      "extraResources": [
+        {
+          "from": "out/native",
+          "to": "native",
+          "filter": [
+            "mootool-ocr"
+          ]
+        }
+      ],
+      "icon": "resources/icon.icns",
+      "executableName": "MooTool Next Electron",
+      "category": "public.app-category.developer-tools",
+      "target": [
+        "dmg"
+      ],
+      "binaries": [
+        "Contents/Resources/native/mootool-ocr"
+      ]
+    },
+    "win": {
+      "extraResources": [
+        {
+          "from": "out/optional-components/win32-${arch}.json",
+          "to": "optional-components/win32-${arch}.json"
+        }
+      ],
+      "icon": "resources/icon.png",
+      "executableName": "MooTool Next Electron",
+      "target": [
+        "nsis",
+        "portable"
+      ]
+    },
+    "nsis": {
+      "shortcutName": "MooTool Next Electron",
+      "uninstallDisplayName": "MooTool Next Electron ${version}",
+      "artifactName": "MooTool-Next-Electron-${version}-win-${arch}-setup.${ext}"
+    },
+    "portable": {
+      "artifactName": "MooTool-Next-Electron-${version}-win-${arch}-portable.${ext}"
+    },
+    "linux": {
+      "extraResources": [
+        {
+          "from": "out/optional-components/linux-${arch}.json",
+          "to": "optional-components/linux-${arch}.json"
+        }
+      ],
+      "syncDesktopName": true,
+      "icon": "resources/icon.png",
+      "category": "Utility;Development",
+      "target": [
+        "AppImage",
+        "deb"
+      ]
+    },
+    "appImage": {
+      "artifactName": "MooTool-Next-Electron-${version}-linux-x64.${ext}"
+    },
+    "deb": {
+      "artifactName": "MooTool-Next-Electron-${version}-linux-x64.${ext}"
+    },
+    "asarUnpack": [
+      "node_modules/electron-liquid-glass/**"
+    ]
+  },
+  "optionalDependencies": {
+    "electron-liquid-glass": "1.1.1"
+  }
+}

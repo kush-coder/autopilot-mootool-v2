@@ -1,0 +1,156 @@
+create table if not exists t_msg_http
+(
+    id            integer
+        constraint t_msg_http_pk
+            primary key autoincrement,
+    msg_name      text,
+    method        text,
+    url           text,
+    params        text,
+    headers       text,
+    cookies       text,
+    body          text,
+    body_type     text,
+    create_time   datetime,
+    modified_time datetime
+);
+
+create unique index if not exists t_msg_http_msg_name_uindex
+    on t_msg_http (msg_name);
+
+create table if not exists t_quick_note
+(
+    id            integer
+        constraint t_quick_note_pk
+            primary key autoincrement,
+    name          text,
+    content       text,
+    create_time   datetime,
+    modified_time datetime
+);
+
+create unique index if not exists t_quick_note_name_uindex
+    on t_quick_note (name);
+
+create table if not exists t_json_beauty
+(
+    id            integer
+        constraint t_json_beauty_pk
+            primary key autoincrement,
+    name          text,
+    content       text,
+    create_time   datetime,
+    modified_time datetime
+);
+
+create unique index if not exists t_json_beauty_name_uindex
+    on t_json_beauty (name);
+
+create table if not exists t_host
+(
+    id            integer
+        constraint t_host_pk
+            primary key autoincrement,
+    name          text,
+    content       text,
+    create_time   datetime,
+    modified_time datetime
+);
+
+create unique index if not exists t_host_name_uindex
+    on t_host (name);
+
+create table if not exists t_qr_code
+(
+    id            integer
+        constraint t_qr_code_pk
+            primary key,
+    content       text,
+    create_time   datetime,
+    modified_time datetime
+);
+
+create table if not exists t_favorite_color_list
+(
+    id            integer
+        constraint t_favorite_color_list_pk
+            primary key autoincrement,
+    title         text,
+    remark        text,
+    create_time   datetime,
+    modified_time datetime
+);
+
+create unique index if not exists t_favorite_color_list_uindex
+    on t_favorite_color_list (title);
+
+create table if not exists t_favorite_color_item
+(
+    id            integer
+        constraint t_favorite_color_item_pk
+            primary key autoincrement,
+    list_id       integer,
+    name          text,
+    value         text,
+    sort_num      integer,
+    remark        text,
+    create_time   datetime,
+    modified_time datetime
+);
+
+create unique index if not exists t_favorite_color_item_uindex
+    on t_favorite_color_item (list_id, name);
+
+create table if not exists t_func_content
+(
+    id            integer
+        constraint t_func_content_pk
+            primary key autoincrement,
+    func          text,
+    content       text,
+    remark        text,
+    create_time   datetime,
+    modified_time datetime
+);
+
+create table if not exists t_func_history
+(
+    id          integer
+        constraint t_func_history_pk
+            primary key autoincrement,
+    func_type   text    not null,
+    summary     text,
+    input_text  text,
+    output_text text,
+    extra_data  text,
+    create_time datetime
+);
+
+create index if not exists t_func_history_func_type_create_time_index
+    on t_func_history (func_type, create_time desc);
+
+-- text diff
+-- 文档主表
+CREATE TABLE IF NOT EXISTS doc (
+        doc_id      INTEGER PRIMARY KEY AUTOINCREMENT,
+        name        TEXT NOT NULL UNIQUE
+);
+
+-- 版本表
+CREATE TABLE IF NOT EXISTS doc_revision (
+        rev_id      INTEGER PRIMARY KEY AUTOINCREMENT,
+        doc_id      INTEGER NOT NULL,
+        created_at  DATETIME NOT NULL DEFAULT (datetime('now')),
+        content     TEXT NOT NULL,
+        FOREIGN KEY (doc_id) REFERENCES doc(doc_id)
+);
+
+-- 缓存行级 unified diff（从前一版本到本版本）
+CREATE TABLE IF NOT EXISTS doc_diff_cache (
+        from_rev_id INTEGER NOT NULL,
+        to_rev_id   INTEGER NOT NULL,
+        unified     TEXT NOT NULL,
+        PRIMARY KEY (from_rev_id, to_rev_id),
+        FOREIGN KEY (from_rev_id) REFERENCES doc_revision(rev_id),
+        FOREIGN KEY (to_rev_id)   REFERENCES doc_revision(rev_id)
+);
